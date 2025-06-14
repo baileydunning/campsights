@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap');
+
+.campsite-form {
+  font-family: 'Outfit', Arial, Helvetica, sans-serif;
+  background: #f8fff3;
+  border-radius: 14px;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(33, 53, 71, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 260px;
+}
+
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #213547;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #213547;
+  margin-bottom: 0.2rem;
+}
+
+.form-input {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid #b6d7a8;
+  border-radius: 7px;
+  background: #fff;
+  color: #213547;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.form-input:focus {
+  border-color: #86bd7a;
+  background: #f4fff0;
+}
+
+.star-rating {
+  display: flex;
+  gap: 0.2rem;
+  font-size: 2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.star {
+  color: #ccc;
+  transition: color 0.2s;
+  outline: none;
+}
+
+.star.filled {
+  color: #FFD700;
+}
+
+.star:focus {
+  color: #ffb300;
+}
+
+.submit-btn {
+  margin-top: 0.5rem;
+  background: #86bd7a;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 7px;
+  padding: 0.7rem 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(33, 53, 71, 0.08);
+  transition: background 0.2s;
+}
+
+.submit-btn:hover,
+.submit-btn:focus {
+  background: #1976d2;
+}

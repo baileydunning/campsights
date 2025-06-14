@@ -1,0 +1,112 @@
+[
+  {
+    "id": "camp_001",
+    "name": "Brainard Lake Road",
+    "description": "Campsite near Indian Peaks at 10400 ft.",
+    "lat": 40.0213,
+    "lng": -105.5856,
+    "rating": 5,
+    "requires_4wd": true,
+    "last_updated": "2025-06-13T21:50:37.842391Z"
+  },
+  {
+    "id": "camp_002",
+    "name": "Switzerland Trail",
+    "description": "Campsite near Sugarloaf at 8700 ft.",
+    "lat": 39.9053,
+    "lng": -105.5753,
+    "rating": 1,
+    "requires_4wd": false,
+    "last_updated": "2025-06-13T21:50:37.842404Z"
+  },
+  {
+    "id": "camp_003",
+    "name": "Hidden Wilderness Road",
+    "description": "Campsite near Rollinsville at 9100 ft.",
+    "lat": 39.9142,
+    "lng": -105.4121,
+    "rating": 5,
+    "requires_4wd": false,
+    "last_updated": "2025-06-13T21:50:37.842408Z"
+  },
+  {
+    "id": "camp_004",
+    "name": "Ski Road",
+    "description": "Campsite near Eldora at 9850 ft.",
+    "lat": 40.0372,
+    "lng": -105.4605,
+    "rating": 3,
+    "requires_4wd": true,
+    "last_updated": "2025-06-13T21:50:37.842412Z"
+  },
+  {
+    "id": "camp_005",
+    "name": "Jones Pass Road",
+    "description": "Campsite near Empire at 10800 ft.",
+    "lat": 39.7964,
+    "lng": -105.8578,
+    "rating": 1,
+    "requires_4wd": true,
+    "last_updated": "2025-06-13T21:50:37.842416Z"
+  },
+  {
+    "id": "camp_006",
+    "name": "Storm Mountain Road",
+    "description": "Campsite near Drake at 8750 ft.",
+    "lat": 40.4335,
+    "lng": -105.4812,
+    "rating": 4,
+    "requires_4wd": false,
+    "last_updated": "2025-06-13T21:50:37.842419Z"
+  },
+  {
+    "id": "camp_007",
+    "name": "Lost Park Road",
+    "description": "Campsite near Lost Creek at 9800 ft.",
+    "lat": 39.2871,
+    "lng": -105.3203,
+    "rating": 1,
+    "requires_4wd": true,
+    "last_updated": "2025-06-13T21:50:37.842422Z"
+  },
+  {
+    "id": "camp_008",
+    "name": "Kebler Pass",
+    "description": "Campsite near Crested Butte at 10007 ft.",
+    "lat": 38.8942,
+    "lng": -107.0806,
+    "rating": 5,
+    "requires_4wd": true,
+    "last_updated": "2025-06-13T21:50:37.842432Z"
+  },
+  {
+    "id": "camp_009",
+    "name": "Cottonwood Pass",
+    "description": "Campsite near Buena Vista at 12126 ft.",
+    "lat": 38.8208,
+    "lng": -106.4153,
+    "rating": 5,
+    "requires_4wd": true,
+    "last_updated": "2025-06-13T21:50:37.842437Z"
+  },
+  {
+    "id": "camp_010",
+    "name": "Dominguez Canyon Road",
+    "description": "Campsite near Dominguez-Escalante at 5200 ft.",
+    "lat": 38.8232,
+    "lng": -108.3025,
+    "rating": 2,
+    "requires_4wd": false,
+    "last_updated": "2025-06-13T21:50:37.842441Z"
+  },
+  {
+    "id": "camp_011",
+    "name": "Rabbit Valley Road",
+    "description": "Campsite near McInnis Canyons at 4600 ft.",
+    "lat": 39.1874,
+    "lng": -109.0256,
+    "rating": 1,
+    "requires_4wd": false,
+    "last_updated": "2025-06-13T21:50:37.842445Z"
+  }
+]

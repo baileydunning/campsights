@@ -1,0 +1,13 @@
+.star {
+  color: #FFD700;
+}
+
+.requires-4wd-yes {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.requires-4wd-no {
+  color: #388e3c;
+  font-weight: 600;
+}
