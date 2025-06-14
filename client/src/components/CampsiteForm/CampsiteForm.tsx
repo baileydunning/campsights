@@ -83,7 +83,9 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
           id="name"
           className="form-input"
           value={name}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setName(e.target.value)
+          }
           placeholder="Campsite Name"
         />
       </div>
@@ -93,13 +95,15 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
           id="description"
           className="form-input"
           value={description}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setDescription(e.target.value)
+          }
           placeholder="Describe your campsite"
         />
       </div>
       <div className="form-group">
         <label htmlFor="rating">Campsite Rating</label>
-        <div id="rating" className="star-rating">
+        <div id="rating" className="star-rating" aria-labelledby="rating-label">
           {[...Array(5)].map((_, index) => (
             <span
               key={index}
@@ -146,7 +150,9 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
               className="form-input"
               type="number"
               value={latitude}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setLatitude(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setLatitude(e.target.value)
+              }
               placeholder="Enter Latitude"
             />
           </div>
@@ -157,7 +163,9 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
               className="form-input"
               type="number"
               value={longitude}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setLongitude(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setLongitude(e.target.value)
+              }
               placeholder="Enter Longitude"
             />
           </div>
