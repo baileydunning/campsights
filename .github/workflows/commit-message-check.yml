@@ -1,0 +1,34 @@
+name: Commit Message Check
+
+on:
+  push:
+    branches:
+      - main 
+  pull_request:
+    branches:
+      - main 
+
+jobs:
+  commit-message-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check commit messages
+        run: |
+          # Get all commit messages in the current push
+          COMMIT_MESSAGES=$(git log --format=%s $(git merge-base origin/main HEAD)..HEAD)
+
+          # Regular expression to match valid commit message types
+          VALID_COMMIT_REGEX="^(feat|fix|chore|docs|style|refactor|test|perf|build|ci)\([a-z]+\): .+"
+
+          # Check each commit message
+          echo "$COMMIT_MESSAGES" | while read -r message; do
+            if [[ ! "$message" =~ $VALID_COMMIT_REGEX ]]; then
+              echo "Invalid commit message: $message"
+              echo "Commit message must start with one of the following types: feat, fix, chore, docs, style, refactor, test, perf, build, ci."
+              exit 1
+            fi
+          done
+          echo "All commit messages are valid."
