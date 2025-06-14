@@ -38,7 +38,7 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
           last_updated: new Date().toISOString(),
         };
 
-        await fetch(`http://localhost:3000/api/v1/campsites`, {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -62,7 +62,7 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
         last_updated: new Date().toISOString(),
       };
 
-      await fetch(`http://localhost:3000/api/v1/campsites`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
