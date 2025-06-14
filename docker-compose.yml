@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    container_name: campsights-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app
+      - ./server/data:/app/data
+    environment:
+      NODE_ENV: development
+
+  client:
+    build: ./client
+    container_name: campsights-client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - server

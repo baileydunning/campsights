@@ -10,37 +10,19 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 
 ## Project Structure
 
-```
-campsights/
-  client/   # React + Vite frontend
-    src/
-      components/      # React components (MapView, CampsiteForm)
-      types/           # TypeScript interfaces
-      App.tsx          # Main app component
-      main.tsx         # Entry point
-    public/
-    App.css            # Global styles
-    ...
-  server/   # Express + TypeScript backend
-    src/
-      index.ts         # Main server file
-      types/           # TypeScript interfaces
-    data/
-      campsites.json   # Campsite data
-    ...
-```
-
 ```mermaid
 flowchart TD
-  subgraph Client ["Frontend (React + Vite)"]
-    A[User]
-    B[MapView Component]
-    C[CampsiteForm Component]
-  end
+  subgraph Docker
+    subgraph Client_Container [client]
+      A[User]
+      B[MapView Component]
+      C[CampsiteForm Component]
+    end
 
-  subgraph Server ["Backend (Express + TypeScript)"]
-    D[/GET & POST /api/v1/campsites/ Endpoint/]
-    E[(campsites.json Storage)]
+    subgraph Server_Container [server]
+      D[/GET & POST /api/v1/campsites/ Endpoint/]
+      E[(campsites.json Storage)]
+    end
   end
 
   A -->|Interacts with| B
@@ -63,7 +45,7 @@ cd ../client
 npm install
 ```
 
-### 2. Run the app
+### 2. Run the app locally
 
 Start the backend:
 
@@ -81,6 +63,33 @@ npm run dev
 
 Frontend: [http://localhost:5173](http://localhost:5173)  
 Backend API: [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
+
+---
+
+## Running with Docker
+
+You can run both the client and server using Docker Compose.
+
+### 1. Build and start the containers
+
+From the project root:
+
+```sh
+docker-compose up --build
+```
+
+- The frontend will be available at [http://localhost:5173](http://localhost:5173)
+- The backend API will be available at [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
+
+### 2. Stopping the containers
+
+Press `Ctrl+C` in the terminal running Docker Compose, or run:
+
+```sh
+docker-compose down
+```
+
+---
 
 ## API
 
