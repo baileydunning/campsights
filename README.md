@@ -32,56 +32,22 @@ flowchart TD
   D -->|Reads/Writes| E
 ```
 
-## Getting Started
-
-### 1. Install dependencies
-
-From the root directory:
-
-```sh
-cd server
-npm install
-cd ../client
-npm install
-```
-
-### 2. Run the app locally
-
-Start the backend:
-
-```sh
-cd ../server
-npm start
-```
-
-Start the frontend:
-
-```sh
-cd ../client
-npm run dev
-```
-
-Frontend: [http://localhost:5173](http://localhost:5173)  
-Backend API: [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
-
----
-
 ## Running with Docker
 
-You can run both the client and server using Docker Compose.
+Docker in this app is used to package both the frontend (React) and backend (Express) into a single container.
 
-### 1. Build and start the containers
+### Build and start the app
 
-From the project root:
+From the project root, run:
 
 ```sh
 docker-compose up --build
 ```
 
-- The frontend will be available at [http://localhost:5173](http://localhost:5173)
-- The backend API will be available at [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
+- The app will be available at [http://localhost:3000](http://localhost:3000)
+- Both the frontend (React) and backend API are served from this address.
 
-### 2. Stopping the containers
+### 2. Stopping the app
 
 Press `Ctrl+C` in the terminal running Docker Compose, or run:
 
@@ -89,7 +55,24 @@ Press `Ctrl+C` in the terminal running Docker Compose, or run:
 docker-compose down
 ```
 
----
+## Local Development (without Docker)
+
+You can still run the client and server separately for development:
+
+```sh
+# In one terminal
+cd server
+npm install
+npm run dev
+
+# In another terminal
+cd client
+npm install
+npm run dev
+```
+
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Backend API: [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
 
 ## API
 
