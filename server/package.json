@@ -5,8 +5,9 @@
   "main": "src/index.ts",
   "type": "commonjs",
   "scripts": {
-    "start": "ts-node src/index.ts",
     "build": "tsc",
+    "dev": "ts-node-dev src/index.ts",
+    "start": "ts-node src/index.ts",
     "start:prod": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
