@@ -41,6 +41,14 @@ jobs:
       - name: Build client Docker image
         run: docker build -t campsights-client ./client
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose -y
+
       - name: Build and start all services with Docker Compose
         run: docker-compose up --build -d
 
