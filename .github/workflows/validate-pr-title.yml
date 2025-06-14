@@ -1,0 +1,28 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR Title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          VALID_TITLE_REGEX="^(feat|fix|chore|docs|style|refactor|test|perf|build|ci): .+"
+
+          echo "Pull Request Title: \"$PR_TITLE\""
+
+          if [[ ! "$PR_TITLE" =~ $VALID_TITLE_REGEX ]]; then
+            echo "Invalid PR title: \"$PR_TITLE\""
+            echo "PR title must start with one of the following types followed by a colon and space:"
+            echo "feat, fix, chore, docs, style, refactor, test, perf, build, ci"
+            echo "Example: feat: did a cool thing"
+            exit 1
+          fi
+
+          echo "Valid PR title."
