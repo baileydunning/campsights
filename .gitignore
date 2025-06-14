@@ -28,10 +28,6 @@ pnpm-debug.log*
 # Misc
 *.local
 
-# Ignore test output
-*.test.*
-*.spec.*
-
 # Ignore lock files (optional, if you want to use only one lock file)
 package-lock.json
 yarn.lock
