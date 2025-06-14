@@ -10,6 +10,18 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+const staticPath = path.join(__dirname, "../client/dist");
+const indexHtmlPath = path.join(staticPath, "index.html");
+
+if (fs.existsSync(indexHtmlPath)) {
+  app.use(express.static(staticPath));
+  app.get(/^\/(?!api).*/, (_, res) => {
+    res.sendFile(indexHtmlPath);
+  });
+} else {
+  console.warn("client/dist/index.html not found, skipping static route handling.");
+}
+
 app.get('/api/v1/campsites', (_req: Request, res: Response) => {
   const filePath = path.join(__dirname, '../data/campsites.json');
 

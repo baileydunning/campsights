@@ -14,7 +14,7 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
   const [campsites, setCampsites] = useState<Campsite[]>([]);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/v1/campsites`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`)
       .then((res) => res.json())
       .then((data: Campsite[]) => setCampsites(data))
       .catch((err) => console.error(err));
