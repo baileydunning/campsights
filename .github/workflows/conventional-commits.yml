@@ -3,34 +3,37 @@ name: Conventional Commits
 on:
   push:
     branches:
-      - main 
+      - main
   pull_request:
     branches:
-      - main 
+      - main
 
 jobs:
   conventional-commit:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Check commit messages
+      - name: Validate commit messages
         run: |
-          # Get all commit messages in the current push
-          COMMIT_MESSAGES=$(git log --format=%s $(git merge-base origin/main HEAD)..HEAD)
+          # Get all non-merge commit messages between origin/main and HEAD
+          COMMIT_MESSAGES=$(git log --no-merges --format=%s $(git merge-base origin/main HEAD)..HEAD)
 
-          # Regular expression to match valid commit message types
-          VALID_COMMIT_REGEX="^(feat|fix|chore|docs|style|refactor|test|perf|build|ci)\([a-z]+\): .+"
+          # Only allow commit messages that start with an approved type and a colon
+          VALID_COMMIT_REGEX="^(feat|fix|chore|docs|style|refactor|test|perf|build|ci): .+"
 
-          # Check each commit message
           echo "$COMMIT_MESSAGES" | while read -r message; do
             if [[ ! "$message" =~ $VALID_COMMIT_REGEX ]]; then
-              echo "Invalid commit message: $message"
-              echo "Commit message must start with one of the following types: feat, fix, chore, docs, style, refactor, test, perf, build, ci."
+              echo "Invalid commit message: \"$message\""
+              echo "Commit message must start with one of the following types followed by a colon and space:"
+              echo "feat, fix, chore, docs, style, refactor, test, perf, build, ci"
+              echo "Example: feat: did a super cool thing"
               exit 1
             fi
           done
+
           echo "All commit messages are valid."
