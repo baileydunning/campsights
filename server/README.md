@@ -10,18 +10,28 @@ It provides a REST API for managing campsite data, which is stored in a JSON fil
 - Stores all data in `data/campsites.json`
 - CORS enabled for local development
 
-## Project Structure
+## Architecture
 
-```
-server/
-  src/
-    index.ts         # Main server file
-    types/           # TypeScript interfaces
-  data/
-    campsites.json   # Campsite data storage
-  package.json
-  tsconfig.json
-  ...
+```mermaid
+flowchart TD
+  User((User)) --> ExpressServer
+
+  ExpressServer["Express Server (src/index.ts)"]
+  ExpressServer --> APIRouter
+  ExpressServer --> StaticHandler
+
+  APIRouter["API Router (src/routes/campsites.ts)"]
+  APIRouter --> ServiceLayer
+  APIRouter -.-> Types
+
+  ServiceLayer["Service Layer (src/services/campsiteService.ts)"]
+  ServiceLayer --> DataFile
+
+  DataFile["Campsite Data (data/campsites.json)"]
+
+  Types["Types (src/types/campsite.ts)"]
+
+  StaticHandler["Static File Handler (serves client/dist)"]
 ```
 
 ## Getting Started

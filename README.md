@@ -2,6 +2,8 @@
 
 Campsights is a full-stack web app for discovering and sharing campsites. Users can view campsites on a map, add new ones with ratings and details, and see which require 4WD access.
 
+**Live project link:** https://campsights.onrender.com/
+
 ## Features
 
 - View campsites on an interactive map
