@@ -19,12 +19,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install dependencies and build
-        run: |
-          npm install --prefix server
-          npm run build --prefix server
-          npm install --prefix client
-          npm run build --prefix client
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build all packages
+        run: npx lerna run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
