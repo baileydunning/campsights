@@ -34,6 +34,15 @@ flowchart TD
   D -->|Reads/Writes| E
 ```
 
+## Monorepo & Lerna
+
+This project uses a **monorepo** structure managed by [Lerna](https://lerna.js.org/).  
+Lerna helps manage multiple packages (the frontend and backend) in a single repository. Install all the dependencies for both packages by running `npm i` at root. 
+
+**Packages:**
+- `packages/client` — The React frontend
+- `packages/server` — The Express backend
+
 ## Running with Docker
 
 Docker in this app is used to package both the frontend (React) and backend (Express) into a single container.
