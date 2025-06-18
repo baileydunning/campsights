@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-/* Ensure full viewport usage */
 html,
 body,
 #root,
@@ -14,7 +13,6 @@ body,
   background: #F2EFE9;
 }
 
-/* App container uses flex layout */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -23,7 +21,6 @@ body,
   min-height: 0;
 }
 
-/* Centered, padded header */
 .app-header {
   display: flex;
   justify-content: center;
@@ -42,17 +39,17 @@ body,
   text-transform: uppercase;
 }
 
-/* Main content fills remaining space */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  position: relative;
   height: 100%;
-  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
 }
 
-/* MapView should fill all available space */
 .main-content>.MapView,
 .main-content>div {
   height: 100%;
@@ -60,7 +57,6 @@ body,
   min-height: 0;
 }
 
-/* Floating plus button */
 .plus-button {
   position: fixed;
   bottom: 2rem;
@@ -86,7 +82,6 @@ body,
   background: #125ea2;
 }
 
-/* Modal overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -102,7 +97,6 @@ body,
   box-sizing: border-box;
 }
 
-/* Modal content */
 .modal-content {
   background: #fff;
   padding: 2rem;
@@ -110,14 +104,12 @@ body,
   min-width: 0;
   width: 100%;
   max-width: 600px;
-  /* Adjusted for larger screens */
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
 }
 
-/* Close button for modal */
 .close-modal {
   position: absolute;
   top: 1rem;
@@ -129,7 +121,6 @@ body,
   color: #888;
 }
 
-/* Desktop-First Adjustments */
 @media (max-width: 600px) {
   .app-header {
     padding: 1rem 0.5rem;
@@ -147,6 +138,5 @@ body,
   .modal-content {
     padding: 1rem;
     max-width: 98vw;
-    /* Responsive for small screens */
   }
 }
