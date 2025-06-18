@@ -1,45 +1,40 @@
-# Node modules and build output
+# Root node_modules and logs
 node_modules/
-dist/
-build/
-coverage/
-*.log
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
-
-# Editor and OS files
-.vscode/
-.idea/
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
 # Environment files
 .env
 .env.*
 
-# TypeScript
-*.tsbuildinfo
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# Output directories for packages
+/packages/*/dist/
+/packages/*/build/
+/packages/*/coverage/
+/packages/*/.next/
+/packages/*/.turbo/
+
+# Dependency directories for packages
+/packages/*/node_modules/
+
+# Log files for packages
+/packages/*/npm-debug.log*
+/packages/*/yarn-debug.log*
+/packages/*/yarn-error.log*
+/packages/*/pnpm-debug.log*
 
 # Misc
-*.local
-
-# Ignore lock files (optional, if you want to use only one lock file)
-package-lock.json
-yarn.lock
-
-# Ignore server/client specific build and dependency folders
-client/node_modules/
-client/dist/
-client/coverage/
-server/node_modules/
-server/dist/
-server/coverage/
-server/data/*.json
-
-# Ignore public assets cache (optional)
-client/public/*.cache
+/packages/*/.DS_Store
+/packages/*/.env
+/packages/*/.env.*
