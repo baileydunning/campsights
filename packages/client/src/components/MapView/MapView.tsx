@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { Campsite } from "../../types/Campsite"; 
-import "./MapView.css"; 
+import { Campsite } from "../../types/Campsite";
+import "./MapView.css";
 
 const defaultPosition: [number, number] = [39.7392, -104.9903]; // Denver
 
@@ -20,6 +20,17 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
       .catch((err) => console.error(err));
   }, [refreshKey]);
 
+  const renderStars = (rating: number | null) => {
+    if (!rating || rating < 1) return null;
+    return (
+      <>
+        {Array.from({ length: rating }).map((_, i) => (
+          <span key={i}>★</span>
+        ))}
+      </>
+    );
+  };
+
   const createCampsiteMarker = () => {
     return campsites.map((site) => (
       <Marker
@@ -30,9 +41,17 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
             "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
         })}
       >
-        <Popup>
-          <br />
-          <br />
+        <Popup data-testid="popup">
+          <div>
+            <strong>{site.name ? site.name : "Unnamed Site"}</strong>
+            <div>{site.description}</div>
+            <div>
+              <span>Rating:</span> {renderStars(site.rating)}
+            </div>
+            <div>
+              <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
+            </div>
+          </div>
         </Popup>
       </Marker>
     ));
