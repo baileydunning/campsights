@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { seedDB } from './config/db';
+import { seedDB } from './config/db';  // Ensure the correct path to your seedDB function
 import campsitesRouter from './routes/campsitesRoutes';
 
 // Load environment variables
@@ -20,28 +20,45 @@ app.use(express.json());
 const staticPath = path.join(__dirname, "../client/dist");
 const indexHtmlPath = path.join(staticPath, "index.html");
 
-try {
-  if (fs.existsSync(indexHtmlPath)) {
-    app.use(express.static(staticPath));
-    app.get(/^\/(?!api).*/, (_, res) => {
-      res.sendFile(indexHtmlPath);
-    });
-  } else {
-    console.warn("client/dist/index.html not found, skipping static route handling.");
+// Serve static files if client build exists
+const setupStaticFileServing = () => {
+  try {
+    if (fs.existsSync(indexHtmlPath)) {
+      app.use(express.static(staticPath));
+      app.get(/^\/(?!api).*/, (_, res) => {
+        res.sendFile(indexHtmlPath); // Serve index.html for non-API routes
+      });
+    } else {
+      console.warn("client/dist/index.html not found, skipping static route handling.");
+    }
+  } catch (err) {
+    console.error("Error setting up static file serving:", err);
   }
-} catch (err) {
-  console.error("Error setting up static file serving:", err);
-}
+};
 
-// Seed the database with error handling
-seedDB().catch((err: unknown) => {
-  console.error("Error seeding the database:", err);
-});
+// Seed the database asynchronously before starting the server
+const initializeApp = async () => {
+  try {
+    await seedDB(); 
+    console.log("Database seeded successfully.");
+    
+    // Start the Express server 
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    }).on('error', (err) => {
+      console.error("Failed to start server:", err);
+      process.exit(1); 
+    });
+  } catch (err) {
+    console.error("Error during initialization:", err);
+    process.exit(1);
+  }
+};
 
 // API routes for handling campsites
 app.use('/api/v1/campsites', campsitesRouter);
 
-// General error handler
+// General error handler for all routes
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("Unhandled error:", err);
   res.status(err.status || 500).json({
@@ -49,14 +66,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start the server if this file is executed directly
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-  }).on('error', (err) => {
-    console.error("Failed to start server:", err);
-    process.exit(1);
-  });
-}
+// Set up static file serving
+setupStaticFileServing();
+
+// Initialize the app (seed the database and start server)
+initializeApp();
 
 export default app;

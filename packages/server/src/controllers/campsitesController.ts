@@ -7,7 +7,7 @@ export const getCampsites = async (req: Request, res: Response) => {
     const campsites = await campsitesService.getCampsites();
     res.status(200).json(campsites);
   } catch (error) {
-    console.error('Error in getAllCampsites controller:', error);
+    console.error('Error in getCampsites controller:', error);
     res.status(500).json({ 
       error: 'Unable to fetch campsites',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -67,7 +67,7 @@ export const addCampsite = async (req: Request, res: Response) => {
     const newCampsite = await campsitesService.addCampsite(campsiteData);
     res.status(201).json(newCampsite);
   } catch (error) {
-    console.error('Error in createCampsite controller:', error);
+    console.error('Error in addCampsite controller:', error);
     res.status(500).json({ 
       error: 'Unable to create campsite',
       message: error instanceof Error ? error.message : 'Unknown error'

@@ -14,10 +14,10 @@ export const getCampsites = async (): Promise<Campsite[]> => {
   }
 };
 
-export const addCampsite = async (campsite: Campsite): Promise<string> => {
+export const addCampsite = async (campsite: Campsite): Promise<Campsite> => {
   try {
     await db.put(campsite.id, campsite);
-    return campsite.id;
+    return campsite;
   } catch (error) {
     console.error('Error creating campsite:', error);
     throw error;
