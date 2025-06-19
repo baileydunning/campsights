@@ -41,11 +41,6 @@ seedDB().catch((err: unknown) => {
 // API routes for handling campsites
 app.use('/api/v1/campsites', campsitesRouter);
 
-// 404 handler for unknown API routes
-app.use('/api', (req, res) => {
-  res.status(404).json({ error: "API route not found" });
-});
-
 // General error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("Unhandled error:", err);
