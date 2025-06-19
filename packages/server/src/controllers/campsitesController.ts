@@ -19,7 +19,6 @@ export const addCampsite = async (req: Request, res: Response) => {
   try {
     const { id, name, description, lat, lng, rating, requires_4wd, last_updated } = req.body;
 
-    // Validate required fields and types to match Campsite interface
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'id is required and must be a string' });
     }
@@ -52,7 +51,6 @@ export const addCampsite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'last_updated is required and must be a string' });
     }
 
-    // Create campsite object that matches Campsite interface exactly
     const campsiteData: Campsite = {
       id,
       name,
