@@ -9,7 +9,7 @@
     "dev": "ts-node-dev src/index.ts",
     "start": "ts-node src/index.ts",
     "start:prod": "node dist/index.js",
-    "test": "jest"
+    "test": "NODE_ENV=test jest --detectOpenHandles --forceExit"
   },
   "keywords": [],
   "author": "",

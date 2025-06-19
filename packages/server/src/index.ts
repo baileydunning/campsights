@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 import dotenv from 'dotenv';
-import { seedDB } from './config/db';  // Ensure the correct path to your seedDB function
+import { seedDB } from './config/db'; 
 import campsitesRouter from './routes/campsitesRoutes';
 
 // Load environment variables
@@ -21,26 +21,26 @@ const staticPath = path.join(__dirname, "../client/dist");
 const indexHtmlPath = path.join(staticPath, "index.html");
 
 // Serve static files if client build exists
-const setupStaticFileServing = () => {
+const setupStaticFileServing = async () => {
   try {
-    if (fs.existsSync(indexHtmlPath)) {
-      app.use(express.static(staticPath));
-      app.get(/^\/(?!api).*/, (_, res) => {
-        res.sendFile(indexHtmlPath); // Serve index.html for non-API routes
-      });
-    } else {
-      console.warn("client/dist/index.html not found, skipping static route handling.");
-    }
+    await fs.access(indexHtmlPath);  
+    app.use(express.static(staticPath));  
+    app.get(/^\/(?!api).*/, (_, res) => {
+      res.sendFile(indexHtmlPath);
+    });
+    console.log("Static file serving set up successfully.");
   } catch (err) {
-    console.error("Error setting up static file serving:", err);
+    console.warn("client/dist/index.html not found, skipping static route handling.");
   }
 };
 
 // Seed the database asynchronously before starting the server
 const initializeApp = async () => {
   try {
-    await seedDB(); 
-    console.log("Database seeded successfully.");
+    if (process.env.NODE_ENV !== 'test') {
+      await seedDB(); 
+      console.log("Database seeded successfully.");
+    }
     
     // Start the Express server 
     app.listen(PORT, () => {
@@ -66,10 +66,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Set up static file serving
-setupStaticFileServing();
-
-// Initialize the app (seed the database and start server)
-initializeApp();
+// Set up static file serving before initializing the app
+setupStaticFileServing().then(() => {
+  initializeApp();
+});
 
 export default app;
