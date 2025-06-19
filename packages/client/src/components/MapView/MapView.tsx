@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { Campsite } from "../../types/Campsite";
 import L from "leaflet";
-import "./MapView.css"; 
+import { Campsite } from "../../types/Campsite";
+import "./MapView.css";
 
 const defaultPosition: [number, number] = [39.7392, -104.9903]; // Denver
 
@@ -20,6 +20,17 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
       .catch((err) => console.error(err));
   }, [refreshKey]);
 
+  const renderStars = (rating: number | null) => {
+    if (!rating || rating < 1) return null;
+    return (
+      <>
+        {Array.from({ length: rating }).map((_, i) => (
+          <span key={i}>★</span>
+        ))}
+      </>
+    );
+  };
+
   const createCampsiteMarker = () => {
     return campsites.map((site) => (
       <Marker
@@ -30,51 +41,36 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
             "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
         })}
       >
-        <Popup>
-          <strong>{site.name || "Unnamed Site"}</strong>
-          <br />
-          {site.description && (
-            <span>
-              {site.description}
-              <br />
-            </span>
-          )}
-          <span>
-            Rating:{" "}
-            {site.rating
-              ? [...Array(site.rating)].map((_, i) => (
-                  <span key={i} className="star">
-                    ★
-                  </span>
-                ))
-              : "No rating"}
-          </span>
-          <br />
-          <span>
-            Requires 4WD:{" "}
-            {site.requires_4wd ? (
-              <span className="requires-4wd-yes">Yes</span>
-            ) : (
-              <span className="requires-4wd-no">No</span>
-            )}
-          </span>
+        <Popup data-testid="popup">
+          <div>
+            <strong>{site.name ? site.name : "Unnamed Site"}</strong>
+            <div>{site.description}</div>
+            <div>
+              <span>Rating:</span> {renderStars(site.rating)}
+            </div>
+            <div>
+              <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
+            </div>
+          </div>
         </Popup>
       </Marker>
     ));
   };
 
   return (
-    <MapContainer
-      center={defaultPosition}
-      zoom={8}
-      style={{ height: "60vh", width: "100vw" }}
-    >
-      <TileLayer
-        attribution="&copy; OpenStreetMap contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {createCampsiteMarker()}
-    </MapContainer>
+    <div className="MapView">
+      <MapContainer
+        center={defaultPosition}
+        zoom={8}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          attribution="&copy; OpenStreetMap contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {createCampsiteMarker()}
+      </MapContainer>
+    </div>
   );
 };
 

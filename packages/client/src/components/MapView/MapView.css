@@ -11,3 +11,12 @@
   color: #388e3c;
   font-weight: 600;
 }
+
+.MapView {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+}
