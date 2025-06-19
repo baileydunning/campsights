@@ -15,6 +15,11 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
 
+  const getCurrentPosition = () =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let lat = latitude;
@@ -22,52 +27,36 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
 
     if (useCurrentLocation) {
       if (!navigator.geolocation) return alert("Geolocation not supported.");
-
-      navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const pos = await getCurrentPosition();
         lat = pos.coords.latitude.toString();
         lng = pos.coords.longitude.toString();
-
-        const payload: CampsitePayload = {
-          id: crypto.randomUUID(),
-          name: name.trim() || "Unnamed Site",
-          description: description.trim(),
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
-          rating,
-          requires_4wd: requires4WD,
-          last_updated: new Date().toISOString(),
-        };
-
-        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        console.log("Campsite submitted:", payload);
-        onSuccess();
-      });
+      } catch {
+        return alert("Unable to get current location.");
+      }
     } else {
       if (!lat || !lng)
         return alert("Please provide valid latitude and longitude.");
-
-      const payload: CampsitePayload = {
-        id: crypto.randomUUID(),
-        name: name.trim() || "Unnamed Site",
-        description: description.trim(),
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-        rating,
-        requires_4wd: requires4WD,
-        last_updated: new Date().toISOString(),
-      };
-
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
     }
+
+    const payload: CampsitePayload = {
+      id: crypto.randomUUID(),
+      name: name.trim() || "Unnamed Site",
+      description: description.trim(),
+      lat: parseFloat(lat),
+      lng: parseFloat(lng),
+      rating,
+      requires_4wd: requires4WD,
+      last_updated: new Date().toISOString(),
+    };
+
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    onSuccess();
   };
 
   const handleStarClick = (starIndex: number) => {

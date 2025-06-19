@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import CampsiteForm from "./CampsiteForm";
 
@@ -44,7 +44,6 @@ describe("CampsiteForm", () => {
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
     const stars = screen.getAllByRole("button", { name: /Rate/ });
     fireEvent.click(stars[2]);
-    // 3rd star clicked, so 3 stars should be filled
     expect(stars[0].className).toContain("filled");
     expect(stars[1].className).toContain("filled");
     expect(stars[2].className).toContain("filled");
@@ -67,6 +66,9 @@ describe("CampsiteForm", () => {
 
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
+    const stars = screen.getAllByRole("button", { name: /Rate/ });
+    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -87,6 +89,10 @@ describe("CampsiteForm", () => {
     window.alert = vi.fn();
 
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
+    fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
+    const stars = screen.getAllByRole("button", { name: /Rate/ });
+    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -98,6 +104,10 @@ describe("CampsiteForm", () => {
     window.alert = vi.fn();
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.click(screen.getByLabelText(/Use current location/i)); // uncheck
+    fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Manual Site" } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
+    const stars = screen.getAllByRole("button", { name: /Rate/ });
+    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -111,10 +121,17 @@ describe("CampsiteForm", () => {
     ) as any;
 
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
-    fireEvent.click(screen.getByLabelText(/Use current location/i)); // uncheck
+    // Uncheck "Use current location" if it's checked by default
+    const useCurrentLocation = screen.getByLabelText(/Use current location/i);
+    if (useCurrentLocation.checked) {
+      fireEvent.click(useCurrentLocation);
+    }
     fireEvent.change(screen.getByLabelText(/Latitude/i), { target: { value: "10.1" } });
     fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: "20.2" } });
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Manual Site" } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
+    const stars = screen.getAllByRole("button", { name: /Rate/ });
+    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -125,6 +142,7 @@ describe("CampsiteForm", () => {
           headers: { "Content-Type": "application/json" },
         })
       );
+      expect(mockOnSuccess).toHaveBeenCalled();
     });
   });
 });
