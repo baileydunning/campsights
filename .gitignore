@@ -38,3 +38,7 @@ Thumbs.db
 /packages/*/.DS_Store
 /packages/*/.env
 /packages/*/.env.*
+
+# LMDB
+/packages/server/data.lmdb-lock
+/packages/server/data.lmdb
