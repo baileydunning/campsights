@@ -1,17 +1,25 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { Campsite } from '../types/campsite';
+import { db } from '../config/db';
+import { Campsite } from '../models/campsiteModel';
 
-const filePath = path.join(__dirname, '../../data/campsites.json');
+export const getCampsites = async (): Promise<Campsite[]> => {
+  try {
+    const campsites: Campsite[] = [];
+    for (const { value } of db.getRange({})) {
+      campsites.push(value as Campsite);
+    }
+    return campsites;
+  } catch (error) {
+    console.error('Error fetching campsites:', error);
+    throw error;
+  }
+};
 
-export async function getAllCampsites(): Promise<Campsite[]> {
-  const data = await fs.readFile(filePath, 'utf8');
-  return JSON.parse(data);
-}
-
-export async function addCampsite(newCampsite: Campsite): Promise<Campsite> {
-  const campsites = await getAllCampsites();
-  campsites.push(newCampsite);
-  await fs.writeFile(filePath, JSON.stringify(campsites, null, 2));
-  return newCampsite;
-}
+export const addCampsite = async (campsite: Campsite): Promise<Campsite> => {
+  try {
+    await db.put(campsite.id, campsite);
+    return campsite;
+  } catch (error) {
+    console.error('Error creating campsite:', error);
+    throw error;
+  }
+};
