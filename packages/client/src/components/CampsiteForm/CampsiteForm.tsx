@@ -53,7 +53,8 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
       lat: parseFloat(lat),
       lng: parseFloat(lng),
       rating,
-      requires_4wd: requires4WD,
+      requires_4wd: !!requires4WD,
+      last_updated: new Date().toISOString(),
     };
 
     try {
