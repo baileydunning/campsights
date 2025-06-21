@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
 import "./MapView.css";
+import { getCampsites } from "../../api/Campsites";
 
 const defaultPosition: [number, number] = [39.7392, -104.9903]; // Denver
 
@@ -14,12 +15,9 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
   const [campsites, setCampsites] = useState<Campsite[]>([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`)
-      .then((res) => res.json())
-      .then((data: Campsite[]) => setCampsites(data))
-      .catch((err) => console.error(err));
+    getCampsites().then(setCampsites);  
   }, [refreshKey]);
-
+  
   const renderStars = (rating: number | null) => {
     if (!rating || rating < 1) return null;
     return (

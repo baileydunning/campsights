@@ -3,11 +3,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import CampsiteForm from "./CampsiteForm";
 
+vi.mock("../../api/Campsites", () => ({
+  addCampsite: vi.fn(() => Promise.resolve({})),
+}));
+
 const mockOnSuccess = vi.fn();
 
 describe("CampsiteForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.clearAllTimers();
   });
 
   it("renders all form fields", () => {
@@ -60,9 +65,7 @@ describe("CampsiteForm", () => {
     // @ts-ignore
     global.navigator.geolocation = mockGeolocation;
 
-    window.fetch = vi.fn(() =>
-      Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
-    ) as any;
+    const { addCampsite } = await import("../../api/Campsites");
 
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
@@ -72,11 +75,16 @@ describe("CampsiteForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
-      expect(window.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/campsites"),
+      expect(addCampsite).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          id: expect.any(String),
+          name: "Geo Site",
+          description: "A nice place",
+          lat: 12.34,
+          lng: 56.78,
+          rating: 3,
+          requires_4wd: false,
+          last_updated: expect.any(String),
         })
       );
       expect(mockOnSuccess).toHaveBeenCalled();
@@ -116,9 +124,7 @@ describe("CampsiteForm", () => {
   });
 
   it("submits with manual lat/lng", async () => {
-    window.fetch = vi.fn(() =>
-      Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
-    ) as any;
+    const { addCampsite } = await import("../../api/Campsites");
 
     render(<CampsiteForm onSuccess={mockOnSuccess} />);
     // Uncheck "Use current location" if it's checked by default
@@ -135,11 +141,16 @@ describe("CampsiteForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
-      expect(window.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/campsites"),
+      expect(addCampsite).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          id: expect.any(String),
+          name: "Manual Site",
+          description: "A nice place",
+          lat: 10.1,
+          lng: 20.2,
+          rating: 3,
+          requires_4wd: false,
+          last_updated: expect.any(String),
         })
       );
       expect(mockOnSuccess).toHaveBeenCalled();

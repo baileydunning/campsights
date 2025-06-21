@@ -1,6 +1,7 @@
 import React, { useState, FormEvent, ChangeEvent, KeyboardEvent } from "react";
 import { CampsitePayload } from "../../types/Campsite"
 import "./CampsiteForm.css";
+import { addCampsite } from "../../api/Campsites";
 
 interface CampsiteFormProps {
   onSuccess: () => void;
@@ -50,11 +51,13 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
       last_updated: new Date().toISOString(),
     };
 
-    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      await addCampsite(payload);
+      onSuccess();
+    } catch (error) {
+      console.error("Error submitting campsite:", error);
+      alert("Failed to submit campsite. Please try again.");
+    }
 
     onSuccess();
   };
