@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
-import "./MapView.css";
 import { getCampsites } from "../../api/Campsites";
+import "./MapView.css";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
