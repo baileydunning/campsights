@@ -12,10 +12,18 @@ vi.mock("../../api/Campsites", () => ({
 
 const mockOnSuccess = vi.fn();
 
-const createTestStore = () => {
+const createTestStore = (preloadedState = {}) => {
   return configureStore({
     reducer: {
       campsites: campsiteSlice,
+    },
+    preloadedState: {
+      campsites: {
+        campsites: [],
+        loading: false,
+        error: null,
+        ...preloadedState,
+      },
     },
   });
 };
