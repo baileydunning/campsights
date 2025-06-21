@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
-import { seedDB } from './config/db'; 
+import { db, seedDB } from './config/db'; 
 import campsitesRouter from './routes/campsitesRoutes';
 
 // Load environment variables
@@ -38,8 +38,13 @@ const setupStaticFileServing = async () => {
 const initializeApp = async () => {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      await seedDB(); 
-      console.log("Database seeded successfully.");
+      const hasAny = Array.from(db.getKeys({ limit: 1 })).length > 0;
+      if (!hasAny) {
+        await seedDB();
+        console.log("Database seeded successfully.");
+      } else {
+        console.log("Database already seeded, skipping.");
+      }
     }
     
     // Start the Express server 
