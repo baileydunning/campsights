@@ -5,7 +5,7 @@ import { Campsite } from "../../types/Campsite";
 import "./MapView.css";
 import { getCampsites } from "../../api/Campsites";
 
-const defaultPosition: [number, number] = [39.7392, -104.9903]; // Denver
+const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
 interface MapViewProps {
   refreshKey: number;
