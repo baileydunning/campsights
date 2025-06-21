@@ -1,5 +1,8 @@
 import React, { useState, FormEvent, ChangeEvent, KeyboardEvent } from "react";
-import { CampsitePayload } from "../../types/Campsite"
+import { useDispatch, useSelector } from 'react-redux';
+import { Campsite } from "../../types/Campsite";
+import { postCampsite, selectLoading, selectError } from "../../store/campsiteSlice";
+import type { AppDispatch } from "../../store/store";
 import "./CampsiteForm.css";
 
 interface CampsiteFormProps {
@@ -7,6 +10,10 @@ interface CampsiteFormProps {
 }
 
 const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const loading = useSelector(selectLoading);
+  const error = useSelector(selectError);
+  
   const [rating, setRating] = useState<number>(0);
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -39,7 +46,7 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
         return alert("Please provide valid latitude and longitude.");
     }
 
-    const payload: CampsitePayload = {
+    const newCampsite: Campsite = {
       id: crypto.randomUUID(),
       name: name.trim() || "Unnamed Site",
       description: description.trim(),
@@ -47,16 +54,15 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
       lng: parseFloat(lng),
       rating,
       requires_4wd: requires4WD,
-      last_updated: new Date().toISOString(),
     };
 
-    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/campsites`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    onSuccess();
+    try {
+      await dispatch(postCampsite(newCampsite)).unwrap();
+      onSuccess();
+    } catch (error) {
+      console.error("Error submitting campsite:", error);
+      alert("Failed to submit campsite. Please try again.");
+    }
   };
 
   const handleStarClick = (starIndex: number) => {
@@ -66,30 +72,37 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
   return (
     <form className="campsite-form" onSubmit={handleSubmit}>
       <h2 className="form-title">Add a Campsite</h2>
+      
+      {error && (
+        <div style={{ color: 'red', marginBottom: '1rem' }}>
+          Error: {error}
+        </div>
+      )}
+
       <div className="form-group">
         <label htmlFor="name">Name</label>
         <input
           id="name"
           className="form-input"
           value={name}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setName(e.target.value)
-          }
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
           placeholder="Campsite Name"
+          disabled={loading}
         />
       </div>
+
       <div className="form-group">
         <label htmlFor="description">Description</label>
         <input
           id="description"
           className="form-input"
           value={description}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setDescription(e.target.value)
-          }
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
           placeholder="Describe your campsite"
+          disabled={loading}
         />
       </div>
+
       <div className="form-group">
         <label htmlFor="rating">Campsite Rating</label>
         <div id="rating" className="star-rating" aria-labelledby="rating-label">
@@ -97,12 +110,14 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
             <span
               key={index}
               className={`star${index < rating ? " filled" : ""}`}
-              onClick={() => handleStarClick(index)}
-              tabIndex={0}
+              onClick={() => !loading && handleStarClick(index)}
+              tabIndex={loading ? -1 : 0}
               role="button"
               aria-label={`Rate ${index + 1} star${index === 0 ? "" : "s"}`}
               onKeyDown={(e: KeyboardEvent<HTMLSpanElement>) => {
-                if (e.key === "Enter" || e.key === " ") handleStarClick(index);
+                if (!loading && (e.key === "Enter" || e.key === " ")) {
+                  handleStarClick(index);
+                }
               }}
             >
               ★
@@ -110,26 +125,31 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
           ))}
         </div>
       </div>
+
       <div className="form-group">
         <label className="checkbox-label">
           <input
             type="checkbox"
             checked={requires4WD}
             onChange={() => setRequires4WD((prev) => !prev)}
+            disabled={loading}
           />
           Requires 4WD to Access
         </label>
       </div>
+
       <div className="form-group">
         <label className="checkbox-label">
           <input
             type="checkbox"
             checked={useCurrentLocation}
             onChange={() => setUseCurrentLocation((prev) => !prev)}
+            disabled={loading}
           />
           Use current location
         </label>
       </div>
+
       {!useCurrentLocation && (
         <div className="form-coords">
           <div className="form-group">
@@ -139,10 +159,9 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
               className="form-input"
               type="number"
               value={latitude}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setLatitude(e.target.value)
-              }
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setLatitude(e.target.value)}
               placeholder="Enter Latitude"
+              disabled={loading}
             />
           </div>
           <div className="form-group">
@@ -152,16 +171,20 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
               className="form-input"
               type="number"
               value={longitude}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setLongitude(e.target.value)
-              }
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setLongitude(e.target.value)}
               placeholder="Enter Longitude"
+              disabled={loading}
             />
           </div>
         </div>
       )}
-      <button className="submit-btn" type="submit">
-        Submit My Campsite
+
+      <button 
+        className="submit-btn" 
+        type="submit"
+        disabled={loading}
+      >
+        {loading ? 'Submitting...' : 'Submit My Campsite'}
       </button>
     </form>
   );
