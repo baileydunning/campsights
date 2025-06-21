@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, ChangeEvent, KeyboardEvent } from "react";
 import { CampsitePayload } from "../../types/Campsite"
-import "./CampsiteForm.css";
 import { addCampsite } from "../../api/Campsites";
+import "./CampsiteForm.css";
 
 interface CampsiteFormProps {
   onSuccess: () => void;
