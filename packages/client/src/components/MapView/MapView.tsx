@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from 'react-redux';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { Campsite } from "../../types/Campsite";
-import { getCampsites } from "../../api/Campsites";
+import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../../store/campsiteSlice";
+import type { AppDispatch } from "../../store/store";
 import "./MapView.css";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
-interface MapViewProps {
-  refreshKey: number;
-}
-
-const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
-  const [campsites, setCampsites] = useState<Campsite[]>([]);
+const MapView: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const campsites = useSelector(selectCampsites);
+  const loading = useSelector(selectLoading);
+  const error = useSelector(selectError);
 
   useEffect(() => {
-    getCampsites().then(setCampsites);  
-  }, [refreshKey]);
-  
+    dispatch(fetchCampsites());
+  }, [dispatch]);
+
   const renderStars = (rating: number | null) => {
     if (!rating || rating < 1) return null;
     return (
@@ -35,8 +35,7 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
         key={site.id}
         position={[site.lat, site.lng] as [number, number]}
         icon={L.icon({
-          iconUrl:
-            "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+          iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
         })}
       >
         <Popup data-testid="popup">
@@ -54,6 +53,26 @@ const MapView: React.FC<MapViewProps> = ({ refreshKey }) => {
       </Marker>
     ));
   };
+
+  if (loading) {
+    return (
+      <div className="MapView">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          Loading campsites...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="MapView">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="MapView">

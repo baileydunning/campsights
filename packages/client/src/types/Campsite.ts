@@ -8,6 +8,12 @@ export interface Campsite {
   requires_4wd?: boolean;
 }
 
+export interface CampsitesState {
+  campsites: Campsite[];
+  loading: boolean;
+  error: string | null;
+}
+
 export interface CampsitePayload {
   id: string;
   name: string;

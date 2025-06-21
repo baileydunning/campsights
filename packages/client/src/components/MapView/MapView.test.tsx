@@ -1,7 +1,11 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import React from 'react';
+import { render, screen, waitFor, within, act } from "@testing-library/react";
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import MapView from "./MapView";
+import campsiteSlice from "../../store/campsiteSlice";
 
 vi.mock("../../api/Campsites", () => ({
   getCampsites: vi.fn(),
@@ -50,23 +54,71 @@ const mockCampsites = [
   },
 ];
 
+const createTestStore = (preloadedState = {}) => {
+  return configureStore({
+    reducer: {
+      campsites: campsiteSlice,
+    },
+    preloadedState: {
+      campsites: {
+        campsites: [],
+        loading: false,
+        error: null,
+        ...preloadedState,
+      },
+    },
+  });
+};
+
+const renderWithProvider = (component: React.ReactElement, store = createTestStore()) => {
+  return render(
+    <Provider store={store}>
+      {component}
+    </Provider>
+  );
+};
+
 describe("MapView", () => {
   beforeEach(() => {
     (getCampsites as any).mockResolvedValue(mockCampsites);
-  });
-
-  afterEach(() => {
     vi.clearAllMocks();
   });
 
-  test("renders map container", () => {
-    render(<MapView refreshKey={0} />);
-    expect(screen.getByRole("region")).toBeInTheDocument();
+  it("shows loading state initially", () => {
+    const store = createTestStore({ loading: true });
+    renderWithProvider(<MapView />, store);
+    expect(screen.getByText("Loading campsites...")).toBeInTheDocument();
   });
 
-  test("fetches and displays campsite markers with correct popup content", async () => {
-    render(<MapView refreshKey={0} />);
+  it("shows error state when there's an error", async () => {
+    (getCampsites as any).mockRejectedValue(new Error("API Error"));
     
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
+    
+    await waitFor(() => {
+      expect(getCampsites).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Error:/)).toBeInTheDocument();
+    });
+  });
+
+  it("fetches and displays campsite markers with correct popup content", async () => {
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
+    
+    await waitFor(() => {
+      expect(getCampsites).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("region")).toBeInTheDocument();
+    });
+
     await waitFor(() => {
       expect(screen.getAllByTestId("marker")).toHaveLength(2);
     });
@@ -88,42 +140,69 @@ describe("MapView", () => {
     expect(within(popup2).getByText("No")).toBeInTheDocument();
   });
 
-  test("calls getCampsites on mount", async () => {
-    render(<MapView refreshKey={0} />);
+  it("calls fetchCampsites Redux action on mount", async () => {
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
     
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
   });
 
-  test("refetches when refreshKey changes", async () => {
-    const { rerender } = render(<MapView refreshKey={0} />);
+  it("displays campsites from Redux store after fetch", async () => {
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
     
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
 
-    rerender(<MapView refreshKey={1} />);
-    
     await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(2);
+      expect(screen.getAllByTestId("marker")).toHaveLength(2);
     });
   });
 
-  test("handles empty campsites array", async () => {
+  it("handles empty campsites array", async () => {
     (getCampsites as any).mockResolvedValue([]);
     
-    render(<MapView refreshKey={0} />);
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
     
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole("region")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("region")).toBeInTheDocument();
+    });
+    
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
 
-  test("renders correct number of stars for rating", async () => {
+  it("handles API error gracefully", async () => {
+    (getCampsites as any).mockRejectedValue(new Error("API Error"));
+    
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
+    
+    await waitFor(() => {
+      expect(getCampsites).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Error:/)).toBeInTheDocument();
+    });
+    
+    consoleSpy.mockRestore();
+  });
+
+  it("renders correct number of stars for rating", async () => {
     const campsitesWithDifferentRatings = [
       {
         id: "1",
@@ -156,12 +235,18 @@ describe("MapView", () => {
 
     (getCampsites as any).mockResolvedValue(campsitesWithDifferentRatings);
     
-    render(<MapView refreshKey={0} />);
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
     
+    await waitFor(() => {
+      expect(getCampsites).toHaveBeenCalledTimes(1);
+    });
+
     await waitFor(() => {
       expect(screen.getAllByTestId("marker")).toHaveLength(3);
     });
-
+    
     const markers = screen.getAllByTestId("marker");
     
     const popup1 = within(markers[0]).getByTestId("popup");
@@ -173,5 +258,18 @@ describe("MapView", () => {
     const popup3 = within(markers[2]).getByTestId("popup");
     expect(within(popup3).queryByText("★")).not.toBeInTheDocument();
   });
-});
 
+  it("component fetches data and shows markers", async () => {
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
+    
+    await waitFor(() => {
+      expect(getCampsites).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("marker")).toHaveLength(2);
+    });
+  });
+});
