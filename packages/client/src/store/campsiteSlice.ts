@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Campsite, CampsitesState } from '../types/Campsite';
 import { getCampsites, addCampsite } from '../api/Campsites';
 
-// Async thunks for API calls
 export const fetchCampsites = createAsyncThunk(
   'campsites/fetchCampsites',
   async (_, { rejectWithValue }) => {
