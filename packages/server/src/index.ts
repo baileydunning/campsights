@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import dotenv from 'dotenv';
 import { db, seedDB } from './config/db';
 import campsitesRouter from './routes/campsitesRoutes';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -24,8 +25,19 @@ const setupStaticFileServing = async (): Promise<void> => {
     await fs.access(indexHtmlPath); // Check if the index.html exists
     app.use(express.static(staticPath)); // Serve static files
 
+    // Rate limiter for fallback route
+    const staticLimiter = rateLimit({
+      windowMs: 60 * 1000, // 1 minute
+      max: 30, // limit each IP to 30 requests per minute
+      handler: (req, res) => {
+        res.status(429).json({
+          error: "Too many requests. Please try again later."
+        });
+      }
+    });
+
     // Fallback to index.html for all routes that aren't API calls
-    app.get('*', (req, res) => {
+    app.get('*', staticLimiter, (req, res) => {
       res.sendFile(path.join(staticPath, 'index.html'));
     });
 
