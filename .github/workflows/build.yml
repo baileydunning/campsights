@@ -33,14 +33,6 @@ jobs:
         run: npm run build || true
         working-directory: ./packages/server
 
-      - name: Check Docker Compose builds
-        run: docker-compose build
-
-      - name: List built files (debug)
-        run: |
-          ls -l ./packages/client/dist || true
-          ls -l ./packages/server/dist || true
-
       - name: Upload client build artifacts
         uses: actions/upload-artifact@v4
         with:
