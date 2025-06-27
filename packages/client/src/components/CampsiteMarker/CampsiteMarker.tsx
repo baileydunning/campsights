@@ -68,7 +68,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
           <div>
             <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
           </div>
-          {/* Weather section */}
           <div className="weather-section">
             <strong>Weather Forecast:</strong>
             {weatherLoading && <div className="weather-loading">Loading weather...</div>}
