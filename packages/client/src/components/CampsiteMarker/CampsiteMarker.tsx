@@ -69,10 +69,10 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
             <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
           </div>
           {/* Weather section */}
-          <div style={{ marginTop: 8 }}>
+          <div className="weather-section">
             <strong>Weather Forecast:</strong>
-            {weatherLoading && <div>Loading weather...</div>}
-            {weatherError && <div style={{ color: 'red' }}>{weatherError}</div>}
+            {weatherLoading && <div className="weather-loading">Loading weather...</div>}
+            {weatherError && <div className="weather-error">{weatherError}</div>}
             {weatherData && weatherData.length > 0 && (
               <div className="weather-forecast-list">
                 {weatherData.map((period: any) => (
@@ -81,9 +81,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                       {period.name} ({period.isDaytime ? 'Day' : 'Night'})
                     </div>
                     <div className="weather-period-details">
-                      <span>🌡️ {period.temperature}°{period.temperatureUnit}</span>
-                      <span>🌤️ {period.shortForecast}</span>
-                      <span>💨 {period.windSpeed} {period.windDirection}</span>
+                      <span className="weather-temp">🌡️ {period.temperature}°{period.temperatureUnit}</span>
+                      <span className="weather-short">🌤️ {period.shortForecast}</span>
+                      <span className="weather-wind">💨 {period.windSpeed} {period.windDirection}</span>
                     </div>
                   </div>
                 ))}
