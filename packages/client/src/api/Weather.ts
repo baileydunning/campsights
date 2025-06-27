@@ -7,7 +7,6 @@ export async function getWeatherForecast(campsite: Campsite) {
   const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
 
   try {
-    // Step 1: Get forecast URL
     const pointsRes = await axios.get(pointsUrl, {
       headers: {
         'Accept': 'application/geo+json, application/json, application/cap+xml'
@@ -15,7 +14,6 @@ export async function getWeatherForecast(campsite: Campsite) {
     });
     const forecastUrl = pointsRes.data.properties?.forecast;
     if (!forecastUrl) throw new Error("No forecast URL found");
-    // Step 2: Get forecast data
     const forecastRes = await axios.get(forecastUrl, {
       headers: {
         'Accept': 'application/geo+json, application/json, application/cap+xml'
