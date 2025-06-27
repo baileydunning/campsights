@@ -1,7 +1,19 @@
 import axios from 'axios';
 import { Campsite } from '../types/Campsite';
 
-export async function getWeatherForecast(campsite: Campsite) {
+export interface WeatherPeriod {
+  name: string;
+  startTime: string;
+  endTime: string;
+  temperature: number;
+  temperatureUnit: string;
+  windSpeed: string;
+  windDirection: string;
+  shortForecast: string;
+  detailedForecast: string;
+}
+
+export async function getWeatherForecast(campsite: Campsite): Promise<WeatherPeriod[]> {
   const lat = campsite.lat;
   const lng = campsite.lng;
   const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
