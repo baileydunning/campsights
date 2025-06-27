@@ -71,4 +71,25 @@ describe('Campsites API', () => {
       console.error("Error setting up static file serving:", err);
     }
   });
+
+  it('returns 429 when rate limit is exceeded on static route', async () => {
+    const staticPath = path.join(__dirname, "../client/dist");
+    const indexHtmlPath = path.join(staticPath, "index.html");
+
+    if (!fs.existsSync(indexHtmlPath)) {
+      // Skip the test if static file is not present
+      console.warn("client/dist/index.html not found, skipping rate limit test.");
+      return;
+    }
+
+    let lastRes: request.Response | undefined;
+    for (let i = 0; i < 31; i++) {
+      lastRes = await request(app).get('/');
+    }
+    expect(lastRes).toBeDefined();
+    expect(lastRes!.status).toBe(429);
+    expect(lastRes!.body).toHaveProperty('error');
+  });
+
+  
 });
