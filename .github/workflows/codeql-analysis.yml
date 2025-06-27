@@ -27,7 +27,6 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |
-            CodeQL scan completed.  
-            View detailed results in the [Security tab](../../security/code-scanning).
+            CodeQL scan completed!  View detailed results in the [Security tab](https://github.com/baileydunning/campsights/security/code-scanning).
           header: CodeQL Scan Results
           hide_and_recreate: true
