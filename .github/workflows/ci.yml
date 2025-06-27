@@ -1,4 +1,4 @@
-name: Docker Compose CI
+name: Docker Compose
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-docker:
     runs-on: ubuntu-latest
 
     steps:
