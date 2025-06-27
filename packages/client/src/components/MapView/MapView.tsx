@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../../store/campsiteSlice";
 import type { AppDispatch } from "../../store/store";
 import "./MapView.css";
+import CampsiteMarker from "../CampsiteMarker/CampsiteMarker";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
@@ -31,26 +31,7 @@ const MapView: React.FC = () => {
 
   const createCampsiteMarker = () => {
     return campsites.map((site) => (
-      <Marker
-        key={site.id}
-        position={[site.lat, site.lng] as [number, number]}
-        icon={L.icon({
-          iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-        })}
-      >
-        <Popup data-testid="popup">
-          <div>
-            <strong>{site.name ? site.name : "Unnamed Site"}</strong>
-            <div>{site.description}</div>
-            <div>
-              <span>Rating:</span> {renderStars(site.rating)}
-            </div>
-            <div>
-              <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
-            </div>
-          </div>
-        </Popup>
-      </Marker>
+      <CampsiteMarker key={site.id} site={site} renderStars={renderStars} />
     ));
   };
 
