@@ -1,4 +1,4 @@
-name: “CodeQL Analysis”
+name: "CodeQL Analysis"
 
 on:
   push:
@@ -11,15 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
-    strategy:
-      matrix:
-        language: [ 'javascript', 'typescript' ]
-
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: ${{ matrix.language }}
+          languages: typescript
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
