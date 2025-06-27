@@ -84,11 +84,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                       <span>🌡️ {period.temperature}°{period.temperatureUnit}</span>
                       <span>🌤️ {period.shortForecast}</span>
                       <span>💨 {period.windSpeed} {period.windDirection}</span>
-                      {period.relativeHumidity && period.relativeHumidity.value !== null && (
-                        <span>💧 {period.relativeHumidity.value}% Humidity</span>
-                      )}
                     </div>
-                    <div className="weather-period-forecast">{period.detailedForecast}</div>
                   </div>
                 ))}
               </div>
