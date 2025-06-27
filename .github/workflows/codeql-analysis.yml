@@ -26,6 +26,8 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: codeql-results.sarif
+          message: |
+            CodeQL scan completed.  
+            View detailed results in the [Security tab](../../security/code-scanning).
           header: CodeQL Scan Results
           hide_and_recreate: true
