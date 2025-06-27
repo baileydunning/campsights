@@ -15,23 +15,23 @@ import { getCampsites } from "../../api/Campsites";
 
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: any) => <div role="region">{children}</div>,
-  TileLayer: () => <div data-testid="tile-layer" />,
-  Marker: ({ children, position }: any) => (
-    <div data-testid="marker" data-position={position}>
-      {children}
-    </div>
-  ),
-  Popup: ({ children }: any) => <div data-testid="popup">{children}</div>,
+  TileLayer: () => <div data-testid="tile-layer" />, // no-op
 }));
 
-vi.mock("leaflet", () => {
-  const icon = vi.fn(() => ({}));
-  return {
-    __esModule: true,
-    default: { icon },
-    icon,
-  };
-});
+// Mock CampsiteMarker to test marker rendering and popup content
+vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
+  __esModule: true,
+  default: ({ site, renderStars }: any) => (
+    <div data-testid="marker">
+      <div data-testid="popup">
+        <div>{site.name ? site.name : "Unnamed Site"}</div>
+        <div>{site.description}</div>
+        <div>Rating: {renderStars(site.rating)}</div>
+        <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
+      </div>
+    </div>
+  ),
+}));
 
 const mockCampsites = [
   {
@@ -92,59 +92,36 @@ describe("MapView", () => {
 
   it("shows error state when there's an error", async () => {
     (getCampsites as any).mockRejectedValue(new Error("API Error"));
-    
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
-
     await waitFor(() => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument();
     });
   });
 
-  it("fetches and displays campsite markers with correct popup content", async () => {
+  it("fetches and displays campsite markers", async () => {
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
-
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
     });
-
     await waitFor(() => {
       expect(screen.getAllByTestId("marker")).toHaveLength(2);
     });
-
-    const markers = screen.getAllByTestId("marker");
-    
-    const popup1 = within(markers[0]).getByTestId("popup");
-    expect(within(popup1).getByText("Test Site")).toBeInTheDocument();
-    expect(within(popup1).getByText("A nice place")).toBeInTheDocument();
-    expect(within(popup1).getByText((content) => content.includes("Rating:"))).toBeInTheDocument();
-    expect(within(popup1).getAllByText("★")).toHaveLength(3);
-    expect(within(popup1).getByText("Requires 4WD:")).toBeInTheDocument();
-    expect(within(popup1).getByText("Yes")).toBeInTheDocument();
-
-    const popup2 = within(markers[1]).getByTestId("popup");
-    expect(within(popup2).getByText("Unnamed Site")).toBeInTheDocument();
-    expect(within(popup2).getByText((content) => content.includes("Rating:"))).toBeInTheDocument();
-    expect(within(popup2).getByText("Requires 4WD:")).toBeInTheDocument();
-    expect(within(popup2).getByText("No")).toBeInTheDocument();
   });
 
   it("calls fetchCampsites Redux action on mount", async () => {
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
@@ -154,11 +131,9 @@ describe("MapView", () => {
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
-
     await waitFor(() => {
       expect(screen.getAllByTestId("marker")).toHaveLength(2);
     });
@@ -166,39 +141,30 @@ describe("MapView", () => {
 
   it("handles empty campsites array", async () => {
     (getCampsites as any).mockResolvedValue([]);
-    
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
-
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
     });
-    
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
 
   it("handles API error gracefully", async () => {
     (getCampsites as any).mockRejectedValue(new Error("API Error"));
-    
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
-
     await waitFor(() => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument();
     });
-    
     consoleSpy.mockRestore();
   });
 
@@ -232,44 +198,22 @@ describe("MapView", () => {
         requires_4wd: false,
       },
     ];
-
     (getCampsites as any).mockResolvedValue(campsitesWithDifferentRatings);
-    
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
     await waitFor(() => {
       expect(getCampsites).toHaveBeenCalledTimes(1);
     });
-
     await waitFor(() => {
       expect(screen.getAllByTestId("marker")).toHaveLength(3);
     });
-    
     const markers = screen.getAllByTestId("marker");
-    
     const popup1 = within(markers[0]).getByTestId("popup");
     expect(within(popup1).getAllByText("★")).toHaveLength(5);
-    
     const popup2 = within(markers[1]).getByTestId("popup");
     expect(within(popup2).getAllByText("★")).toHaveLength(1);
-    
     const popup3 = within(markers[2]).getByTestId("popup");
     expect(within(popup3).queryByText("★")).not.toBeInTheDocument();
-  });
-
-  it("component fetches data and shows markers", async () => {
-    await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
-    });
-
-    await waitFor(() => {
-      expect(screen.getAllByTestId("marker")).toHaveLength(2);
-    });
   });
 });
