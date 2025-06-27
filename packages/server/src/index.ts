@@ -12,9 +12,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per minute 
+  handler: (req, res) => {
+    res.status(429).json({
+      error: "Too many requests. Please try again later."
+    });
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(globalLimiter);
 
 // Serve static frontend if built
 const staticPath = path.join(__dirname, "../client/dist");
@@ -25,19 +36,8 @@ const setupStaticFileServing = async (): Promise<void> => {
     await fs.access(indexHtmlPath); // Check if the index.html exists
     app.use(express.static(staticPath)); // Serve static files
 
-    // Rate limiter for fallback route
-    const staticLimiter = rateLimit({
-      windowMs: 60 * 1000, // 1 minute
-      max: 30, // limit each IP to 30 requests per minute
-      handler: (req, res) => {
-        res.status(429).json({
-          error: "Too many requests. Please try again later."
-        });
-      }
-    });
-
     // Fallback to index.html for all routes that aren't API calls
-    app.get('*', staticLimiter, (req, res) => {
+    app.get('*', (req, res) => {
       res.sendFile(path.join(staticPath, 'index.html'));
     });
 
