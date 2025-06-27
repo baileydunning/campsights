@@ -1,0 +1,58 @@
+name: Build Monorepo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Bootstrap monorepo (Lerna)
+        run: npx lerna bootstrap
+
+      - name: Build client
+        run: npm run build
+        working-directory: ./packages/client
+
+      - name: Build server
+        run: npm run build || true
+        working-directory: ./packages/server
+
+      - name: Check Docker Compose builds
+        run: docker-compose build
+
+      - name: List built files (debug)
+        run: |
+          ls -l ./packages/client/dist || true
+          ls -l ./packages/server/dist || true
+
+      - name: Upload client build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: ./packages/client/dist
+
+      - name: Upload server build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-dist
+          path: ./packages/server/dist
+        if: always()
