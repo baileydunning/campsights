@@ -1,17 +1,18 @@
+import { describe, it, beforeEach, vi, expect } from 'vitest';
 import request from 'supertest';
 
-jest.mock('./config/db', () => ({
-  seedDB: jest.fn(() => Promise.resolve()),
+vi.mock('./config/db', () => ({
+  seedDB: vi.fn(() => Promise.resolve()),
   db: {
-    getRange: jest.fn(() => []),
-    put: jest.fn(() => Promise.resolve()),
-    get: jest.fn(() => null),
+    getRange: vi.fn(() => []),
+    put: vi.fn(() => Promise.resolve()),
+    get: vi.fn(() => null),
   }
 }));
 
-jest.mock('./services/campsitesService', () => ({
-  getCampsites: jest.fn(() => Promise.resolve([])),
-  addCampsite: jest.fn((campsite) => Promise.resolve(campsite)),
+vi.mock('./services/campsitesService', () => ({
+  getCampsites: vi.fn(() => Promise.resolve([])),
+  addCampsite: vi.fn((campsite) => Promise.resolve(campsite)),
 }));
 
 import app from './index';
@@ -20,7 +21,7 @@ import path from 'path';
 
 describe('Campsites API', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('GET /api/v1/campsites returns 200 and array', async () => {
@@ -70,4 +71,25 @@ describe('Campsites API', () => {
       console.error("Error setting up static file serving:", err);
     }
   });
+
+  it('returns 429 when rate limit is exceeded on static route', async () => {
+    const staticPath = path.join(__dirname, "../client/dist");
+    const indexHtmlPath = path.join(staticPath, "index.html");
+
+    if (!fs.existsSync(indexHtmlPath)) {
+      // Skip the test if static file is not present
+      console.warn("client/dist/index.html not found, skipping rate limit test.");
+      return;
+    }
+
+    let lastRes: request.Response | undefined;
+    for (let i = 0; i < 31; i++) {
+      lastRes = await request(app).get('/');
+    }
+    expect(lastRes).toBeDefined();
+    expect(lastRes!.status).toBe(429);
+    expect(lastRes!.body).toHaveProperty('error');
+  });
+
+  
 });

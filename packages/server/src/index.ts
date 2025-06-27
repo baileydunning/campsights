@@ -5,15 +5,27 @@ import fs from 'fs/promises';
 import dotenv from 'dotenv';
 import { db, seedDB } from './config/db';
 import campsitesRouter from './routes/campsitesRoutes';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per minute 
+  handler: (req, res) => {
+    res.status(429).json({
+      error: "Too many requests. Please try again later."
+    });
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(globalLimiter);
 
 // Serve static frontend if built
 const staticPath = path.join(__dirname, "../client/dist");
