@@ -80,14 +80,25 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                       {period.name} ({period.isDaytime ? 'Day' : 'Night'})
                     </div>
                     <div className="weather-period-details">
-                      <span className="weather-temp">🌡️ {period.temperature}°{period.temperatureUnit}</span>
-                      <span className="weather-short">🌤️ {period.shortForecast}</span>
-                      <span className="weather-wind">💨 {period.windSpeed} {period.windDirection}</span>
+                      <span className="weather-temp">Temperature: {period.temperature}°{period.temperatureUnit}</span>
+                      <span className="weather-short">Forecast: {period.shortForecast}</span>
+                      <span className="weather-wind">Wind: {period.windSpeed} {period.windDirection}</span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+          <div className="directions-btn-container">
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="directions-button"
+              role="button"
+            >
+              Get Directions
+            </a>
           </div>
         </div>
       </Popup>
