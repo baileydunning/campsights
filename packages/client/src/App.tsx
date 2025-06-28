@@ -5,11 +5,9 @@ import "./App.css";
 
 const App: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleSuccess = useCallback(() => {
     setShowModal(false);
-    setRefreshKey((k) => k + 1); // triggers MapView to refetch
   }, []);
 
   return (
@@ -19,7 +17,7 @@ const App: React.FC = () => {
       </header>
       <div className="app-container">
         <main className="main-content">
-          <MapView refreshKey={refreshKey} />
+          <MapView />
           <button
             className="plus-button"
             onClick={() => setShowModal(true)}
