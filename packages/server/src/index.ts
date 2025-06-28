@@ -66,7 +66,12 @@ const initializeApp = async (): Promise<void> => {
       console.log(`Server is running on http://localhost:${PORT}`);
     }).on('error', (err) => {
       console.error("Failed to start server:", err);
-      process.exit(1); // Exit if the server fails to start
+      if (process.env.NODE_ENV === 'test') {
+        // Don't exit the process during tests
+        throw err;
+      } else {
+        process.exit(1); // Exit if the server fails to start in production
+      }
     });
 
   } catch (err) {
