@@ -1,6 +1,7 @@
 import React from "react";
-import { render, waitFor, screen } from "@testing-library/react";
+import { render, waitFor, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { act } from 'react';
 import CampsiteMarker from "./CampsiteMarker";
 import { Campsite } from "../../types/Campsite";
 
@@ -15,7 +16,12 @@ vi.mock("../../api/Weather", () => ({
   getWeatherForecast: vi.fn(),
 }));
 
+// Mock editCampsite
+vi.mock("../../api/Campsites", () => ({
+  editCampsite: vi.fn(),
+}));
 import { getWeatherForecast } from "../../api/Weather";
+import { editCampsite } from "../../api/Campsites";
 
 describe("CampsiteMarker", () => {
   const mockCampsite: Campsite = {
@@ -36,18 +42,20 @@ describe("CampsiteMarker", () => {
     vi.clearAllMocks();
   });
 
-  it("renders marker and popup with campsite info", () => {
+  it("renders marker and popup with campsite info", async () => {
     (getWeatherForecast as any).mockResolvedValue([]);
-    const { getByTestId, getByText } = render(
-      <CampsiteMarker site={mockCampsite} renderStars={renderStars} />
-    );
-    expect(getByTestId("marker")).toBeInTheDocument();
-    expect(getByTestId("popup")).toBeInTheDocument();
-    expect(getByText("Test Site")).toBeInTheDocument();
-    expect(getByText("A beautiful place")).toBeInTheDocument();
-    expect(getByText("Requires 4WD:")).toBeInTheDocument();
-    expect(getByText("Yes")).toBeInTheDocument();
-    expect(getByTestId("stars")).toHaveTextContent("★★★★");
+    await act(async () => {
+      render(
+        <CampsiteMarker site={mockCampsite} renderStars={renderStars} />
+      );
+    });
+    expect(screen.getByTestId("marker")).toBeInTheDocument();
+    expect(screen.getByTestId("popup")).toBeInTheDocument();
+    expect(screen.getByText("Test Site")).toBeInTheDocument();
+    expect(screen.getByText("A beautiful place")).toBeInTheDocument();
+    expect(screen.getByText("Requires 4WD:")).toBeInTheDocument();
+    expect(screen.getByText("Yes")).toBeInTheDocument();
+    expect(screen.getByTestId("stars")).toHaveTextContent("★★★★");
   });
 
   it("shows loading state while fetching weather", async () => {
@@ -93,5 +101,59 @@ describe("CampsiteMarker", () => {
     const badCampsite = { ...mockCampsite, lat: 0, lng: 0 };
     render(<CampsiteMarker site={badCampsite} renderStars={renderStars} />);
     expect(screen.getByText(/invalid coordinates/i)).toBeInTheDocument();
+  });
+
+  it("allows editing and saving a campsite", async () => {
+    (editCampsite as any).mockResolvedValue({});
+
+    render(<CampsiteMarker site={mockCampsite} renderStars={renderStars} />);
+
+    // Open edit mode
+    fireEvent.click(screen.getByRole("button", { name: /edit campsite/i }));
+
+    // Wait for the name input to appear and check its initial value
+    const nameInput = await screen.findByPlaceholderText(/name/i) as HTMLInputElement;
+    expect(nameInput.value).toBe("Test Site");
+
+    // Change the name
+    fireEvent.change(nameInput, { target: { value: "Updated Site" } });
+
+    // Submit the form
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    // editCampsite should be called with the updated name
+    await waitFor(() =>
+      expect(editCampsite).toHaveBeenCalledWith(
+        "1",
+        expect.objectContaining({ name: "Updated Site" })
+      )
+    );
+
+    // And we should see the success message
+    await screen.findByText(/campsite updated/i);
+  });
+
+  it("resets form and exits edit mode on cancel", async () => {
+    render(<CampsiteMarker site={mockCampsite} renderStars={renderStars} />);
+
+    // Open edit mode
+    fireEvent.click(screen.getByRole("button", { name: /edit campsite/i }));
+
+    // Wait for the name input and change it
+    const nameInput = await screen.findByPlaceholderText(/name/i);
+    fireEvent.change(nameInput, { target: { value: "Changed Name" } });
+
+    // Click cancel
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+    // Back in view mode: edit button should be visible and the form gone
+    await screen.findByRole("button", { name: /edit campsite/i });
+    expect(screen.queryByPlaceholderText(/name/i)).toBeNull();
+    expect(screen.getByText("Test Site")).toBeInTheDocument();
+
+    // Re-open edit mode and confirm the field has been reset
+    fireEvent.click(screen.getByRole("button", { name: /edit campsite/i }));
+    const resetInput = await screen.findByDisplayValue("Test Site");
+    expect(resetInput).toBeInTheDocument();
   });
 });
