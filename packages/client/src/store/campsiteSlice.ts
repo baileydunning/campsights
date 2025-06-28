@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Campsite, CampsitesState } from '../types/Campsite';
-import { getCampsites, addCampsite } from '../api/Campsites';
+import { getCampsites, addCampsite, editCampsite as apiEditCampsite } from '../api/Campsites';
 
 export const fetchCampsites = createAsyncThunk(
   'campsites/fetchCampsites',
@@ -22,6 +22,18 @@ export const postCampsite = createAsyncThunk(
       return newCampsite;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to add campsite');
+    }
+  }
+);
+
+export const putCampsite = createAsyncThunk(
+  'campsites/putCampsite',
+  async ({ id, data }: { id: string, data: Omit<Campsite, 'id'> }, { rejectWithValue }) => {
+    try {
+      const updated = await apiEditCampsite(id, data);
+      return updated;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to update campsite');
     }
   }
 );
@@ -66,6 +78,23 @@ const campsiteSlice = createSlice({
         state.error = null;
       })
       .addCase(postCampsite.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Edit campsite
+      .addCase(putCampsite.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(putCampsite.fulfilled, (state, action) => {
+        state.loading = false;
+        const idx = state.campsites.findIndex(c => c.id === action.payload.id);
+        if (idx !== -1) {
+          state.campsites[idx] = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(putCampsite.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

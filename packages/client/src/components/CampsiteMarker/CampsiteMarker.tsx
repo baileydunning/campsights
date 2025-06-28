@@ -3,7 +3,8 @@ import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
 import { getWeatherForecast } from "../../api/Weather";
-import { editCampsite } from "../../api/Campsites";
+import { useAppDispatch, useAppSelector } from "../../store/store";
+import { putCampsite } from "../../store/campsiteSlice";
 import "./CampsiteMarker.css";
 
 interface CampsiteMarkerProps {
@@ -39,6 +40,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
   const [editLoading, setEditLoading] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
   const popupRef = useRef<any>(null);
+  const dispatch = useAppDispatch();
+  const campsiteStatus = useAppSelector(state => state.campsites.status);
+  const campsiteError = useAppSelector(state => state.campsites.error);
 
   // Fetch weather data for the campsite based on its coordinates
   useEffect(() => {
@@ -86,12 +90,17 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
     setEditError(null);
     setEditSuccess(false);
     try {
-      await editCampsite(site.id, {
+      // Dispatch Redux thunk instead of direct API call
+      const resultAction = await dispatch(putCampsite({ id: site.id, data: {
         ...editForm,
         last_updated: new Date().toISOString(),
-      });
-      setEditSuccess(true);
-      setEditing(false);
+      }}));
+      if (putCampsite.fulfilled.match(resultAction)) {
+        setEditSuccess(true);
+        setEditing(false);
+      } else {
+        setEditError(resultAction.payload?.message || 'Failed to update campsite');
+      }
     } catch (err: any) {
       setEditError(err.message || 'Failed to update campsite');
     } finally {
@@ -175,6 +184,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                 </button>
               </div>
               {editSuccess && <div style={{ color: '#92C689', marginTop: 6, textAlign: 'center' }}>Campsite updated!</div>}
+              {/* Show Redux error if present */}
+              {campsiteError && <div className="weather-error" style={{ marginTop: 2 }}>{campsiteError}</div>}
             </>
           ) : (
             <form className="edit-campsite-form" onSubmit={handleEditSubmit}>
@@ -238,7 +249,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                   4WD
                 </label>
               </div>
-              {editError && <div className="weather-error" style={{ marginTop: 2 }}>{editError}</div>}
+              {/* Show local or Redux error */}
+              {(editError || campsiteError) && <div className="weather-error" style={{ marginTop: 2 }}>{editError || campsiteError}</div>}
               <div style={{ display: 'flex', gap: 8, marginTop: 4, justifyContent: 'center' }}>
                 <button
                   type="submit"
