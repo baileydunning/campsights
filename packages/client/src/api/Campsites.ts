@@ -33,3 +33,15 @@ export const addCampsite = async (campsite: Campsite): Promise<Campsite> => {
     throw error;
   }
 };
+
+export async function editCampsite(id: string, data: Omit<Campsite, 'id'>) {
+  const response = await fetch(`/api/v1/campsites/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update campsite: ${response.statusText}`);
+  }
+  return response.json();
+}

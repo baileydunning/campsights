@@ -4,6 +4,7 @@ vi.mock('../config/db', () => ({
     db: {
         getRange: vi.fn(),
         put: vi.fn(),
+        get: vi.fn(),
     },
 }));
 
@@ -63,6 +64,62 @@ describe('campsitesService', () => {
 
             await expect(campsitesService.addCampsite(campsite)).rejects.toThrow('Put error');
             expect(consoleSpy).toHaveBeenCalledWith('Error creating campsite:', error);
+
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe('updateCampsite', () => {
+        it('should update an existing campsite and return it', async () => {
+            const existingCampsite: Campsite = { id: '123', name: 'Old Camp' } as Campsite;
+            const updatedData: Campsite = { id: '123', name: 'Updated Camp', description: 'New description' } as Campsite;
+            
+            (db.get as any).mockResolvedValue(existingCampsite);
+            (db.put as any).mockResolvedValue(undefined);
+
+            const result = await campsitesService.updateCampsite('123', updatedData);
+            
+            expect(result).toEqual({ ...updatedData, id: '123' });
+            expect(db.get).toHaveBeenCalledWith('123');
+            expect(db.put).toHaveBeenCalledWith('123', { ...updatedData, id: '123' });
+        });
+
+        it('should return null if campsite does not exist', async () => {
+            const updatedData: Campsite = { id: '123', name: 'Updated Camp' } as Campsite;
+            
+            (db.get as any).mockResolvedValue(null);
+
+            const result = await campsitesService.updateCampsite('123', updatedData);
+            
+            expect(result).toBeNull();
+            expect(db.get).toHaveBeenCalledWith('123');
+            expect(db.put).not.toHaveBeenCalled();
+        });
+
+        it('should throw and log error if db.get fails', async () => {
+            const updatedData: Campsite = { id: '123', name: 'Updated Camp' } as Campsite;
+            const error = new Error('Get error');
+            
+            (db.get as any).mockRejectedValue(error);
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            await expect(campsitesService.updateCampsite('123', updatedData)).rejects.toThrow('Get error');
+            expect(consoleSpy).toHaveBeenCalledWith('Error updating campsite:', error);
+
+            consoleSpy.mockRestore();
+        });
+
+        it('should throw and log error if db.put fails', async () => {
+            const existingCampsite: Campsite = { id: '123', name: 'Old Camp' } as Campsite;
+            const updatedData: Campsite = { id: '123', name: 'Updated Camp' } as Campsite;
+            const error = new Error('Put error');
+            
+            (db.get as any).mockResolvedValue(existingCampsite);
+            (db.put as any).mockRejectedValue(error);
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            await expect(campsitesService.updateCampsite('123', updatedData)).rejects.toThrow('Put error');
+            expect(consoleSpy).toHaveBeenCalledWith('Error updating campsite:', error);
 
             consoleSpy.mockRestore();
         });

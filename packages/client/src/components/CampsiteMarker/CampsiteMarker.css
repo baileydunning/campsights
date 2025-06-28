@@ -64,6 +64,31 @@
   text-decoration: none;
 }
 
+.popup-button {
+  display: inline-block;
+  padding: 8px 20px;
+  background: #BEDBB2;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: none;
+}
+
+.popup-button:hover,
+.popup-button:focus {
+  background: #92C689;
+  color: #000;
+  text-decoration: none;
+}
+
+a.popup-button {
+  color: #000 !important;
+  text-decoration: none !important;
+}
+
 .weather-section {
   margin-top: 12px;
 }
@@ -74,4 +99,40 @@
 
 .weather-error {
   color: #92C689;
+}
+
+.edit-campsite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 220px;
+  align-items: center;
+}
+
+.edit-coords-row,
+.edit-rating-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.edit-input {
+  margin-bottom: 0;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-rating-input {
+  width: 60px;
+  height: 24px;
+  text-align: center;
+}
+
+.edit-campsite-form input.edit-input,
+.edit-campsite-form textarea.edit-input {
+  width: 100%;
+  box-sizing: border-box;
 }

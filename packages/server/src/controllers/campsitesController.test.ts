@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getCampsites, addCampsite } from './campsitesController';
+import { getCampsites, addCampsite, updateCampsite } from './campsitesController';
 import * as campsitesService from '../services/campsitesService';
 import { Request, Response } from 'express';
 
@@ -135,6 +135,104 @@ describe('campsitesController', () => {
             expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({
                 error: 'Unable to create campsite',
                 message: 'fail'
+            }));
+        });
+    });
+
+    describe('updateCampsite', () => {
+        const validBody = {
+            name: 'Updated Test Site',
+            description: 'An updated nice place',
+            lat: 2.34,
+            lng: 5.67,
+            rating: 3,
+            requires_4wd: false,
+            last_updated: '2024-01-02'
+        };
+
+        beforeEach(() => {
+            req.params = { id: 'test-id' };
+        });
+
+        it('should update a campsite and return status 200', async () => {
+            req.body = { ...validBody };
+            const updatedCampsite = { id: 'test-id', ...validBody };
+            vi.spyOn(campsitesService, 'updateCampsite').mockResolvedValue(updatedCampsite);
+
+            await updateCampsite(req as Request, res as Response);
+
+            expect(statusMock).toHaveBeenCalledWith(200);
+            expect(jsonMock).toHaveBeenCalledWith(updatedCampsite);
+            expect(campsitesService.updateCampsite).toHaveBeenCalledWith('test-id', updatedCampsite);
+        });
+
+        it('should return 404 if campsite does not exist', async () => {
+            req.body = { ...validBody };
+            vi.spyOn(campsitesService, 'updateCampsite').mockResolvedValue(null);
+
+            await updateCampsite(req as Request, res as Response);
+
+            expect(statusMock).toHaveBeenCalledWith(404);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'Campsite not found' });
+        });
+
+        it('should validate required fields and return 400 for missing name', async () => {
+            req.body = { ...validBody, name: undefined };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'name is required and must be a string' });
+        });
+
+        it('should validate required fields and return 400 for missing description', async () => {
+            req.body = { ...validBody, description: undefined };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'description is required and must be a string' });
+        });
+
+        it('should validate lat as number and return 400 for invalid lat', async () => {
+            req.body = { ...validBody, lat: 'not-a-number' };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'lat is required and must be a valid number' });
+        });
+
+        it('should validate lng as number and return 400 for invalid lng', async () => {
+            req.body = { ...validBody, lng: 'not-a-number' };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'lng is required and must be a valid number' });
+        });
+
+        it('should validate rating as number between 0 and 5', async () => {
+            req.body = { ...validBody, rating: 6 };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'rating is required and must be a number between 0 and 5' });
+        });
+
+        it('should validate requires_4wd as boolean', async () => {
+            req.body = { ...validBody, requires_4wd: 'no' };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'requires_4wd is required and must be a boolean' });
+        });
+
+        it('should validate last_updated as string', async () => {
+            req.body = { ...validBody, last_updated: undefined };
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(400);
+            expect(jsonMock).toHaveBeenCalledWith({ error: 'last_updated is required and must be a string' });
+        });
+
+        it('should handle errors and return status 500', async () => {
+            req.body = { ...validBody };
+            vi.spyOn(campsitesService, 'updateCampsite').mockRejectedValue(new Error('update fail'));
+            await updateCampsite(req as Request, res as Response);
+            expect(statusMock).toHaveBeenCalledWith(500);
+            expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({
+                error: 'Unable to update campsite',
+                message: 'update fail'
             }));
         });
     });

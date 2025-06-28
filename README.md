@@ -22,32 +22,6 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - All weather and directions UI is styled via CSS for maintainability
 - Comprehensive unit and integration tests using Vitest
 
-## Project Structure
-
-```mermaid
-flowchart TD
-  subgraph Docker
-    subgraph Client_Container [client]
-      A[User]
-      B[MapView Component]
-      C[CampsiteForm Component]
-    end
-
-    subgraph Server_Container [server]
-      D[/GET & POST /api/v1/campsites/ Endpoint/]
-      E[(LMDB Storage)]
-      F[(Weather API)]
-    end
-  end
-
-  A -->|Interacts with| B
-  A -->|Interacts with| C
-  B -->|Fetch campsites| D
-  C -->|Submit campsite| D
-  D -->|Reads/Writes| E
-  D -->|Fetches weather| F
-```
-
 ## Monorepo & Lerna
 
 This project uses a **monorepo** structure managed by [Lerna](https://lerna.js.org/).  
@@ -56,6 +30,68 @@ Lerna helps manage multiple packages (the frontend and backend) in a single repo
 **Packages:**
 - `packages/client` — The React frontend
 - `packages/server` — The Express backend
+
+### Client
+
+```mermaid
+flowchart TD
+    A[User's Browser] --> B[Redux Provider]
+    B --> C[Redux Store]
+    B --> D[React App Component]
+    
+    D --> E[MapView Component]
+    D --> F[CampsiteForm Component]
+    D --> G[CampsiteMarker Component]
+    
+    E --> C
+    F --> C
+    G --> C
+    
+    C --> H[campsiteSlice]
+    H --> I[fetchCampsites thunk]
+    H --> J[postCampsite thunk]
+    H --> K[putCampsite thunk]
+    
+    I --> L[API Client Layer]
+    J --> L
+    K --> L
+    
+    L --> M[GET /api/v1/campsites]
+    L --> N[POST /api/v1/campsites]
+    L --> O[PUT /api/v1/campsites/:id]
+    
+    G --> P[Weather API Client]
+    P --> Q[National Weather Service API]
+    
+    M --> R[Backend Server]
+    N --> R
+    O --> R
+```
+
+### Server
+
+```mermaid
+flowchart TD
+    A[HTTP Requests] --> B[Express Server]
+    B --> C[Router Layer]
+    
+    C --> D[GET /api/v1/campsites]
+    C --> E[POST /api/v1/campsites]
+    C --> F[PUT /api/v1/campsites/:id]
+    
+    D --> G[Campsites Controller]
+    E --> G
+    F --> G
+    
+    G --> H[Campsites Service]
+    H --> I[Campsite Model]
+    I --> J[(LMDB Database)]
+    
+    B --> K[Database Seeder]
+    K --> J
+    
+    J --> L[Data Persistence]
+```
 
 ## Running with Docker
 
@@ -141,3 +177,28 @@ npm run dev
 - **Response:**
   - Status: `201 Created`
   - Body: The created campsite object
+
+### `PUT /api/v1/campsites/:id`
+- **Description:** Update an existing campsite by ID.
+- **Request Body:**
+  - JSON object with the following fields (same as POST, except `id` is in the URL):
+    ```json
+    {
+      "name": "string",
+      "description": "string",
+      "lat": number,
+      "lng": number,
+      "rating": number,
+      "requires_4wd": boolean,
+      "last_updated": "ISO8601 string"
+    }
+    ```
+- **Response:**
+  - Status: `200 OK`
+  - Body: The updated campsite object
+
+## Attribution
+
+Weather data provided by the [National Weather Service (NWS) API](https://www.weather.gov/documentation/services-web-api).
+
+This product uses the NWS API but is not endorsed or certified by the National Weather Service.

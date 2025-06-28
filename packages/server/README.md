@@ -7,50 +7,11 @@ It provides a REST API for managing campsite data, which is stored in an LMDB da
 
 - Serves campsite data to the frontend via REST API
 - Accepts new campsite submissions via POST requests
+- Accepts edit campsite submissions via PUT requests
 - Stores all data in LMDB (Lightning Memory-Mapped Database)
 - CORS enabled for local development
 - Automatic database seeding from JSON data
 - Full TypeScript support with proper error handling
-
-## Architecture
-
-```mermaid
-flowchart TD
-  User((User)) --> ExpressServer
-
-  ExpressServer["Express Server (src/index.ts)"]
-  ExpressServer --> APIRouter
-  ExpressServer --> StaticHandler
-  ExpressServer --> ErrorHandler
-  ExpressServer --> SeedDatabase
-
-  APIRouter["API Router (src/routes/campsitesRoutes.ts)"]
-  APIRouter --> Controller
-
-  Controller["Controller Layer (src/controllers/campsitesController.ts)"]
-  Controller --> ServiceLayer
-  Controller --> Validation
-
-  ServiceLayer["Service Layer (src/services/campsitesService.ts)"]
-  ServiceLayer --> DatabaseConfig
-
-  DatabaseConfig["Database Config (src/config/db.ts)"]
-  DatabaseConfig --> LMDB
-  DatabaseConfig --> SeedData
-
-  LMDB["LMDB Database (data.lmdb)"]
-  SeedData["Seed Data (data/campsites.json)"]
-
-  Models["Models (src/models/campsiteModel.ts)"]
-  Models -.-> Controller
-  Models -.-> ServiceLayer
-
-  StaticHandler["Static File Handler (serves client/dist)"]
-  ErrorHandler["Error Handler & 404 Routes"]
-  SeedDatabase["Database Seeding (seeding with campsites.json)"]
-
-  Validation["Request Validation"]
-```
 
 ## Getting Started
 
@@ -75,6 +36,7 @@ flowchart TD
 
 - `GET /api/v1/campsites` — List all campsites
 - `POST /api/v1/campsites` — Add a new campsite
+- `PUT /api/v1/campsites/:id` — Update an existing campsite
 
 ### POST Request Format
 
@@ -91,13 +53,36 @@ flowchart TD
 }
 ```
 
+### PUT Request Format
+
+Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's id). The body must include all fields except `id` (which is taken from the URL):
+
+```json
+{
+  "name": "Updated Campsite Name",
+  "description": "Updated description of the campsite",
+  "lat": 39.7392,
+  "lng": -104.9903,
+  "rating": 4,
+  "requires_4wd": true,
+  "last_updated": "2025-06-28T15:30:00Z"
+}
+```
+
+#### Notes
+- All fields are required.
+- The `id` is taken from the URL, not the body.
+- Returns 200 and the updated campsite on success.
+- Returns 404 if the campsite does not exist.
+- Returns 400 for validation errors.
+
 ## Scripts
 
 - `npm run dev` — Start development server with hot reload
 - `npm start` — Start server with ts-node
 - `npm run build` — Compile TypeScript to JavaScript
 - `npm run start:prod` — Start production server (requires build first)
-- `npm test` — Run Jest tests
+- `npm test` — Run tests
 
 ## Database
 
