@@ -98,7 +98,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
         setEditSuccess(true);
         setEditing(false);
       } else {
-        setEditError(resultAction.payload?.message || 'Failed to update campsite');
+        setEditError(resultAction.payload as string || 'Failed to update campsite');
       }
     } catch (err: any) {
       setEditError(err.message || 'Failed to update campsite');
