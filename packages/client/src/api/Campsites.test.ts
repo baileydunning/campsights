@@ -33,12 +33,14 @@ describe('Campsites API', () => {
         });
 
         it('should throw error if response is not ok', async () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             globalAny.fetch.mockResolvedValueOnce({
                 ok: false,
                 status: 500,
             });
 
             await expect(getCampsites()).rejects.toThrow('HTTP error! status: 500');
+            consoleSpy.mockRestore();
         });
     });
 
@@ -59,12 +61,14 @@ describe('Campsites API', () => {
         });
 
         it('should throw error if POST fails', async () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             globalAny.fetch.mockResolvedValueOnce({
                 ok: false,
                 status: 400,
             });
 
             await expect(addCampsite(mockCampsite)).rejects.toThrow('HTTP error! status: 400');
+            consoleSpy.mockRestore();
         });
     });
 
