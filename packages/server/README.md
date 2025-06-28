@@ -75,6 +75,7 @@ flowchart TD
 
 - `GET /api/v1/campsites` — List all campsites
 - `POST /api/v1/campsites` — Add a new campsite
+- `PUT /api/v1/campsites/:id` — Update an existing campsite
 
 ### POST Request Format
 
@@ -90,6 +91,29 @@ flowchart TD
   "last_updated": "2025-06-19T12:00:00.000Z"
 }
 ```
+
+### PUT Request Format
+
+Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's id). The body must include all fields except `id` (which is taken from the URL):
+
+```json
+{
+  "name": "Updated Campsite Name",
+  "description": "Updated description of the campsite",
+  "lat": 39.7392,
+  "lng": -104.9903,
+  "rating": 4,
+  "requires_4wd": true,
+  "last_updated": "2025-06-28T15:30:00Z"
+}
+```
+
+#### Notes
+- All fields are required.
+- The `id` is taken from the URL, not the body.
+- Returns 200 and the updated campsite on success.
+- Returns 404 if the campsite does not exist.
+- Returns 400 for validation errors.
 
 ## Scripts
 
