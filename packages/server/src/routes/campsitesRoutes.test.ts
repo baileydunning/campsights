@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import campsitesRouter from './campsitesRoutes';
@@ -5,6 +6,7 @@ import campsitesRouter from './campsitesRoutes';
 vi.mock('../controllers/campsitesController', () => ({
     getCampsites: vi.fn((req, res) => res.status(200).json([{ id: 1, name: 'Test Campsite' }])),
     addCampsite: vi.fn((req, res) => res.status(201).json({ id: 2, ...req.body })),
+    updateCampsite: vi.fn((req, res) => res.status(200).json({ id: req.params.id, ...req.body })),
 }));
 
 const app = express();
@@ -23,5 +25,12 @@ describe('campsitesRouter', () => {
         const res = await request(app).post('/campsites').send(newCampsite);
         expect(res.status).toBe(201);
         expect(res.body).toMatchObject({ id: 2, name: 'New Campsite' });
+    });
+
+    it('PUT /campsites/:id should call updateCampsite and return updated campsite', async () => {
+        const updatedCampsite = { name: 'Updated Campsite', description: 'Updated description' };
+        const res = await request(app).put('/campsites/123').send(updatedCampsite);
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ id: '123', name: 'Updated Campsite', description: 'Updated description' });
     });
 });
