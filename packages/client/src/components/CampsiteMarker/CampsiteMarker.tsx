@@ -41,7 +41,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
   const [editSuccess, setEditSuccess] = useState(false);
   const popupRef = useRef<any>(null);
   const dispatch = useAppDispatch();
-  const campsiteStatus = useAppSelector(state => state.campsites.status);
   const campsiteError = useAppSelector(state => state.campsites.error);
 
   // Fetch weather data for the campsite based on its coordinates
