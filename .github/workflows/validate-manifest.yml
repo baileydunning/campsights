@@ -36,4 +36,4 @@ jobs:
         run: |
           npx serve -s packages/client/dist &
           sleep 5
-          lhci autorun --collect.url=http://localhost:5000
+          lhci autorun --collect.url=http://localhost:3000
