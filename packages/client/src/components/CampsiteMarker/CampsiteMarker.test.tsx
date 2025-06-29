@@ -38,7 +38,6 @@ describe("CampsiteMarker", () => {
     description: "A lovely place",
     lat: 10,
     lng: 20,
-    rating: 5,
     requires_4wd: true,
     last_updated: "2025-01-01T00:00:00Z",
   };
@@ -57,7 +56,6 @@ describe("CampsiteMarker", () => {
 
     expect(screen.getByText("Test Site")).toBeInTheDocument();
     expect(screen.getByText("A lovely place")).toBeInTheDocument();
-    expect(screen.getByTestId("stars")).toHaveTextContent("5");
     expect(screen.getByText("Requires 4WD:")).toBeInTheDocument();
     expect(screen.getByText("Yes")).toBeInTheDocument();
 

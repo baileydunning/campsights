@@ -41,7 +41,6 @@ describe('Campsites API', () => {
       description: "Test Description",
       lat: 0,
       lng: 0,
-      rating: 5,
       requires_4wd: false,
       last_updated: new Date().toISOString()
     };
@@ -59,7 +58,6 @@ describe('Campsites API', () => {
       description: "Updated Description",
       lat: 1,
       lng: 1,
-      rating: 4,
       requires_4wd: true,
       last_updated: new Date().toISOString()
     };
@@ -86,7 +84,6 @@ describe('Campsites API', () => {
     description: "Test Description",
     lat: 0,
     lng: 0,
-    rating: 5,
     requires_4wd: false,
     last_updated: new Date().toISOString()
   };
