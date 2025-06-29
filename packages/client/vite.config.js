@@ -8,7 +8,6 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       srcDir: 'src',
-      filename: 'service-worker.js',
       strategies: 'generateSW',
       manifest: false, // Use the manifest from public/
       workbox: {
