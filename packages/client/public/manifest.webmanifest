@@ -1,0 +1,30 @@
+{
+  "name": "Campsights",
+  "short_name": "Campsights",
+  "description": "Discover and share campsites. View maps, weather, and directions.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F1EFE9",
+  "theme_color": "#B8D8BD",
+  "icons": [
+    {
+      "src": "/tent.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "792x1172",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "2242x1338",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

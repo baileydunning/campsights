@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   test: {
@@ -6,4 +7,9 @@ export default defineConfig({
     setupFiles: './utils/setupTests.ts',
     globals: true
   },
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {}
+  ],
 });
