@@ -18,6 +18,7 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - See multi-day weather forecasts for each campsite
 - Get directions to any campsite via Google Maps
 - Add new campsites with name, description, rating, coordinates, and 4WD requirement
+- Edit and delete campsites
 - Data is stored in LMDB (server) and served via REST API
 - All weather and directions UI is styled via CSS for maintainability
 - Comprehensive unit and integration tests using Vitest
@@ -196,6 +197,12 @@ npm run dev
 - **Response:**
   - Status: `200 OK`
   - Body: The updated campsite object
+
+###  `DELETE /api/v1/campsites/:id`
+- **Description:** Delete an existing campsite by ID.
+- **Response:**
+  - Status: `204 No Content`
+  - Body: N/A
 
 ## Attribution
 

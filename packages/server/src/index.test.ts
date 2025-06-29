@@ -1,5 +1,7 @@
 import { describe, it, beforeEach, vi, expect } from 'vitest';
+import type { Mock } from 'vitest';
 import request from 'supertest';
+import * as campsitesService from './services/campsitesService';
 
 vi.mock('./config/db', () => ({
   seedDB: vi.fn(() => Promise.resolve()),
@@ -13,6 +15,8 @@ vi.mock('./config/db', () => ({
 vi.mock('./services/campsitesService', () => ({
   getCampsites: vi.fn(() => Promise.resolve([])),
   addCampsite: vi.fn((campsite) => Promise.resolve(campsite)),
+  updateCampsite: vi.fn((id, data) => Promise.resolve({ id, ...data })),
+  deleteCampsite: vi.fn(() => Promise.resolve(true)),
 }));
 
 import app from './index';
@@ -47,6 +51,58 @@ describe('Campsites API', () => {
       .set('Content-Type', 'application/json');
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject(newCampsite);
+  });
+
+  it('PUT /api/v1/campsites/:id updates a campsite', async () => {
+    const updatedCampsite = {
+      name: "Updated Site",
+      description: "Updated Description",
+      lat: 1,
+      lng: 1,
+      rating: 4,
+      requires_4wd: true,
+      last_updated: new Date().toISOString()
+    };
+    const res = await request(app)
+      .put('/api/v1/campsites/test_id')
+      .send(updatedCampsite)
+      .set('Content-Type', 'application/json');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id: "test_id", ...updatedCampsite });
+  });
+
+  it('DELETE /api/v1/campsites/:id deletes a campsite', async () => {
+    const res = await request(app)
+      .delete('/api/v1/campsites/test_id')
+      .set('Content-Type', 'application/json');
+    expect(res.status).toBe(204);
+  });
+
+  it('returns 500 for internal server error', async () => {
+  (campsitesService.addCampsite as Mock).mockImplementationOnce(() => { throw new Error('fail'); });
+  const validCampsite = {
+    id: "test_id",
+    name: "Test Site",
+    description: "Test Description",
+    lat: 0,
+    lng: 0,
+    rating: 5,
+    requires_4wd: false,
+    last_updated: new Date().toISOString()
+  };
+  const res = await request(app)
+    .post('/api/v1/campsites')
+    .send(validCampsite)
+    .set('Content-Type', 'application/json');
+  expect(res.status).toBe(500);
+});
+
+  it('returns 400 for bad request', async () => {
+    const res = await request(app)
+      .post('/api/v1/campsites')
+      .send({ invalid: 'data' })
+      .set('Content-Type', 'application/json');
+    expect(res.status).toBe(400);
   });
 
   it('returns 404 for unknown API route', async () => {

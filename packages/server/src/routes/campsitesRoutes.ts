@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getCampsites, addCampsite, updateCampsite } from '../controllers/campsitesController';
+import { getCampsites, addCampsite, updateCampsite, deleteCampsite } from '../controllers/campsitesController';
 
 const campsitesRouter = Router();
 
@@ -13,6 +13,10 @@ campsitesRouter.post('/', (req: Request, res: Response) => {
 
 campsitesRouter.put('/:id', (req: Request, res: Response) => {
   updateCampsite(req, res);
+});
+
+campsitesRouter.delete('/:id', (req: Request, res: Response) => {
+  deleteCampsite(req, res);
 });
 
 export default campsitesRouter;

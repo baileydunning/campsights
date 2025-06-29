@@ -37,6 +37,7 @@ It provides a REST API for managing campsite data, which is stored in an LMDB da
 - `GET /api/v1/campsites` — List all campsites
 - `POST /api/v1/campsites` — Add a new campsite
 - `PUT /api/v1/campsites/:id` — Update an existing campsite
+- `DELETE /api/v1/campsites/:id` — Delete a campsite
 
 ### POST Request Format
 
@@ -69,12 +70,9 @@ Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's i
 }
 ```
 
-#### Notes
-- All fields are required.
-- The `id` is taken from the URL, not the body.
-- Returns 200 and the updated campsite on success.
-- Returns 404 if the campsite does not exist.
-- Returns 400 for validation errors.
+### DELETE
+
+- `DELETE /api/v1/campsites/:id` — Delete a campsite by its unique `id`.
 
 ## Scripts
 

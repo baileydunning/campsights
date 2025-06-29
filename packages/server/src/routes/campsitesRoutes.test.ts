@@ -7,6 +7,7 @@ vi.mock('../controllers/campsitesController', () => ({
     getCampsites: vi.fn((req, res) => res.status(200).json([{ id: 1, name: 'Test Campsite' }])),
     addCampsite: vi.fn((req, res) => res.status(201).json({ id: 2, ...req.body })),
     updateCampsite: vi.fn((req, res) => res.status(200).json({ id: req.params.id, ...req.body })),
+    deleteCampsite: vi.fn((req, res) => res.status(204).json({})),
 }));
 
 const app = express();
@@ -32,5 +33,16 @@ describe('campsitesRouter', () => {
         const res = await request(app).put('/campsites/123').send(updatedCampsite);
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({ id: '123', name: 'Updated Campsite', description: 'Updated description' });
+    });
+
+    it('PUT /campsites/:id should return 404 if id is missing', async () => {
+        const res = await request(app).put('/campsites/').send({ name: 'Invalid Update' });
+        expect(res.status).toBe(404);
+    });
+
+    it('DELETE /campsites/:id should return 204', async () => {
+        const res = await request(app).delete('/campsites/123');
+        expect(res.status).toBe(204);
+        expect(res.body).toEqual({});
     });
 });

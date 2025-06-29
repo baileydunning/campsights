@@ -136,3 +136,23 @@ export const updateCampsite = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const deleteCampsite = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ error: 'id is required and must be a string' });
+    }
+    const deleted = await campsitesService.deleteCampsite(id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Campsite not found' });
+    }
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error in deleteCampsite controller:', error);
+    res.status(500).json({
+      error: 'Unable to delete campsite',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};

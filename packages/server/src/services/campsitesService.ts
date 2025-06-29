@@ -26,18 +26,30 @@ export const addCampsite = async (campsite: Campsite): Promise<Campsite> => {
 
 export const updateCampsite = async (id: string, campsite: Campsite): Promise<Campsite | null> => {
   try {
-    // Check if campsite exists
     const existingCampsite = await db.get(id);
     if (!existingCampsite) {
       return null;
     }
     
-    // Update the campsite
     const updatedCampsite = { ...campsite, id };
     await db.put(id, updatedCampsite);
     return updatedCampsite;
   } catch (error) {
     console.error('Error updating campsite:', error);
+    throw error;
+  }
+};
+
+export const deleteCampsite = async (id: string): Promise<boolean> => {
+  try {
+    const existingCampsite = await db.get(id);
+    if (!existingCampsite) {
+      return false;
+    }
+    await db.remove(id);
+    return true;
+  } catch (error) {
+    console.error('Error deleting campsite:', error);
     throw error;
   }
 };

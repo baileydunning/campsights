@@ -4,7 +4,7 @@ import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
 import { getWeatherForecast } from "../../api/Weather";
 import { useAppDispatch, useAppSelector } from "../../store/store";
-import { putCampsite } from "../../store/campsiteSlice";
+import { putCampsite, deleteCampsite } from "../../store/campsiteSlice";
 import "./CampsiteMarker.css";
 
 interface CampsiteMarkerProps {
@@ -39,6 +39,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
   const [editError, setEditError] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const popupRef = useRef<any>(null);
   const dispatch = useAppDispatch();
   const campsiteError = useAppSelector(state => state.campsites.error);
@@ -127,6 +129,23 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
     }
   };
 
+  const handleDelete = async () => {
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const resultAction = await dispatch(deleteCampsite(site.id));
+      if (deleteCampsite.fulfilled.match(resultAction)) {
+        // Optionally close popup or show success
+      } else {
+        setDeleteError(resultAction.payload as string || 'Failed to delete campsite');
+      }
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to delete campsite');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const handlePopupClose = () => {
     setEditing(false);
   };
@@ -201,7 +220,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                 </button>
               </div>
               {editSuccess && <div style={{ color: '#92C689', marginTop: 6, textAlign: 'center' }}>Campsite updated!</div>}
-              {/* Show Redux error if present */}
               {campsiteError && <div className="weather-error" style={{ marginTop: 2 }}>{campsiteError}</div>}
             </>
           ) : (
@@ -297,7 +315,17 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                 >
                   Cancel
                 </button>
+                <button
+                  type="button"
+                  className="popup-button"
+                  style={{ background: '#16563A', color: '#fff' }}
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete Campsite'}
+                </button>
               </div>
+              {deleteError && <div className="weather-error" style={{ marginTop: 2 }}>{deleteError}</div>}
             </form>
           )}
         </div>
