@@ -52,21 +52,25 @@ flowchart TD
     H --> I[fetchCampsites thunk]
     H --> J[postCampsite thunk]
     H --> K[putCampsite thunk]
+    H --> L[removeCampsite thunk]
     
-    I --> L[API Client Layer]
-    J --> L
-    K --> L
+    I --> M[API Client Layer]
+    J --> M
+    K --> M
+    L --> M
     
-    L --> M[GET /api/v1/campsites]
-    L --> N[POST /api/v1/campsites]
-    L --> O[PUT /api/v1/campsites/:id]
+    M --> N[GET /api/v1/campsites]
+    M --> O[POST /api/v1/campsites]
+    M --> P[PUT /api/v1/campsites/:id]
+    M --> Q[DELETE /api/v1/campsites/:id]
     
-    G --> P[Weather API Client]
-    P --> Q[National Weather Service API]
+    G --> R[Weather API Client]
+    R --> S[National Weather Service API]
     
-    M --> R[Backend Server]
-    N --> R
-    O --> R
+    N --> T[Backend Server]
+    O --> T
+    P --> T
+    Q --> T
 ```
 
 ### Server
@@ -79,19 +83,21 @@ flowchart TD
     C --> D[GET /api/v1/campsites]
     C --> E[POST /api/v1/campsites]
     C --> F[PUT /api/v1/campsites/:id]
+    C --> G[DELETE /api/v1/campsites/:id]
     
-    D --> G[Campsites Controller]
-    E --> G
-    F --> G
+    D --> H[Campsites Controller]
+    E --> H
+    F --> H
+    G --> H
     
-    G --> H[Campsites Service]
-    H --> I[Campsite Model]
-    I --> J[(LMDB Database)]
+    H --> I[Campsites Service]
+    I --> J[Campsite Model]
+    J --> K[(LMDB Database)]
     
-    B --> K[Database Seeder]
-    K --> J
+    B --> L[Database Seeder]
+    L --> K
     
-    J --> L[Data Persistence]
+    K --> M[Data Persistence]
 ```
 
 ## Running with Docker
