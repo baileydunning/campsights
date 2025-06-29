@@ -7,9 +7,4 @@ export default defineConfig({
     setupFiles: './utils/setupTests.ts',
     globals: true
   },
-  plugins: [
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {}
-  ],
 });
