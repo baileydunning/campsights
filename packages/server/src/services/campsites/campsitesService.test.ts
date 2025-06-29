@@ -8,9 +8,9 @@ vi.mock('../config/db', () => ({
     },
 }));
 
-import * as campsitesService from './campsitesService';
-import { Campsite } from '../models/campsiteModel';
-import { db } from '../config/db';
+import * as campsitesService from '../campsitesService';
+import { Campsite } from '../../models/campsiteModel';
+import { db } from '../../config/db';
 
 describe('campsitesService', () => {
     beforeEach(() => {

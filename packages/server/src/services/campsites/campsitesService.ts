@@ -1,5 +1,5 @@
-import { db } from '../config/db';
-import { Campsite } from '../models/campsiteModel';
+import { db } from '../../config/db';
+import { Campsite } from '../../models/campsiteModel';
 
 export const getCampsites = async (): Promise<Campsite[]> => {
   try {

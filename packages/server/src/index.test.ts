@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, vi, expect } from 'vitest';
 import type { Mock } from 'vitest';
 import request from 'supertest';
-import * as campsitesService from './services/campsitesService';
+import * as campsitesService from './services/campsites/campsitesService';
 
 vi.mock('./config/db', () => ({
   seedDB: vi.fn(() => Promise.resolve()),

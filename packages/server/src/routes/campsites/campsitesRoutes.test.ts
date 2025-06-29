@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import campsitesRouter from './campsitesRoutes';
+import campsitesRouter from '../campsitesRoutes';
 
 vi.mock('../controllers/campsitesController', () => ({
     getCampsites: vi.fn((req, res) => res.status(200).json([{ id: 1, name: 'Test Campsite' }])),

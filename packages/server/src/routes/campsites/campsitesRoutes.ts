@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getCampsites, addCampsite, updateCampsite, deleteCampsite } from '../controllers/campsitesController';
+import { getCampsites, addCampsite, updateCampsite, deleteCampsite } from '../../controllers/campsites/campsitesController';
 
 const campsitesRouter = Router();
 
