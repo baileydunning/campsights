@@ -47,5 +47,11 @@ jobs:
           sleep 5
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
+      - name: Check manifest is served
+        run: |
+          curl -f http://localhost:3000/manifest.webmanifest
+      - name: Check service worker is served
+        run: |
+          curl -f http://localhost:3000/service-worker.js
       - name: Run Lighthouse CI against backend server
         run: lhci autorun --collect.url=http://localhost:3000
