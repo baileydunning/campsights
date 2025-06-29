@@ -6,4 +6,5 @@ export interface Campsite {
   lng: number;
   requires_4wd: boolean;
   last_updated: string;
+  elevation?: number | null;
 }

@@ -7,8 +7,11 @@ vi.mock('../config/db', () => ({
         get: vi.fn(),
     },
 }));
+vi.mock('../elevation/elevationService', () => ({
+    getElevation: vi.fn(),
+}));
 
-import * as campsitesService from '../campsitesService';
+import * as campsitesService from './campsitesService';
 import { Campsite } from '../../models/campsiteModel';
 import { db } from '../../config/db';
 
@@ -121,6 +124,37 @@ describe('campsitesService', () => {
             await expect(campsitesService.updateCampsite('123', updatedData)).rejects.toThrow('Put error');
             expect(consoleSpy).toHaveBeenCalledWith('Error updating campsite:', error);
 
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe('attachElevation', () => {
+        it('should use cached elevation if present', async () => {
+            const campsite: Campsite = { id: '1', name: 'Camp A', lat: 1, lng: 2, elevation: 123 } as any;
+            const result = await campsitesService['attachElevation'](campsite);
+            expect(result.elevation).toBe(123);
+        });
+
+        it('should fetch and persist elevation if not present', async () => {
+            const campsite: Campsite = { id: '2', name: 'Camp B', lat: 3, lng: 4 } as any;
+            const elevation = 456;
+            const getElevation = require('../elevation/elevationService').getElevation;
+            getElevation.mockResolvedValue(elevation);
+            (db.put as any).mockResolvedValue(undefined);
+            const result = await campsitesService['attachElevation'](campsite);
+            expect(result.elevation).toBe(elevation);
+            expect(getElevation).toHaveBeenCalledWith(3, 4);
+            expect(db.put).toHaveBeenCalledWith('2', { ...campsite, elevation });
+        });
+
+        it('should set elevation to null and log error if fetch fails', async () => {
+            const campsite: Campsite = { id: '3', name: 'Camp C', lat: 5, lng: 6 } as any;
+            const getElevation = require('../elevation/elevationService').getElevation;
+            getElevation.mockRejectedValue(new Error('fail'));
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const result = await campsitesService['attachElevation'](campsite);
+            expect(result.elevation).toBeNull();
+            expect(consoleSpy).toHaveBeenCalled();
             consoleSpy.mockRestore();
         });
     });
