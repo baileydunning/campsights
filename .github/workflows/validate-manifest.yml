@@ -39,6 +39,7 @@ jobs:
           mkdir -p packages/server/public 
           rm -rf packages/server/public/*
           cp -r packages/client/dist/* packages/server/public/
+          cp packages/client/dist/sw.js packages/server/public/service-worker.js
       - name: Start backend server
         run: |
           cd packages/server
