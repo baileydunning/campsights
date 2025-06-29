@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
 import { db, seedDB } from './config/db';
-import campsitesRouter from './routes/campsitesRoutes';
+import campsitesRouter from './routes/campsites/campsitesRoutes';
 import rateLimit from 'express-rate-limit';
 
 dotenv.config();
@@ -80,7 +80,7 @@ const initializeApp = async (): Promise<void> => {
   }
 };
 
-// API routes for handling campsites
+// API routes for handling campsites and elevation data
 app.use('/api/v1/campsites', campsitesRouter);
 
 // Handle 404 for API routes (not found)

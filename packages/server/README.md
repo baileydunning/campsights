@@ -86,3 +86,26 @@ Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's i
 - **Location**: `data.lmdb/` directory
 - **Seeding**: Automatically seeds from `data/campsites.json` on startup
 - **Benefits**: High performance, ACID transactions, no separate server process needed
+
+## Elevation Data
+
+- When a campsite is created or updated, the backend automatically fetches the elevation for the provided coordinates using the [Open-Elevation API](https://github.com/Jorl17/open-elevation/blob/master/docs/api.md).
+- Elevation is fetched via a batch POST request for efficiency and is stored with each campsite record in the database.
+- The elevation (in meters) is included in all campsite API responses. If the elevation cannot be fetched, it is set to `null`.
+- The backend caches elevation lookups in memory to reduce redundant API calls.
+
+## Architecture Overview
+
+The backend is organized into controllers, services, and models for clarity and maintainability:
+
+- **Controllers**: Handle HTTP requests and responses. Each route (e.g., `/api/v1/campsites`) has a controller that validates input, calls the appropriate service, and formats the response.
+- **Services**: Contain business logic and data operations. For example, the Campsites Service manages CRUD operations and attaches elevation data to each campsite, while the Elevation Service handles communication with the Open-Elevation API and caching.
+- **Models**: Define TypeScript interfaces for data structures (e.g., `Campsite`, `Elevation`).
+- **Database**: Uses LMDB for fast, persistent key-value storage. Data is seeded from JSON on startup.
+
+### Example Flow
+
+1. **POST /api/v1/campsites**: Controller validates the request and calls the Campsites Service.
+2. **Campsites Service**: Stores the campsite, fetches elevation (if not already present), and updates the record.
+3. **Elevation Service**: Checks the cache, then queries the Open-Elevation API if needed.
+4. **Response**: The created campsite, including elevation, is returned to the client.

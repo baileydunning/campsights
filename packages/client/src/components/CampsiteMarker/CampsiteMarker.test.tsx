@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-
 import CampsiteMarker from "./CampsiteMarker";
 import { getWeatherForecast } from "../../api/Weather";
 import { putCampsite } from "../../store/campsiteSlice";
@@ -41,18 +40,19 @@ describe("CampsiteMarker", () => {
     requires_4wd: true,
     last_updated: "2025-01-01T00:00:00Z",
   };
-  const renderStars = (n: number|null) => <span data-testid="stars">{n}</span>;
+
   const fakeForecast = [
     { number: 1, name: "Today", isDaytime: true,
       temperature: 70, temperatureUnit: "F",
       shortForecast: "Sunny",
+      detailedForecast: "Sunny",
       windSpeed: "5 mph", windDirection: "NW" },
   ];
 
   it("renders site info and loads weather", async () => {
     (getWeatherForecast as any).mockResolvedValue(fakeForecast);
 
-    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+    render(<CampsiteMarker site={site} />);
 
     expect(screen.getByText("Test Site")).toBeInTheDocument();
     expect(screen.getByText("A lovely place")).toBeInTheDocument();
@@ -60,10 +60,20 @@ describe("CampsiteMarker", () => {
     expect(screen.getByText("Yes")).toBeInTheDocument();
 
     expect(screen.getByText("Loading weather...")).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByText("Temperature: 70°F")).toBeInTheDocument()
-    );
-    expect(screen.getByText(/Forecast: Sunny/)).toBeInTheDocument();
+    await waitFor(() => {
+      const matches = screen.getAllByText(
+        (content, node) =>
+          !!node?.textContent && node.textContent.includes("Temperature: 70°F")
+      );
+      expect(matches.length).toBeGreaterThan(0);
+    });
+    await waitFor(() => {
+      const matches = screen.getAllByText(
+        (content, node) =>
+          !!node?.textContent && node.textContent.includes("Forecast: Sunny")
+      );
+      expect(matches.length).toBeGreaterThan(0);
+    });
 
     const dirButton = screen.getByRole("button", { name: /Get Directions/ });
     expect(dirButton).toHaveAttribute(
@@ -76,7 +86,6 @@ describe("CampsiteMarker", () => {
     render(
       <CampsiteMarker
         site={{ ...site, lat: 0, lng: 0 }}
-        renderStars={renderStars}
       />
     );
     expect(screen.getByText("Invalid coordinates")).toBeInTheDocument();
@@ -87,7 +96,7 @@ describe("CampsiteMarker", () => {
 
     mockDispatch.mockResolvedValue({ type: putCampsite.fulfilled.type });
 
-    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+    render(<CampsiteMarker site={site} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: /Edit Campsite/ })
@@ -112,7 +121,7 @@ describe("CampsiteMarker", () => {
     (getWeatherForecast as any).mockResolvedValue(fakeForecast);
     mockDispatch.mockResolvedValue({ type: "campsites/deleteCampsite/fulfilled" });
 
-    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+    render(<CampsiteMarker site={site} />);
 
     await userEvent.click(screen.getByRole("button", { name: /Edit Campsite/ }));
 

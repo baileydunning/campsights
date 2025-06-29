@@ -23,7 +23,7 @@ vi.mock("react-leaflet", () => ({
 
 vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
   __esModule: true,
-  default: ({ site, renderStars }: any) => (
+  default: ({ site }: any) => (
     <div data-testid="marker">
       <div data-testid="popup">
         <div>{site.name ? site.name : "Unnamed Site"}</div>

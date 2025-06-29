@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getCampsites, addCampsite, updateCampsite } from './campsitesController';
-import * as campsitesService from '../services/campsitesService';
+import { getCampsites, addCampsite, updateCampsite, deleteCampsite } from './campsitesController';
+import * as campsitesService from '../../services/campsites/campsitesService';
 import { Request, Response } from 'express';
 
 describe('campsitesController', () => {
@@ -232,7 +232,6 @@ describe('campsitesController', () => {
 
         it('should delete a campsite and return status 204', async () => {
             vi.spyOn(campsitesService, 'deleteCampsite').mockResolvedValue(true);
-            const { deleteCampsite } = await import('./campsitesController');
             await deleteCampsite(req as Request, res as Response);
             expect(statusMock).toHaveBeenCalledWith(204);
             expect(sendMock).toHaveBeenCalledWith();
@@ -241,7 +240,6 @@ describe('campsitesController', () => {
 
         it('should return 404 if campsite does not exist', async () => {
             vi.spyOn(campsitesService, 'deleteCampsite').mockResolvedValue(false);
-            const { deleteCampsite } = await import('./campsitesController');
             await deleteCampsite(req as Request, res as Response);
             expect(statusMock).toHaveBeenCalledWith(404);
             expect(jsonMock).toHaveBeenCalledWith({ error: 'Campsite not found' });
@@ -249,7 +247,6 @@ describe('campsitesController', () => {
 
         it('should handle errors and return status 500', async () => {
             vi.spyOn(campsitesService, 'deleteCampsite').mockRejectedValue(new Error('delete fail'));
-            const { deleteCampsite } = await import('./campsitesController');
             await deleteCampsite(req as Request, res as Response);
             expect(statusMock).toHaveBeenCalledWith(500);
             expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({

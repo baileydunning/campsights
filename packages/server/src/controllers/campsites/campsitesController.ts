@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Campsite } from '../models/campsiteModel';
-import * as campsitesService from '../services/campsitesService';
+import { Campsite } from '../../models/campsiteModel';
+import * as campsitesService from '../../services/campsites/campsitesService';
 
 export const getCampsites = async (req: Request, res: Response) => {
   try {

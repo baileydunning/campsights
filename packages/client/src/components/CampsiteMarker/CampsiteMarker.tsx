@@ -168,8 +168,11 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
             <>
               <strong>{site.name ? site.name : "Unnamed Site"}</strong>
               <div>{site.description}</div>
+              <div><strong>Elevation:</strong> {site.elevation != null && !isNaN(Number(site.elevation))
+    ? `${site.elevation} meters (${(site.elevation * 3.28084).toFixed(0)} ft)`
+    : "Unknown"}</div>
               <div>
-                <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
+                <span><strong>Requires 4WD:</strong></span> {site.requires_4wd ? "Yes" : "No"}
               </div>
               <div className="weather-section">
                 <strong>Weather Forecast:</strong>
@@ -183,9 +186,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
                           {period.name} ({period.isDaytime ? 'Day' : 'Night'})
                         </div>
                         <div className="weather-period-details">
-                          <span className="weather-temp">Temperature: {period.temperature}°{period.temperatureUnit}</span>
-                          <span className="weather-short">Forecast: {period.shortForecast}</span>
-                          <span className="weather-wind">Wind: {period.windSpeed} {period.windDirection}</span>
+                          <span className="weather-temp"><strong>Temperature:</strong> {period.temperature}°{period.temperatureUnit}</span>
+                          <span className="weather-wind"><strong>Wind:</strong> {period.windSpeed} {period.windDirection}</span>
+                          <span className="weather-short"><strong>Forecast:</strong> {period.detailedForecast}</span>
                         </div>
                       </div>
                     ))}

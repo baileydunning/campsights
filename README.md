@@ -52,21 +52,25 @@ flowchart TD
     H --> I[fetchCampsites thunk]
     H --> J[postCampsite thunk]
     H --> K[putCampsite thunk]
+    H --> L[removeCampsite thunk]
     
-    I --> L[API Client Layer]
-    J --> L
-    K --> L
+    I --> M[API Client Layer]
+    J --> M
+    K --> M
+    L --> M
     
-    L --> M[GET /api/v1/campsites]
-    L --> N[POST /api/v1/campsites]
-    L --> O[PUT /api/v1/campsites/:id]
+    M --> N[GET /api/v1/campsites]
+    M --> O[POST /api/v1/campsites]
+    M --> P[PUT /api/v1/campsites/:id]
+    M --> Q[DELETE /api/v1/campsites/:id]
     
-    G --> P[Weather API Client]
-    P --> Q[National Weather Service API]
+    G --> R[Weather API Client]
+    R --> S[National Weather Service API]
     
-    M --> R[Backend Server]
-    N --> R
-    O --> R
+    N --> T[Backend Server]
+    O --> T
+    P --> T
+    Q --> T
 ```
 
 ### Server
@@ -79,19 +83,23 @@ flowchart TD
     C --> D[GET /api/v1/campsites]
     C --> E[POST /api/v1/campsites]
     C --> F[PUT /api/v1/campsites/:id]
+    C --> G[DELETE /api/v1/campsites/:id]
     
-    D --> G[Campsites Controller]
-    E --> G
-    F --> G
+    D --> I[Campsites Controller]
+    E --> I
+    F --> I
+    G --> I
     
-    G --> H[Campsites Service]
-    H --> I[Campsite Model]
-    I --> J[(LMDB Database)]
+    I --> K[Campsites Service]
+    K --> L[Campsite Model]
+    K --> M[Elevation Service]
+    M --> N[Open-Elevation API]
+    L --> O[(LMDB Database)]
     
-    B --> K[Database Seeder]
-    K --> J
+    B --> P[Database Seeder]
+    P --> O
     
-    J --> L[Data Persistence]
+    O --> Q[Data Persistence]
 ```
 
 ## Running with Docker
@@ -151,6 +159,7 @@ npm run dev
         "description": "string",
         "lat": number,
         "lng": number,
+        "elevation": number,
         "requires_4wd": boolean,
         "last_updated": "ISO8601 string"
       },
@@ -201,8 +210,58 @@ npm run dev
   - Status: `204 No Content`
   - Body: N/A
 
-## Attribution
+## Elevation Data
 
-Weather data provided by the [National Weather Service (NWS) API](https://www.weather.gov/documentation/services-web-api).
+Campsights uses the [Open-Elevation API](https://github.com/Jorl17/open-elevation/blob/master/docs/api.md) to fetch elevation data for each campsite based on its latitude and longitude.
 
-This product uses the NWS API but is not endorsed or certified by the National Weather Service.
+- **How it works:**
+  - When a campsite is created or updated, the backend queries the Open-Elevation API to retrieve the elevation for the provided coordinates.
+  - Elevation is fetched using the POST endpoint (`/api/v1/lookup`), which allows batch requests for multiple locations at once. This improves efficiency and reduces redundant API calls.
+  - The elevation (in meters) is then stored with the campsite record and included in all API responses.
+  - The frontend displays the elevation in both meters and feet.
+  - If the Open-Elevation API is unavailable or returns an error, the elevation is set to `null` and displayed as "Unknown" in the UI.
+
+## Weather Data
+
+Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov/documentation/services-web-api) to provide detailed weather forecasts for each campsite location.
+
+- **How it works:**
+  - When viewing a campsite, the frontend requests a weather forecast using the campsite's latitude and longitude.
+  - The client queries the NWS `/points/{lat},{lng}` endpoint to get the appropriate forecast URL for the location.
+  - It then fetches the multi-day forecast from the returned URL, which includes temperature, wind, and summary information for each period (day or night).
+  - The weather data is displayed in the UI for each campsite, including temperature, forecast summary, and wind details.
+  - If the NWS API is unavailable or returns an error, a user-friendly error message is shown and weather data is omitted for that campsite.
+
+- **NWS API Reference:**
+  - [API Documentation](https://www.weather.gov/documentation/services-web-api)
+  - Example forecast request:
+    `GET https://api.weather.gov/points/39.7392,-104.9903`
+  - Example forecast response (truncated):
+    ```json
+    {
+      "properties": {
+        "forecast": "https://api.weather.gov/gridpoints/BOU/62,61/forecast"
+      }
+    }
+    ```
+    Then:
+    `GET https://api.weather.gov/gridpoints/BOU/62,61/forecast`
+    ```json
+    {
+      "properties": {
+        "periods": [
+          {
+            "name": "Today",
+            "startTime": "2025-06-29T06:00:00-06:00",
+            "temperature": 75,
+            "temperatureUnit": "F",
+            "windSpeed": "10 mph",
+            "windDirection": "NW",
+            "shortForecast": "Sunny",
+            "detailedForecast": "Sunny, with a high near 75. Northwest wind 10 mph."
+          },
+          // ...more periods...
+        ]
+      }
+    }
+    ```
