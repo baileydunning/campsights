@@ -34,6 +34,9 @@ jobs:
         run: |
           cd packages/server
           npm ci
+      - name: Copy client build to server
+        run: |
+          cp -r packages/client/dist packages/server/public || true
       - name: Start backend server
         run: |
           cd packages/server
@@ -42,8 +45,5 @@ jobs:
           sleep 5
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli
-      - name: Start static server & run Lighthouse CI
-        run: |
-          npx serve -s packages/client/dist -l 5000 &
-          sleep 5
-          lhci autorun --collect.url=http://localhost:5000
+      - name: Run Lighthouse CI against backend server
+        run: lhci autorun --collect.url=http://localhost:3000
