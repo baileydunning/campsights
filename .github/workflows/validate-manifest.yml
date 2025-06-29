@@ -40,6 +40,14 @@ jobs:
           rm -rf packages/server/public/*
           cp -r packages/client/dist/* packages/server/public/
           cp packages/client/dist/sw.js packages/server/public/service-worker.js
+      - name: Stop any running server on port 3000
+        run: |
+          if lsof -i:3000 -t | grep -q .; then
+            kill -9 $(lsof -i:3000 -t)
+            echo "Killed process on port 3000."
+          else
+            echo "No process running on port 3000."
+          fi
       - name: Start backend server
         run: |
           cd packages/server
