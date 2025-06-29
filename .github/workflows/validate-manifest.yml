@@ -36,6 +36,7 @@ jobs:
           npm ci
       - name: Copy client build to server
         run: |
+          mkdir -p packages/server/public 
           rm -rf packages/server/public/*
           cp -r packages/client/dist/* packages/server/public/
       - name: Start backend server
