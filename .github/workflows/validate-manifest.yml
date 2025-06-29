@@ -1,17 +1,19 @@
-name: Validate PWA Manifest
+name: Validate Manifest
 
 on:
   push:
     paths:
       - 'packages/client/public/manifest.webmanifest'
+      - 'packages/client/**'
       - '.github/workflows/validate-manifest.yml'
   pull_request:
     paths:
       - 'packages/client/public/manifest.webmanifest'
+      - 'packages/client/**'
       - '.github/workflows/validate-manifest.yml'
 
 jobs:
-  validate-manifest:
+  lighthouse:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,7 +22,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install manifest validator
-        run: npm install -g pwamanifest-validator
-      - name: Validate manifest.webmanifest
-        run: pwamanifest-validator packages/client/public/manifest.webmanifest
+      - name: Install dependencies
+        run: |
+          cd packages/client
+          npm ci
+      - name: Build client
+        run: |
+          cd packages/client
+          npm run build
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+      - name: Start static server & run Lighthouse CI
+        run: |
+          npx serve -s packages/client/dist &
+          sleep 5
+          lhci autorun --collect.url=http://localhost:5000
