@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux';
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../../store/campsiteSlice";
 import type { AppDispatch } from "../../store/store";
@@ -95,7 +95,12 @@ const MapView: React.FC = () => {
         />
         {createCampsiteMarker()}
         {currentPosition && (
-          <Marker position={currentPosition} icon={personIcon} />
+          <Marker position={currentPosition} icon={personIcon}>
+            <Popup>You are here</Popup>
+            <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
+              You are here
+            </Tooltip>
+          </Marker>
         )}
       </MapContainer>
     </div>
