@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(globalLimiter);
 
 // Serve static frontend if built
-const staticPath = path.join(__dirname, "../client/dist");
+const staticPath = path.join(__dirname, "../public");
 const indexHtmlPath = path.join(staticPath, "index.html");
 
 const setupStaticFileServing = async (): Promise<void> => {
@@ -43,7 +43,7 @@ const setupStaticFileServing = async (): Promise<void> => {
 
     console.log("Static file serving set up successfully.");
   } catch (err) {
-    console.warn("client/dist/index.html not found, skipping static route handling.");
+    console.warn("public/index.html not found, skipping static route handling.");
   }
 };
 
