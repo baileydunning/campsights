@@ -16,9 +16,11 @@ import { getCampsites } from "../../api/Campsites";
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: any) => <div role="region">{children}</div>,
   TileLayer: () => <div data-testid="tile-layer" />, // no-op
+  Marker: ({ children }: any) => <div data-testid="person-marker">{children}</div>,
+  Popup: ({ children }: any) => <div data-testid="person-popup">{children}</div>,
+  Tooltip: ({ children }: any) => <div data-testid="person-tooltip">{children}</div>,
 }));
 
-// Mock CampsiteMarker to test marker rendering and popup content
 vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
   __esModule: true,
   default: ({ site, renderStars }: any) => (
@@ -215,5 +217,21 @@ describe("MapView", () => {
     expect(within(popup2).getAllByText("★")).toHaveLength(1);
     const popup3 = within(markers[2]).getByTestId("popup");
     expect(within(popup3).queryByText("★")).not.toBeInTheDocument();
+  });
+
+  it("renders the current location marker and shows tooltip on hover", async () => {
+    const mockGeolocation = {
+      getCurrentPosition: (success: any) => success({ coords: { latitude: 39.5, longitude: -106.5 } })
+    };
+    // @ts-ignore
+    global.navigator.geolocation = mockGeolocation;
+
+    await act(async () => {
+      renderWithProvider(<MapView />);
+    });
+    
+    expect(screen.getByTestId("person-marker")).toBeInTheDocument();
+    expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
+    expect(screen.getByTestId("person-popup")).toHaveTextContent(/You are here/i);
   });
 });
