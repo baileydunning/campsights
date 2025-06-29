@@ -41,7 +41,7 @@ describe("CampsiteMarker", () => {
     requires_4wd: true,
     last_updated: "2025-01-01T00:00:00Z",
   };
-  const renderStars = (n: number|null) => <span data-testid="stars">{n}</span>;
+
   const fakeForecast = [
     { number: 1, name: "Today", isDaytime: true,
       temperature: 70, temperatureUnit: "F",
@@ -52,7 +52,7 @@ describe("CampsiteMarker", () => {
   it("renders site info and loads weather", async () => {
     (getWeatherForecast as any).mockResolvedValue(fakeForecast);
 
-    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+    render(<CampsiteMarker site={site} />);
 
     expect(screen.getByText("Test Site")).toBeInTheDocument();
     expect(screen.getByText("A lovely place")).toBeInTheDocument();
@@ -76,7 +76,6 @@ describe("CampsiteMarker", () => {
     render(
       <CampsiteMarker
         site={{ ...site, lat: 0, lng: 0 }}
-        renderStars={renderStars}
       />
     );
     expect(screen.getByText("Invalid coordinates")).toBeInTheDocument();
@@ -87,7 +86,7 @@ describe("CampsiteMarker", () => {
 
     mockDispatch.mockResolvedValue({ type: putCampsite.fulfilled.type });
 
-    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+    render(<CampsiteMarker site={site} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: /Edit Campsite/ })
@@ -112,7 +111,7 @@ describe("CampsiteMarker", () => {
     (getWeatherForecast as any).mockResolvedValue(fakeForecast);
     mockDispatch.mockResolvedValue({ type: "campsites/deleteCampsite/fulfilled" });
 
-    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+    render(<CampsiteMarker site={site} />);
 
     await userEvent.click(screen.getByRole("button", { name: /Edit Campsite/ }));
 
