@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import campsitesRouter from '../campsitesRoutes';
+import campsitesRouter from './campsitesRoutes';
 
-vi.mock('../controllers/campsitesController', () => ({
+// Fix mock path to match router import
+vi.mock('../../controllers/campsites/campsitesController', () => ({
     getCampsites: vi.fn((req, res) => res.status(200).json([{ id: 1, name: 'Test Campsite' }])),
     addCampsite: vi.fn((req, res) => res.status(201).json({ id: 2, ...req.body })),
     updateCampsite: vi.fn((req, res) => res.status(200).json({ id: req.params.id, ...req.body })),
@@ -22,14 +23,29 @@ describe('campsitesRouter', () => {
     });
 
     it('POST /campsites should call addCampsite and return new campsite', async () => {
-        const newCampsite = { name: 'New Campsite' };
+        const newCampsite = {
+          id: '2',
+          name: 'New Campsite',
+          description: 'A new test campsite',
+          lat: 10,
+          lng: 20,
+          requires_4wd: false,
+          last_updated: new Date().toISOString()
+        };
         const res = await request(app).post('/campsites').send(newCampsite);
         expect(res.status).toBe(201);
-        expect(res.body).toMatchObject({ id: 2, name: 'New Campsite' });
+        expect(res.body).toMatchObject({ id: '2', name: 'New Campsite' });
     });
 
     it('PUT /campsites/:id should call updateCampsite and return updated campsite', async () => {
-        const updatedCampsite = { name: 'Updated Campsite', description: 'Updated description' };
+        const updatedCampsite = {
+          name: 'Updated Campsite',
+          description: 'Updated description',
+          lat: 11,
+          lng: 21,
+          requires_4wd: true,
+          last_updated: new Date().toISOString()
+        };
         const res = await request(app).put('/campsites/123').send(updatedCampsite);
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({ id: '123', name: 'Updated Campsite', description: 'Updated description' });

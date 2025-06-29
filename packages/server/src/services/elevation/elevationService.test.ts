@@ -51,7 +51,7 @@ describe('getElevation', () => {
         } as any);
 
         await expect(getElevation(latitude, longitude)).rejects.toThrow(
-            'No elevation data returned for those coordinates.'
+            'Elevation data missing or mismatched for requested coordinates.'
         );
     });
 
@@ -62,7 +62,7 @@ describe('getElevation', () => {
         } as any);
 
         await expect(getElevation(latitude, longitude)).rejects.toThrow(
-            'No elevation data returned for those coordinates.'
+            'Elevation data missing or mismatched for requested coordinates.'
         );
     });
 });
