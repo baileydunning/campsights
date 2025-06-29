@@ -43,6 +43,24 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
   const dispatch = useAppDispatch();
   const campsiteError = useAppSelector(state => state.campsites.error);
 
+  const tentIcon = new L.DivIcon({
+    html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 50px; width: 50px;">
+      <svg xmlns="http://www.w3.org/2000/svg"
+     width="32" height="32" viewBox="0 0 32 32"
+     aria-label="Campsite Tent Marker">
+      <polygon points="6,26 16,6 16,26"
+          fill="#2E8B57"/>
+      <polygon points="16,6 26,26 16,26"
+          fill="#226E52"/>
+      <polygon points="14,26 14,14 18,14 18,26"
+          fill="#16563A"/>
+      </svg>
+    </div>`,
+    className: 'campsite-tent-marker',
+    iconSize: [32, 32],
+    iconAnchor: [16, 28],
+  });
+
   // Fetch weather data for the campsite based on its coordinates
   useEffect(() => {
     if (!isValidCoordinate(site.lat, site.lng)) {
@@ -90,10 +108,12 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
     setEditSuccess(false);
     try {
       // Dispatch Redux thunk instead of direct API call
-      const resultAction = await dispatch(putCampsite({ id: site.id, data: {
-        ...editForm,
-        last_updated: new Date().toISOString(),
-      }}));
+      const resultAction = await dispatch(putCampsite({
+        id: site.id, data: {
+          ...editForm,
+          last_updated: new Date().toISOString(),
+        }
+      }));
       if (putCampsite.fulfilled.match(resultAction)) {
         setEditSuccess(true);
         setEditing(false);
@@ -115,9 +135,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
     <Marker
       key={site.id}
       position={[site.lat, site.lng] as [number, number]}
-      icon={L.icon({
-        iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-      })}
+      icon={tentIcon}
     >
       <Popup
         data-testid="popup"
