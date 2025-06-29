@@ -186,9 +186,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
                           {period.name} ({period.isDaytime ? 'Day' : 'Night'})
                         </div>
                         <div className="weather-period-details">
-                          <span className="weather-temp">Temperature: {period.temperature}°{period.temperatureUnit}</span>
-                          <span className="weather-short">Forecast: {period.shortForecast}</span>
-                          <span className="weather-wind">Wind: {period.windSpeed} {period.windDirection}</span>
+                          <span className="weather-temp"><strong>Temperature:</strong> {period.temperature}°{period.temperatureUnit}</span>
+                          <span className="weather-wind"><strong>Wind:</strong> {period.windSpeed} {period.windDirection}</span>
+                          <span className="weather-short"><strong>Forecast:</strong> {period.detailedForecast}</span>
                         </div>
                       </div>
                     ))}
