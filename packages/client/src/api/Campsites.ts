@@ -45,3 +45,13 @@ export async function editCampsite(id: string, data: Omit<Campsite, 'id'>) {
   }
   return response.json();
 }
+
+export async function deleteCampsite(id: string) {
+  const response = await fetch(`/api/v1/campsites/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Failed to delete campsite: ${response.statusText}`);
+  }
+  return true;
+}
