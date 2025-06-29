@@ -99,4 +99,27 @@ describe('Campsites API', () => {
                 .rejects.toThrow('Failed to update campsite: Bad Request');
         });
     });
+
+    describe('deleteCampsite', () => {
+        it('should DELETE and return true on success', async () => {
+            globalAny.fetch.mockResolvedValueOnce({
+                ok: true,
+                status: 204,
+            });
+            const result = await (await import('./Campsites')).deleteCampsite('1');
+            expect(globalAny.fetch).toHaveBeenCalledWith('/api/v1/campsites/1', expect.objectContaining({
+                method: 'DELETE',
+            }));
+            expect(result).toBe(true);
+        });
+
+        it('should throw error if DELETE fails', async () => {
+            globalAny.fetch.mockResolvedValueOnce({
+                ok: false,
+                status: 400,
+                statusText: 'Bad Request',
+            });
+            await expect((await import('./Campsites')).deleteCampsite('1')).rejects.toThrow('Failed to delete campsite: Bad Request');
+        });
+    });
 });

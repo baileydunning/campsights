@@ -6,7 +6,6 @@ import CampsiteMarker from "./CampsiteMarker";
 import { getWeatherForecast } from "../../api/Weather";
 import { putCampsite } from "../../store/campsiteSlice";
 
-// --- mocks ---
 vi.mock("react-leaflet", () => {
   const React = require("react");
   return {
@@ -56,21 +55,18 @@ describe("CampsiteMarker", () => {
 
     render(<CampsiteMarker site={site} renderStars={renderStars} />);
 
-    // basic info
     expect(screen.getByText("Test Site")).toBeInTheDocument();
     expect(screen.getByText("A lovely place")).toBeInTheDocument();
     expect(screen.getByTestId("stars")).toHaveTextContent("5");
     expect(screen.getByText("Requires 4WD:")).toBeInTheDocument();
     expect(screen.getByText("Yes")).toBeInTheDocument();
 
-    // weather loading → forecast
     expect(screen.getByText("Loading weather...")).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByText("Temperature: 70°F")).toBeInTheDocument()
     );
     expect(screen.getByText(/Forecast: Sunny/)).toBeInTheDocument();
 
-    // “Get Directions” is an <a role="button">
     const dirButton = screen.getByRole("button", { name: /Get Directions/ });
     expect(dirButton).toHaveAttribute(
       "href",
@@ -91,31 +87,45 @@ describe("CampsiteMarker", () => {
   it("toggles edit form and dispatches update", async () => {
     (getWeatherForecast as any).mockResolvedValue(fakeForecast);
 
-    // simulate a successful thunk result
     mockDispatch.mockResolvedValue({ type: putCampsite.fulfilled.type });
 
     render(<CampsiteMarker site={site} renderStars={renderStars} />);
 
-    // open edit form
     await userEvent.click(
       screen.getByRole("button", { name: /Edit Campsite/ })
     );
     const nameInput = screen.getByPlaceholderText("Name");
     expect(nameInput).toHaveValue("Test Site");
 
-    // change name and submit
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, "New Name");
     await userEvent.click(screen.getByRole("button", { name: /Save/ }));
 
-    // dispatch should be called exactly once with a thunk function
     await waitFor(() => {
       expect(mockDispatch).toHaveBeenCalledTimes(1);
       const firstArg = mockDispatch.mock.calls[0][0];
       expect(typeof firstArg).toBe("function");
     });
 
-    // success banner
     expect(screen.getByText("Campsite updated!")).toBeInTheDocument();
+  });
+
+  it("deletes campsite when delete button is clicked", async () => {
+    (getWeatherForecast as any).mockResolvedValue(fakeForecast);
+    mockDispatch.mockResolvedValue({ type: "campsites/deleteCampsite/fulfilled" });
+
+    render(<CampsiteMarker site={site} renderStars={renderStars} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Edit Campsite/ }));
+
+    const deleteBtn = screen.getByRole("button", { name: /Delete Campsite/ });
+    expect(deleteBtn).toBeInTheDocument();
+    await userEvent.click(deleteBtn);
+
+    await waitFor(() => {
+      expect(mockDispatch).toHaveBeenCalled();
+      const firstArg = mockDispatch.mock.calls[mockDispatch.mock.calls.length - 1][0];
+      expect(typeof firstArg).toBe("function");
+    });
   });
 });
