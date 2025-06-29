@@ -46,6 +46,7 @@ describe("CampsiteMarker", () => {
     { number: 1, name: "Today", isDaytime: true,
       temperature: 70, temperatureUnit: "F",
       shortForecast: "Sunny",
+      detailedForecast: "Sunny",
       windSpeed: "5 mph", windDirection: "NW" },
   ];
 
@@ -60,10 +61,20 @@ describe("CampsiteMarker", () => {
     expect(screen.getByText("Yes")).toBeInTheDocument();
 
     expect(screen.getByText("Loading weather...")).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByText("Temperature: 70°F")).toBeInTheDocument()
-    );
-    expect(screen.getByText(/Forecast: Sunny/)).toBeInTheDocument();
+    await waitFor(() => {
+      const matches = screen.getAllByText(
+        (content, node) =>
+          !!node?.textContent && node.textContent.includes("Temperature: 70°F")
+      );
+      expect(matches.length).toBeGreaterThan(0);
+    });
+    await waitFor(() => {
+      const matches = screen.getAllByText(
+        (content, node) =>
+          !!node?.textContent && node.textContent.includes("Forecast: Sunny")
+      );
+      expect(matches.length).toBeGreaterThan(0);
+    });
 
     const dirButton = screen.getByRole("button", { name: /Get Directions/ });
     expect(dirButton).toHaveAttribute(
