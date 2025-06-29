@@ -7,7 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      manifest: {}
+      srcDir: 'src',
+      filename: 'service-worker.js',
+      strategies: 'generateSW',
+      manifest: false, // Use the manifest from public/
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
+      },
     })
   ],
   server: {
