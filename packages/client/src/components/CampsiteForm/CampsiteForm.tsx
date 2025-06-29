@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, ChangeEvent, KeyboardEvent } from "react";
+import React, { useState, FormEvent, ChangeEvent } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { Campsite } from "../../types/Campsite";
 import { postCampsite, selectLoading, selectError } from "../../store/campsiteSlice";
@@ -14,7 +14,6 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
   
-  const [rating, setRating] = useState<number>(0);
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [useCurrentLocation, setUseCurrentLocation] = useState<boolean>(true);
@@ -52,7 +51,6 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
       description: description.trim(),
       lat: parseFloat(lat),
       lng: parseFloat(lng),
-      rating,
       requires_4wd: !!requires4WD,
       last_updated: new Date().toISOString(),
     };
@@ -64,10 +62,6 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
       console.error("Error submitting campsite:", error);
       alert("Failed to submit campsite. Please try again.");
     }
-  };
-
-  const handleStarClick = (starIndex: number) => {
-    setRating(starIndex + 1);
   };
 
   return (
@@ -102,29 +96,6 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
           placeholder="Describe your campsite"
           disabled={loading}
         />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="rating">Campsite Rating</label>
-        <div id="rating" className="star-rating" aria-labelledby="rating-label">
-          {[...Array(5)].map((_, index) => (
-            <span
-              key={index}
-              className={`star${index < rating ? " filled" : ""}`}
-              onClick={() => !loading && handleStarClick(index)}
-              tabIndex={loading ? -1 : 0}
-              role="button"
-              aria-label={`Rate ${index + 1} star${index === 0 ? "" : "s"}`}
-              onKeyDown={(e: KeyboardEvent<HTMLSpanElement>) => {
-                if (!loading && (e.key === "Enter" || e.key === " ")) {
-                  handleStarClick(index);
-                }
-              }}
-            >
-              ★
-            </span>
-          ))}
-        </div>
       </div>
 
       <div className="form-group">

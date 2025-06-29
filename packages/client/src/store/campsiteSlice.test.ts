@@ -20,7 +20,6 @@ const mockCampsite: Campsite = {
   description: 'Test Description',
   lat: 0,
   lng: 0,
-  rating: 0,
   requires_4wd: false,
   last_updated: '',
 };

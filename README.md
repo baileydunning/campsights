@@ -1,6 +1,6 @@
 # Campsights
 
-Campsights is a full-stack web app for discovering and sharing campsites. Users can view campsites on a map, see weather forecasts, get directions, add new ones with ratings and details, and see which require 4WD access.
+Campsights is a full-stack web app for discovering and sharing campsites. Users can view campsites on a map, see weather forecasts, get directions, add new ones with details, and see which require 4WD access.
 
 **Live project link:** https://campsights.onrender.com/
 
@@ -17,7 +17,7 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - View campsites on an interactive Leaflet map
 - See multi-day weather forecasts for each campsite
 - Get directions to any campsite via Google Maps
-- Add new campsites with name, description, rating, coordinates, and 4WD requirement
+- Add new campsites with name, description, coordinates, and 4WD requirement
 - Edit and delete campsites
 - Data is stored in LMDB (server) and served via REST API
 - All weather and directions UI is styled via CSS for maintainability
@@ -151,7 +151,6 @@ npm run dev
         "description": "string",
         "lat": number,
         "lng": number,
-        "rating": number,
         "requires_4wd": boolean,
         "last_updated": "ISO8601 string"
       },
@@ -170,7 +169,6 @@ npm run dev
       "description": "string",
       "lat": number,
       "lng": number,
-      "rating": number,
       "requires_4wd": boolean,
       "last_updated": "ISO8601 string"
     }
@@ -189,7 +187,6 @@ npm run dev
       "description": "string",
       "lat": number,
       "lng": number,
-      "rating": number,
       "requires_4wd": boolean,
       "last_updated": "ISO8601 string"
     }

@@ -45,20 +45,9 @@ const MapView: React.FC = () => {
     }
   }, []);
 
-  const renderStars = (rating: number | null) => {
-    if (!rating || rating < 1) return null;
-    return (
-      <>
-        {Array.from({ length: rating }).map((_, i) => (
-          <span key={i}>★</span>
-        ))}
-      </>
-    );
-  };
-
   const createCampsiteMarker = () => {
     return campsites.map((site) => (
-      <CampsiteMarker key={site.id} site={site} renderStars={renderStars} />
+      <CampsiteMarker key={site.id} site={site} />
     ));
   };
 

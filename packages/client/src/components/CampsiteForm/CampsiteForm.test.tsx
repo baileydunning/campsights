@@ -46,7 +46,6 @@ describe("CampsiteForm", () => {
     renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
     expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Description/i)).toBeInTheDocument();
-    expect(screen.getByText(/Campsite Rating/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Requires 4WD to Access/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Use current location/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Submit My Campsite/i })).toBeInTheDocument();
@@ -72,15 +71,6 @@ describe("CampsiteForm", () => {
     expect(descInput).toHaveValue("Nice place");
   });
 
-  it("sets rating when a star is clicked", () => {
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
-    const stars = screen.getAllByRole("button", { name: /Rate/ });
-    fireEvent.click(stars[2]);
-    expect(stars[0].className).toContain("filled");
-    expect(stars[1].className).toContain("filled");
-    expect(stars[2].className).toContain("filled");
-  });
-
   it("submits with current location (geolocation)", async () => {
     const mockGeolocation = {
       getCurrentPosition: vi.fn((success) =>
@@ -99,15 +89,12 @@ describe("CampsiteForm", () => {
       description: "A nice place",
       lat: 12.34,
       lng: 56.78,
-      rating: 3,
       requires_4wd: false,
     });
 
     renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
-    const stars = screen.getAllByRole("button", { name: /Rate/ });
-    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -118,7 +105,6 @@ describe("CampsiteForm", () => {
           description: "A nice place",
           lat: 12.34,
           lng: 56.78,
-          rating: 3,
           requires_4wd: false,
         })
       );
@@ -134,8 +120,6 @@ describe("CampsiteForm", () => {
     renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
-    const stars = screen.getAllByRole("button", { name: /Rate/ });
-    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -149,8 +133,6 @@ describe("CampsiteForm", () => {
     fireEvent.click(screen.getByLabelText(/Use current location/i)); // uncheck
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Manual Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
-    const stars = screen.getAllByRole("button", { name: /Rate/ });
-    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -166,7 +148,6 @@ describe("CampsiteForm", () => {
       description: "A nice place",
       lat: 10.1,
       lng: 20.2,
-      rating: 3,
       requires_4wd: false,
     });
 
@@ -180,8 +161,6 @@ describe("CampsiteForm", () => {
     fireEvent.change(screen.getByLabelText(/Longitude/i), { target: { value: "20.2" } });
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Manual Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
-    const stars = screen.getAllByRole("button", { name: /Rate/ });
-    fireEvent.click(stars[2]);
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
 
     await waitFor(() => {
@@ -192,7 +171,6 @@ describe("CampsiteForm", () => {
           description: "A nice place",
           lat: 10.1,
           lng: 20.2,
-          rating: 3,
           requires_4wd: false,
         })
       );

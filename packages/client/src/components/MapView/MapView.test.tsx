@@ -28,7 +28,6 @@ vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
       <div data-testid="popup">
         <div>{site.name ? site.name : "Unnamed Site"}</div>
         <div>{site.description}</div>
-        <div>Rating: {renderStars(site.rating)}</div>
         <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
       </div>
     </div>
@@ -42,7 +41,6 @@ const mockCampsites = [
     description: "A nice place",
     lat: 40,
     lng: -105,
-    rating: 3,
     requires_4wd: true,
   },
   {
@@ -51,7 +49,6 @@ const mockCampsites = [
     description: "",
     lat: 41,
     lng: -106,
-    rating: null,
     requires_4wd: false,
   },
 ];
@@ -168,55 +165,6 @@ describe("MapView", () => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument();
     });
     consoleSpy.mockRestore();
-  });
-
-  it("renders correct number of stars for rating", async () => {
-    const campsitesWithDifferentRatings = [
-      {
-        id: "1",
-        name: "Five Star Site",
-        description: "Amazing",
-        lat: 40,
-        lng: -105,
-        rating: 5,
-        requires_4wd: false,
-      },
-      {
-        id: "2",
-        name: "One Star Site",
-        description: "Poor",
-        lat: 41,
-        lng: -106,
-        rating: 1,
-        requires_4wd: false,
-      },
-      {
-        id: "3",
-        name: "No Rating Site",
-        description: "Unrated",
-        lat: 42,
-        lng: -107,
-        rating: null,
-        requires_4wd: false,
-      },
-    ];
-    (getCampsites as any).mockResolvedValue(campsitesWithDifferentRatings);
-    await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
-    });
-    await waitFor(() => {
-      expect(screen.getAllByTestId("marker")).toHaveLength(3);
-    });
-    const markers = screen.getAllByTestId("marker");
-    const popup1 = within(markers[0]).getByTestId("popup");
-    expect(within(popup1).getAllByText("★")).toHaveLength(5);
-    const popup2 = within(markers[1]).getByTestId("popup");
-    expect(within(popup2).getAllByText("★")).toHaveLength(1);
-    const popup3 = within(markers[2]).getByTestId("popup");
-    expect(within(popup3).queryByText("★")).not.toBeInTheDocument();
   });
 
   it("renders the current location marker and shows tooltip on hover", async () => {

@@ -1,6 +1,6 @@
 # Campsights Client
 
-This is the frontend for the Campsights app, built with React, Vite, and TypeScript. It allows users to view, edit and delete campsites on an interactive map, see weather forecasts, get directions, and add new campsites with details and ratings.
+This is the frontend for the Campsights app, built with React, Vite, and TypeScript. It allows users to view, edit and delete campsites on an interactive map, see weather forecasts, get directions, and add new campsites with details.
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ This is the frontend for the Campsights app, built with React, Vite, and TypeScr
 - Edit and delete existing campsite data via a form on the popup
 - See multi-day weather forecasts for each campsite (via National Weather Service API)
 - Get directions to any campsite via Google Maps (from your current location)
-- Add new campsites with name, description, rating, coordinates, and 4WD requirement
+- Add new campsites with name, description, coordinates, and 4WD requirement
 - Responsive and modern UI
 - Robust error and loading states for weather and data fetching
 - All weather and directions UI is styled via CSS for maintainability

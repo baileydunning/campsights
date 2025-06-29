@@ -48,7 +48,6 @@ It provides a REST API for managing campsite data, which is stored in an LMDB da
   "description": "Description of the campsite",
   "lat": 39.7392,
   "lng": -104.9903,
-  "rating": 5,
   "requires_4wd": false,
   "last_updated": "2025-06-19T12:00:00.000Z"
 }
@@ -64,7 +63,6 @@ Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's i
   "description": "Updated description of the campsite",
   "lat": 39.7392,
   "lng": -104.9903,
-  "rating": 4,
   "requires_4wd": true,
   "last_updated": "2025-06-28T15:30:00Z"
 }

@@ -109,8 +109,7 @@ a.popup-button {
   align-items: center;
 }
 
-.edit-coords-row,
-.edit-rating-row {
+.edit-coords-row {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -121,18 +120,6 @@ a.popup-button {
 .edit-input {
   margin-bottom: 0;
   text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.edit-rating-input {
-  width: 60px;
-  height: 24px;
-  text-align: center;
-}
-
-.edit-campsite-form input.edit-input,
-.edit-campsite-form textarea.edit-input {
   width: 100%;
   box-sizing: border-box;
 }

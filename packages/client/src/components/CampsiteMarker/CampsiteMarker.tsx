@@ -7,9 +7,8 @@ import { useAppDispatch, useAppSelector } from "../../store/store";
 import { putCampsite, deleteCampsite } from "../../store/campsiteSlice";
 import "./CampsiteMarker.css";
 
-interface CampsiteMarkerProps {
+export interface CampsiteMarkerProps {
   site: Campsite;
-  renderStars: (rating: number | null) => React.ReactNode;
 }
 
 function isValidCoordinate(lat: number, lng: number) {
@@ -22,7 +21,7 @@ function isValidCoordinate(lat: number, lng: number) {
   );
 }
 
-const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) => {
+const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
   const [weatherData, setWeatherData] = useState<any>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -32,7 +31,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
     description: site.description,
     lat: site.lat,
     lng: site.lng,
-    rating: site.rating,
     requires_4wd: site.requires_4wd,
     last_updated: site.last_updated,
   });
@@ -98,7 +96,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
     } else {
       setEditForm((prev) => ({
         ...prev,
-        [name]: name === 'lat' || name === 'lng' || name === 'rating' ? Number(value) : value,
+        [name]: name === 'lat' || name === 'lng' ? Number(value) : value,
       }));
     }
   };
@@ -170,9 +168,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
             <>
               <strong>{site.name ? site.name : "Unnamed Site"}</strong>
               <div>{site.description}</div>
-              <div>
-                <span>Rating:</span> {renderStars(site.rating)}
-              </div>
               <div>
                 <span>Requires 4WD:</span> {site.requires_4wd ? "Yes" : "No"}
               </div>
@@ -261,19 +256,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                   required
                 />
               </div>
-              <div className="edit-rating-row">
-                <p style={{ margin: 0 }}>Rating:</p>
-                <input
-                  name="rating"
-                  type="number"
-                  min={0}
-                  max={5}
-                  value={editForm.rating}
-                  onChange={handleEditChange}
-                  placeholder="Rating"
-                  className="edit-input edit-rating-input"
-                  required
-                />
+              <div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, margin: 0 }}>
                   <input
                     name="requires_4wd"
@@ -306,7 +289,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, renderStars }) =>
                       description: site.description,
                       lat: site.lat,
                       lng: site.lng,
-                      rating: site.rating,
                       requires_4wd: site.requires_4wd,
                       last_updated: site.last_updated,
                     });

@@ -17,7 +17,7 @@ export const getCampsites = async (req: Request, res: Response) => {
 
 export const addCampsite = async (req: Request, res: Response) => {
   try {
-    const { id, name, description, lat, lng, rating, requires_4wd, last_updated } = req.body;
+    const { id, name, description, lat, lng, requires_4wd, last_updated } = req.body;
 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'id is required and must be a string' });
@@ -39,10 +39,6 @@ export const addCampsite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'lng is required and must be a valid number' });
     }
     
-    if (typeof rating !== 'number' || isNaN(rating) || rating < 0 || rating > 5) {
-      return res.status(400).json({ error: 'rating is required and must be a number between 0 and 5' });
-    }
-    
     if (typeof requires_4wd !== 'boolean') {
       return res.status(400).json({ error: 'requires_4wd is required and must be a boolean' });
     }
@@ -51,18 +47,17 @@ export const addCampsite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'last_updated is required and must be a string' });
     }
 
-    const campsiteData: Campsite = {
+    const campsiteData = {
       id,
       name,
       description,
       lat,
       lng,
-      rating,
       requires_4wd,
-      last_updated
+      last_updated,
     };
 
-    const newCampsite = await campsitesService.addCampsite(campsiteData);
+    const newCampsite = await campsitesService.addCampsite({ ...campsiteData });
     res.status(201).json(newCampsite);
   } catch (error) {
     console.error('Error in addCampsite controller:', error);
@@ -76,7 +71,7 @@ export const addCampsite = async (req: Request, res: Response) => {
 export const updateCampsite = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, lat, lng, rating, requires_4wd, last_updated } = req.body;
+    const { name, description, lat, lng, requires_4wd, last_updated } = req.body;
 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'id is required and must be a string' });
@@ -98,10 +93,6 @@ export const updateCampsite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'lng is required and must be a valid number' });
     }
     
-    if (typeof rating !== 'number' || isNaN(rating) || rating < 0 || rating > 5) {
-      return res.status(400).json({ error: 'rating is required and must be a number between 0 and 5' });
-    }
-    
     if (typeof requires_4wd !== 'boolean') {
       return res.status(400).json({ error: 'requires_4wd is required and must be a boolean' });
     }
@@ -110,18 +101,17 @@ export const updateCampsite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'last_updated is required and must be a string' });
     }
 
-    const campsiteData: Campsite = {
+    const campsiteData = {
       id,
       name,
       description,
       lat,
       lng,
-      rating,
       requires_4wd,
-      last_updated
+      last_updated,
     };
 
-    const updatedCampsite = await campsitesService.updateCampsite(id, campsiteData);
+    const updatedCampsite = await campsitesService.updateCampsite(id, { ...campsiteData });
     
     if (!updatedCampsite) {
       return res.status(404).json({ error: 'Campsite not found' });

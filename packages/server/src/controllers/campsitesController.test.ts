@@ -30,7 +30,7 @@ describe('campsitesController', () => {
 
     describe('getCampsites', () => {
         it('should return campsites with status 200', async () => {
-            const fakeCampsites = [{ id: '1', name: 'Test', description: '', lat: 0, lng: 0, rating: 5, requires_4wd: false, last_updated: '2024-01-01' }];
+            const fakeCampsites = [{ id: '1', name: 'Test', description: '', lat: 0, lng: 0, requires_4wd: false, last_updated: '2024-01-01' }];
             vi.spyOn(campsitesService, 'getCampsites').mockResolvedValue(fakeCampsites);
 
             await getCampsites(req as Request, res as Response);
@@ -59,7 +59,6 @@ describe('campsitesController', () => {
             description: 'A nice place',
             lat: 1.23,
             lng: 4.56,
-            rating: 4,
             requires_4wd: true,
             last_updated: '2024-01-01'
         };
@@ -110,13 +109,6 @@ describe('campsitesController', () => {
             expect(jsonMock).toHaveBeenCalledWith({ error: 'lng is required and must be a valid number' });
         });
 
-        it('should validate rating as number between 0 and 5', async () => {
-            req.body = { ...validBody, rating: 6 };
-            await addCampsite(req as Request, res as Response);
-            expect(statusMock).toHaveBeenCalledWith(400);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'rating is required and must be a number between 0 and 5' });
-        });
-
         it('should validate requires_4wd as boolean', async () => {
             req.body = { ...validBody, requires_4wd: 'yes' };
             await addCampsite(req as Request, res as Response);
@@ -149,7 +141,6 @@ describe('campsitesController', () => {
             description: 'An updated nice place',
             lat: 2.34,
             lng: 5.67,
-            rating: 3,
             requires_4wd: false,
             last_updated: '2024-01-02'
         };
@@ -206,13 +197,6 @@ describe('campsitesController', () => {
             await updateCampsite(req as Request, res as Response);
             expect(statusMock).toHaveBeenCalledWith(400);
             expect(jsonMock).toHaveBeenCalledWith({ error: 'lng is required and must be a valid number' });
-        });
-
-        it('should validate rating as number between 0 and 5', async () => {
-            req.body = { ...validBody, rating: 6 };
-            await updateCampsite(req as Request, res as Response);
-            expect(statusMock).toHaveBeenCalledWith(400);
-            expect(jsonMock).toHaveBeenCalledWith({ error: 'rating is required and must be a number between 0 and 5' });
         });
 
         it('should validate requires_4wd as boolean', async () => {
