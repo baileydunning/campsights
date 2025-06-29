@@ -1,0 +1,26 @@
+name: Validate PWA Manifest
+
+on:
+  push:
+    paths:
+      - 'packages/client/public/manifest.webmanifest'
+      - '.github/workflows/validate-manifest.yml'
+  pull_request:
+    paths:
+      - 'packages/client/public/manifest.webmanifest'
+      - '.github/workflows/validate-manifest.yml'
+
+jobs:
+  validate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install manifest validator
+        run: npm install -g pwamanifest-validator
+      - name: Validate manifest.webmanifest
+        run: pwamanifest-validator packages/client/public/manifest.webmanifest
