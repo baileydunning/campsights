@@ -64,9 +64,6 @@ flowchart TD
     M --> P[PUT /api/v1/campsites/:id]
     M --> Q[DELETE /api/v1/campsites/:id]
     
-    G --> R[Weather API Client]
-    R --> S[National Weather Service API]
-    
     N --> T[Backend Server]
     O --> T
     P --> T
@@ -93,13 +90,15 @@ flowchart TD
     I --> K[Campsites Service]
     K --> L[Campsite Model]
     K --> M[Elevation Service]
+    K --> Q[Weather Service]
     M --> N[Open-Elevation API]
+    Q --> R[National Weather Service API]
     L --> O[(LMDB Database)]
     
     B --> P[Database Seeder]
     P --> O
     
-    O --> Q[Data Persistence]
+    O --> S[Data Persistence]
 ```
 
 ## Running with Docker
@@ -150,7 +149,7 @@ npm run dev
 - **Description:** Returns a list of all campsites.
 - **Response:**
   - Status: `200 OK`
-  - Body: Array of campsite objects
+  - Body: Array of campsite objects with weather and elevation data attached
     ```json
     [
       {
@@ -159,9 +158,31 @@ npm run dev
         "description": "string",
         "lat": number,
         "lng": number,
-        "elevation": number,
         "requires_4wd": boolean,
-        "last_updated": "ISO8601 string"
+        "last_updated": "ISO8601 string",
+        "elevation": number,
+        "weather": [
+          {
+                "number": number,
+                "name": "string",
+                "startTime": "string",
+                "endTime": "string",
+                "isDaytime": boolean,
+                "temperature": number,
+                "temperatureUnit": "string",
+                "temperatureTrend": "string",
+                "probabilityOfPrecipitation": {
+                    "unitCode": "string",
+                    "value": number
+                },
+                "windSpeed": "string",
+                "windDirection": "string",
+                "icon": "string",
+                "shortForecast": "string",
+                "detailedForecast": "string"
+            },
+            ...
+        ] 
       },
       ...
     ]
@@ -215,10 +236,9 @@ npm run dev
 Campsights uses the [Open-Elevation API](https://github.com/Jorl17/open-elevation/blob/master/docs/api.md) to fetch elevation data for each campsite based on its latitude and longitude.
 
 - **How it works:**
-  - When a campsite is created or updated, the backend queries the Open-Elevation API to retrieve the elevation for the provided coordinates.
-  - Elevation is fetched using the POST endpoint (`/api/v1/lookup`), which allows batch requests for multiple locations at once. This improves efficiency and reduces redundant API calls.
-  - The elevation (in meters) is then stored with the campsite record and included in all API responses.
-  - The frontend displays the elevation in both meters and feet.
+  - When a campsite is created or its coordinates are updated, the backend fetches the elevation from the Open-Elevation API.
+  - The elevation (in meters) is stored with the campsite record in the database and included in all API responses.
+  - The backend only fetches elevation once per campsite (on creation or coordinate change); all reads use the stored value.
   - If the Open-Elevation API is unavailable or returns an error, the elevation is set to `null` and displayed as "Unknown" in the UI.
 
 ## Weather Data
@@ -226,10 +246,10 @@ Campsights uses the [Open-Elevation API](https://github.com/Jorl17/open-elevatio
 Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov/documentation/services-web-api) to provide detailed weather forecasts for each campsite location.
 
 - **How it works:**
-  - When viewing a campsite, the frontend requests a weather forecast using the campsite's latitude and longitude.
-  - The client queries the NWS `/points/{lat},{lng}` endpoint to get the appropriate forecast URL for the location.
-  - It then fetches the multi-day forecast from the returned URL, which includes temperature, wind, and summary information for each period (day or night).
-  - The weather data is displayed in the UI for each campsite, including temperature, forecast summary, and wind details.
+  - When a campsite is requested, the backend fetches the weather forecast from the NWS API using the campsite's latitude and longitude.
+  - The backend queries the NWS `/points/{lat},{lng}` endpoint to get the appropriate forecast URL for the location, then fetches the multi-day forecast.
+  - The weather data is included in the API response for each campsite.
+  - The frontend displays the weather data provided by the backend.
   - If the NWS API is unavailable or returns an error, a user-friendly error message is shown and weather data is omitted for that campsite.
 
 - **NWS API Reference:**

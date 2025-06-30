@@ -1,9 +1,9 @@
 import { Campsite } from '../../models/campsiteModel';
-import { WeatherModel } from '../../models/weatherModel';
+import { WeatherPeriod } from '../../models/weatherModel';
 
 export async function getWeatherForecast(
   campsite: Campsite
-): Promise<WeatherModel[]> {
+): Promise<WeatherPeriod[]> {
   const { lat, lng, id } = campsite;
   const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
 
@@ -33,8 +33,8 @@ export async function getWeatherForecast(
       return [];
     }
 
-    const forecastData = await forecastRes.json() as { properties?: { periods?: WeatherModel[] } };
-    const periods: WeatherModel[] = forecastData.properties?.periods || [];
+    const forecastData = await forecastRes.json() as { properties?: { periods?: WeatherPeriod[] } };
+    const periods: WeatherPeriod[] = forecastData.properties?.periods || [];
     return periods;
   } catch (error) {
     console.error(`Error fetching weather for campsite ${id}:`, error);

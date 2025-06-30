@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getWeatherForecast } from './weatherService';
 import type { Campsite } from '../../models/campsiteModel';
-import type { WeatherModel } from '../../models/weatherModel';
+import type { WeatherPeriod } from '../../models/weatherModel';
 
 const mockCampsite: Campsite = {
     id: 'test-campsite',
@@ -12,9 +12,9 @@ const mockCampsite: Campsite = {
     lng: -105.0,
 } as Campsite;
 
-const mockPeriods: WeatherModel[] = [
-    { name: 'Tonight', temperature: 50 } as WeatherModel,
-    { name: 'Tomorrow', temperature: 60 } as WeatherModel,
+const mockPeriods: WeatherPeriod[] = [
+    { name: 'Tonight', temperature: 50 } as WeatherPeriod,
+    { name: 'Tomorrow', temperature: 60 } as WeatherPeriod,
 ];
 
 function mockFetchImplementation(responses: any[]) {

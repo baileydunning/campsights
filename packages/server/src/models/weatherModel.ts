@@ -1,4 +1,4 @@
-export interface WeatherModel {
+export interface WeatherPeriod {
   name: string;
   startTime: string;
   endTime: string;

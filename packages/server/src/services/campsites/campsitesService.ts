@@ -2,15 +2,15 @@ import { db } from '../../config/db';
 import { Campsite } from '../../models/campsiteModel';
 import { getElevation } from '../elevation/elevationService';
 import { getWeatherForecast } from '../weather/weatherService';
-import { WeatherModel } from '../../models/weatherModel';
+import { WeatherPeriod } from '../../models/weatherModel';
 
 // in-memory cache for weather only
-const weatherCache = new Map<string, WeatherModel[]>();
+const weatherCache = new Map<string, WeatherPeriod[]>();
 
 // Attach weather forecast to a campsite record
 async function attachWeather(
   campsite: Campsite
-): Promise<{ weather: WeatherModel[] }> {
+): Promise<{ weather: WeatherPeriod[] }> {
   // Use cached value if available
   if (weatherCache.has(campsite.id)) {
     return { weather: weatherCache.get(campsite.id)! };
@@ -28,7 +28,7 @@ async function attachWeather(
 
 // Fetch all campsites with elevation and weather
 export const getCampsites = async (): Promise<
-  (Campsite & { elevation: number | null; weather: WeatherModel[] })[]
+  (Campsite & { elevation: number | null; weather: WeatherPeriod[] })[]
 > => {
   try {
     const raw: Campsite[] = [];
@@ -51,7 +51,7 @@ export const getCampsites = async (): Promise<
 // Create a new campsite, persisting elevation (weather not stored)
 export const addCampsite = async (
   campsite: Campsite
-): Promise<Campsite & { elevation: number | null; weather: WeatherModel[] }> => {
+): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] }> => {
   try {
     // Fetch elevation once, store in DB
     const elevation = await getElevation(campsite.lat, campsite.lng);
@@ -71,7 +71,7 @@ export const addCampsite = async (
 export const updateCampsite = async (
   id: string,
   campsite: Campsite
-): Promise<(Campsite & { elevation: number | null; weather: WeatherModel[] }) | null> => {
+): Promise<(Campsite & { elevation: number | null; weather: WeatherPeriod[] }) | null> => {
   try {
     const existing = await db.get(id);
     if (!existing) return null;
