@@ -1,5 +1,7 @@
 import React from "react";
-import MapView from "./components/MapView/MapView";
+import { Routes, Route, NavLink } from "react-router-dom";
+import MapView from "./views/MapView/MapView";
+import CampsitesView from "./views/CampsitesView/CampsitesView";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -7,10 +9,17 @@ const App: React.FC = () => {
     <div className="app">
       <header className="app-header">
         <h1>Campsights</h1>
+        <nav className="app-nav">
+          <NavLink to="/" end>Map</NavLink>
+          <NavLink to="/campsites">Campsites</NavLink>
+        </nav>
       </header>
       <div className="app-container">
         <main className="main-content">
-          <MapView />
+          <Routes>
+            <Route path="/" element={<MapView />} />
+            <Route path="/campsites" element={<CampsitesView />} />
+          </Routes>
         </main>
       </div>
     </div>

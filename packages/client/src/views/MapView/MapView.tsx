@@ -5,8 +5,8 @@ import L from "leaflet";
 import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../../store/campsiteSlice";
 import type { AppDispatch } from "../../store/store";
 import "./MapView.css";
-import CampsiteMarker from "../CampsiteMarker/CampsiteMarker";
-import AddCampsiteForm from "../AddCampsiteForm/AddCampsiteForm";
+import CampsiteMarker from "../../components/CampsiteMarker/CampsiteMarker";
+import AddCampsiteForm from "../../components/AddCampsiteForm/AddCampsiteForm";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
