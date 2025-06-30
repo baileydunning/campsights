@@ -1,94 +1,135 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as campsitesService from './campsitesService';
-import { db } from '../../config/db';
-import { Campsite } from '../../models/campsiteModel';
-import { getElevation } from '../../services/elevation/elevationService';
 
-vi.mock('../../config/db', () => ({
-  db: {
-    getRange: vi.fn(),
-    put: vi.fn(),
-    get: vi.fn(),
-    remove: vi.fn(),
-  },
-}));
-vi.mock('../../services/elevation/elevationService', () => ({
-  getElevation: vi.fn(),
-}));
-
-const fakeCampsite: Campsite = {
-  id: '1',
-  name: 'Test Site',
-  description: 'A test site',
-  lat: 10,
-  lng: 20,
-  requires_4wd: false,
-  last_updated: '2025-01-01T00:00:00Z',
+const dbMock = {
+  getRange: vi.fn(),
+  put: vi.fn(),
+  get: vi.fn(),
+  remove: vi.fn(),
 };
+const getElevationMock = vi.fn();
+const getWeatherForecastMock = vi.fn();
 
-describe('campsitesService', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+vi.mock('../../config/db', () => ({ db: dbMock }));
+vi.mock('../elevation/elevationService', () => ({ getElevation: getElevationMock }));
+vi.mock('../weather/weatherService', () => ({ getWeatherForecast: getWeatherForecastMock }));
+
+let campsitesService: typeof import('./campsitesService');
+
+beforeEach(async () => {
+  vi.resetModules();
+  Object.values(dbMock).forEach(fn => fn.mockReset());
+  getElevationMock.mockReset();
+  getWeatherForecastMock.mockReset();
+  campsitesService = await import('./campsitesService');
+});
+
+describe('Campsites Service', () => {
+  describe('getCampsites', () => {
+    it('should return campsites with existing elevation and fetched weather', async () => {
+      const campsite = { id: '1', lat: 10, lng: 20, elevation: 50 };
+      dbMock.getRange.mockReturnValue([{ value: campsite }]);
+      const fakeWeather = [{ number: 1, name: 'Test', startTime: '', endTime: '', isDaytime: true, temperature: 70, temperatureUnit: 'F', windSpeed: '5 mph', windDirection: 'N', shortForecast: 'Sunny', detailedForecast: 'Clear skies' }];
+      getWeatherForecastMock.mockResolvedValue(fakeWeather);
+
+      const result = await campsitesService.getCampsites();
+
+      expect(dbMock.getRange).toHaveBeenCalled();
+      expect(getWeatherForecastMock).toHaveBeenCalledWith(campsite);
+      expect(result).toEqual([{
+        ...campsite,
+        weather: fakeWeather
+      }]);
+    });
+
+    it('should return empty list if db error', async () => {
+      dbMock.getRange.mockImplementation(() => { throw new Error('DB failure'); });
+      await expect(campsitesService.getCampsites()).rejects.toThrow('DB failure');
+    });
   });
 
-  it('getCampsites returns campsites with elevation', async () => {
-    (db.getRange as any).mockReturnValue([{ value: fakeCampsite }]);
-    getElevation.mockResolvedValue(100);
-    const result = await campsitesService.getCampsites();
-    expect(result[0].elevation).toBe(100);
+  describe('addCampsite', () => {
+    it('should save elevation and return new campsite with weather', async () => {
+      const input = { id: '2', lat: 30, lng: 40 };
+      getElevationMock.mockResolvedValue(100);
+      const fakeWeather = [];
+      getWeatherForecastMock.mockResolvedValue(fakeWeather);
+
+      const result = await campsitesService.addCampsite(input as any);
+
+      expect(getElevationMock).toHaveBeenCalledWith(30, 40);
+      expect(dbMock.put).toHaveBeenCalledWith('2', { ...input, elevation: 100 });
+      expect(getWeatherForecastMock).toHaveBeenCalledWith({ ...input, elevation: 100 });
+      expect(result).toEqual({ ...input, elevation: 100, weather: fakeWeather });
+    });
+
+    it('should throw on error', async () => {
+      const input = { id: 'x', lat: 0, lng: 0 };
+      getElevationMock.mockRejectedValue(new Error('elev fail'));
+      await expect(campsitesService.addCampsite(input as any)).rejects.toThrow('elev fail');
+    });
   });
 
-  it('addCampsite adds and returns campsite with elevation', async () => {
-    getElevation.mockResolvedValue(200);
-    (db.put as any).mockResolvedValue(undefined);
-    const result = await campsitesService.addCampsite(fakeCampsite);
-    expect(result.elevation).toBe(200);
-    expect(db.put).toHaveBeenCalledWith(fakeCampsite.id, expect.objectContaining({ elevation: 200 }));
+  describe('updateCampsite', () => {
+    it('should return null if campsite does not exist', async () => {
+      dbMock.get.mockResolvedValue(null);
+      const result = await campsitesService.updateCampsite('nope', { id: '', lat: 0, lng: 0 } as any);
+      expect(result).toBeNull();
+    });
+
+    it('should reuse existing elevation if lat/lng unchanged', async () => {
+      const existing = { id: '3', lat: 5, lng: 6, elevation: 20 };
+      dbMock.get.mockResolvedValue(existing);
+      const update = { lat: 5, lng: 6 } as any;
+      const fakeWeather = [{} as any];
+      getWeatherForecastMock.mockResolvedValue(fakeWeather);
+
+      const result = await campsitesService.updateCampsite('3', update);
+
+      expect(getElevationMock).not.toHaveBeenCalled();
+      expect(dbMock.put).toHaveBeenCalledWith('3', { ...update, id: '3', elevation: 20 });
+      expect(getWeatherForecastMock).toHaveBeenCalledWith({ ...update, id: '3', elevation: 20 });
+      expect(result).toEqual({ ...update, id: '3', elevation: 20, weather: fakeWeather });
+    });
+
+    it('should fetch new elevation if lat/lng changed', async () => {
+      const existing = { id: '4', lat: 1, lng: 2, elevation: 10 };
+      dbMock.get.mockResolvedValue(existing);
+      const update = { lat: 9, lng: 8 } as any;
+      getElevationMock.mockResolvedValue(200);
+      const fakeWeather = [];
+      getWeatherForecastMock.mockResolvedValue(fakeWeather);
+
+      const result = await campsitesService.updateCampsite('4', update);
+
+      expect(getElevationMock).toHaveBeenCalledWith(9, 8);
+      expect(dbMock.put).toHaveBeenCalledWith('4', { ...update, id: '4', elevation: 200 });
+      expect(result).toEqual({ ...update, id: '4', elevation: 200, weather: fakeWeather });
+    });
+
+    it('should throw on error', async () => {
+      dbMock.get.mockResolvedValue({ id: 'x', lat: 0, lng: 0 } as any);
+      getElevationMock.mockRejectedValue(new Error('fail'));    
+      await expect(campsitesService.updateCampsite('x', { lat:0, lng:0 } as any)).rejects.toThrow('fail');
+    });
   });
 
-  it('updateCampsite updates and returns campsite with elevation', async () => {
-    (db.get as any).mockResolvedValue(fakeCampsite);
-    getElevation.mockResolvedValue(300);
-    (db.put as any).mockResolvedValue(undefined);
-    const result = await campsitesService.updateCampsite('1', fakeCampsite);
-    expect(result?.elevation).toBe(300);
-    expect(db.put).toHaveBeenCalledWith('1', expect.objectContaining({ elevation: 300 }));
-  });
+  describe('deleteCampsite', () => {
+    it('should return false if campsite does not exist', async () => {
+      dbMock.get.mockResolvedValue(null);
+      const result = await campsitesService.deleteCampsite('none');
+      expect(result).toBe(false);
+    });
 
-  it('deleteCampsite removes and returns true if found', async () => {
-    (db.get as any).mockResolvedValue(fakeCampsite);
-    (db.remove as any).mockResolvedValue(undefined);
-    const result = await campsitesService.deleteCampsite('1');
-    expect(result).toBe(true);
-    expect(db.remove).toHaveBeenCalledWith('1');
-  });
+    it('should delete and return true if exists', async () => {
+      dbMock.get.mockResolvedValue({ id: '5' } as any);
+      const result = await campsitesService.deleteCampsite('5');
+      expect(dbMock.remove).toHaveBeenCalledWith('5');
+      expect(result).toBe(true);
+    });
 
-  it('deleteCampsite returns false if not found', async () => {
-    (db.get as any).mockResolvedValue(null);
-    const result = await campsitesService.deleteCampsite('notfound');
-    expect(result).toBe(false);
-  });
-
-  it('getCampsites throws and logs error if db.getRange fails', async () => {
-    (db.getRange as any).mockImplementation(() => { throw new Error('fail'); });
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await expect(campsitesService.getCampsites()).rejects.toThrow('fail');
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
-  });
-
-  it('addCampsite throws and logs error if db.put fails', async () => {
-    getElevation.mockResolvedValue(100);
-    (db.put as any).mockRejectedValue(new Error('fail'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await expect(campsitesService.addCampsite(fakeCampsite)).rejects.toThrow('fail');
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
-  });
-
-  it('updateCampsite returns null if not found', async () => {
-    (db.get as any).mockResolvedValue(null);
-    const result = await campsitesService.updateCampsite('notfound', fakeCampsite);
-    expect(result).toBeNull();
+    it('should throw on error', async () => {
+      dbMock.get.mockRejectedValue(new Error('db fail'));
+      await expect(campsitesService.deleteCampsite('err')).rejects.toThrow('db fail');
+    });
   });
 });

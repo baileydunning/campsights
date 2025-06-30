@@ -1,82 +1,113 @@
 import { db } from '../../config/db';
 import { Campsite } from '../../models/campsiteModel';
 import { getElevation } from '../elevation/elevationService';
+import { getWeatherForecast } from '../weather/weatherService';
+import { WeatherModel } from '../../models/weatherModel';
 
-// Simple in-memory cache for elevation lookups
-const elevationCache = new Map<string, number | null>();
+// in-memory cache for weather only
+const weatherCache = new Map<string, WeatherModel[]>();
 
-async function attachElevation(campsite: Campsite): Promise<Campsite & { elevation: number | null }> {
-  // If elevation is already present, use it
-  if (typeof campsite.elevation === 'number') {
-    return { ...campsite, elevation: campsite.elevation };
+// Attach weather forecast to a campsite record
+async function attachWeather(
+  campsite: Campsite
+): Promise<{ weather: WeatherModel[] }> {
+  // Use cached value if available
+  if (weatherCache.has(campsite.id)) {
+    return { weather: weatherCache.get(campsite.id)! };
   }
+
   try {
-    const elevation = await getElevation(campsite.lat, campsite.lng);
-    // Persist elevation in the campsite record
-    const updatedCampsite = { ...campsite, elevation };
-    await db.put(campsite.id, updatedCampsite);
-    return updatedCampsite;
-  } catch (error) {
-    // Log error but don't fail the whole request
-    console.error(`Error fetching elevation for campsite ${campsite.id}:`, error);
-    return { ...campsite, elevation: null };
+    const forecast = await getWeatherForecast(campsite);
+    weatherCache.set(campsite.id, forecast);
+    return { weather: forecast };
+  } catch (err) {
+    console.error(`Error fetching weather for ${campsite.id}:`, err);
+    return { weather: [] };
   }
 }
 
-export const getCampsites = async (): Promise<(Campsite & { elevation: number | null })[]> => {
+// Fetch all campsites with elevation and weather
+export const getCampsites = async (): Promise<
+  (Campsite & { elevation: number | null; weather: WeatherModel[] })[]
+> => {
   try {
-    const campsites: Campsite[] = [];
+    const raw: Campsite[] = [];
     for (const { value } of db.getRange({})) {
-      campsites.push(value as Campsite);
+      raw.push(value as Campsite);
     }
-    // Attach elevation to each campsite, but handle errors per-campsite
-    return await Promise.all(campsites.map(attachElevation));
-  } catch (error) {
-    console.error('Error fetching campsites:', error);
-    throw error;
+
+    return await Promise.all(
+      raw.map(async (site) => {
+        const { weather } = await attachWeather(site);
+        return { ...site, elevation: site.elevation ?? null, weather };
+      })
+    );
+  } catch (err) {
+    console.error('Error fetching campsites:', err);
+    throw err;
   }
 };
 
-export const addCampsite = async (campsite: Campsite): Promise<Campsite> => {
+// Create a new campsite, persisting elevation (weather not stored)
+export const addCampsite = async (
+  campsite: Campsite
+): Promise<Campsite & { elevation: number | null; weather: WeatherModel[] }> => {
   try {
-    // Fetch and persist elevation on add
+    // Fetch elevation once, store in DB
     const elevation = await getElevation(campsite.lat, campsite.lng);
-    const campsiteWithElevation = { ...campsite, elevation };
-    await db.put(campsite.id, campsiteWithElevation);
-    return campsiteWithElevation;
-  } catch (error) {
-    console.error('Error creating campsite:', error);
-    throw error;
+    const newSite = { ...campsite, elevation };
+    await db.put(newSite.id, newSite);
+
+    // Optionally fetch weather on creation (not persisted)
+    const weather = await getWeatherForecast(newSite);
+    return { ...newSite, weather };
+  } catch (err) {
+    console.error('Error creating campsite:', err);
+    throw err;
   }
 };
 
-export const updateCampsite = async (id: string, campsite: Campsite): Promise<Campsite | null> => {
+// Update existing campsite
+export const updateCampsite = async (
+  id: string,
+  campsite: Campsite
+): Promise<(Campsite & { elevation: number | null; weather: WeatherModel[] }) | null> => {
   try {
-    const existingCampsite = await db.get(id);
-    if (!existingCampsite) {
-      return null;
+    const existing = await db.get(id);
+    if (!existing) return null;
+
+    let elevation = existing.elevation ?? null;
+    // Only fetch if lat/lng changed or elevation missing
+    if (
+      existing.lat !== campsite.lat ||
+      existing.lng !== campsite.lng ||
+      elevation == null
+    ) {
+      elevation = await getElevation(campsite.lat, campsite.lng);
     }
-    // Fetch and persist elevation on update
-    const elevation = await getElevation(campsite.lat, campsite.lng);
-    const updatedCampsite = { ...campsite, id, elevation };
-    await db.put(id, updatedCampsite);
-    return updatedCampsite;
-  } catch (error) {
-    console.error('Error updating campsite:', error);
-    throw error;
+
+    const updatedSite = { ...campsite, id, elevation };
+    await db.put(id, updatedSite);
+
+    const weather = await getWeatherForecast(updatedSite);
+    return { ...updatedSite, weather };
+  } catch (err) {
+    console.error('Error updating campsite:', err);
+    throw err;
   }
 };
 
+// Delete a campsite
 export const deleteCampsite = async (id: string): Promise<boolean> => {
   try {
-    const existingCampsite = await db.get(id);
-    if (!existingCampsite) {
-      return false;
-    }
+    const exists = await db.get(id);
+    if (!exists) return false;
     await db.remove(id);
+    // clear weather cache
+    weatherCache.delete(id);
     return true;
-  } catch (error) {
-    console.error('Error deleting campsite:', error);
-    throw error;
+  } catch (err) {
+    console.error(`Error deleting campsite ${id}:`, err);
+    throw err;
   }
 };
