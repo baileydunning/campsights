@@ -1,0 +1,22 @@
+.edit-campsite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 220px;
+  align-items: center;
+}
+
+.edit-coords-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.edit-input {
+  margin-bottom: 0;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import CampsiteForm from "./CampsiteForm";
+import AddCampsiteForm from "./AddCampsiteForm";
 import campsiteSlice from "../../store/campsiteSlice";
 
 vi.mock("../../api/Campsites", () => ({
@@ -36,14 +36,14 @@ const renderWithProvider = (component: React.ReactElement, store = createTestSto
   );
 };
 
-describe("CampsiteForm", () => {
+describe("AddCampsiteForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.clearAllTimers();
   });
 
   it("renders all form fields", () => {
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Description/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Requires 4WD to Access/i)).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe("CampsiteForm", () => {
   });
 
   it("toggles latitude/longitude fields when 'Use current location' is unchecked", () => {
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     const checkbox = screen.getByLabelText(/Use current location/i);
     fireEvent.click(checkbox);
     expect(screen.getByLabelText(/Latitude/i)).toBeInTheDocument();
@@ -60,7 +60,7 @@ describe("CampsiteForm", () => {
   });
 
   it("updates name and description fields", () => {
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     const nameInput = screen.getByLabelText(/Name/i);
     const descInput = screen.getByLabelText(/Description/i);
 
@@ -92,7 +92,7 @@ describe("CampsiteForm", () => {
       requires_4wd: false,
     });
 
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
@@ -117,7 +117,7 @@ describe("CampsiteForm", () => {
     global.navigator.geolocation = undefined;
     window.alert = vi.fn();
 
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Geo Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
     fireEvent.click(screen.getByRole("button", { name: /Submit My Campsite/i }));
@@ -129,7 +129,7 @@ describe("CampsiteForm", () => {
 
   it("shows alert if lat/lng not provided when not using current location", async () => {
     window.alert = vi.fn();
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     fireEvent.click(screen.getByLabelText(/Use current location/i)); // uncheck
     fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: "Manual Site" } });
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "A nice place" } });
@@ -151,7 +151,7 @@ describe("CampsiteForm", () => {
       requires_4wd: false,
     });
 
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     // Uncheck "Use current location" if it's checked by default
     const useCurrentLocation = screen.getByLabelText(/Use current location/i);
     if (useCurrentLocation.checked) {
@@ -182,7 +182,7 @@ describe("CampsiteForm", () => {
     const { addCampsite } = await import("../../api/Campsites");
     (addCampsite as any).mockImplementation(() => new Promise(() => {})); // Never resolves
 
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     
     const useCurrentLocation = screen.getByLabelText(/Use current location/i);
     if (useCurrentLocation.checked) {
@@ -206,7 +206,7 @@ describe("CampsiteForm", () => {
     window.alert = vi.fn();
     console.error = vi.fn(); // Mock console.error to avoid noise
 
-    renderWithProvider(<CampsiteForm onSuccess={mockOnSuccess} />);
+    renderWithProvider(<AddCampsiteForm onSuccess={mockOnSuccess} />);
     
     const useCurrentLocation = screen.getByLabelText(/Use current location/i);
     if (useCurrentLocation.checked) {

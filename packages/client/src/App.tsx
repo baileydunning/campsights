@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import MapView from "./components/MapView/MapView";
-import CampsiteForm from "./components/CampsiteForm/CampsiteForm";
+import AddCampsiteForm from "./components/AddCampsiteForm/AddCampsiteForm";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -38,7 +38,7 @@ const App: React.FC = () => {
                 >
                   &times;
                 </button>
-                <CampsiteForm onSuccess={handleSuccess}/>
+                <AddCampsiteForm onSuccess={handleSuccess}/>
               </div>
             </div>
           )}
