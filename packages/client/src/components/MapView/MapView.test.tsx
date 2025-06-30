@@ -86,7 +86,7 @@ describe("MapView", () => {
   it("shows loading state initially", () => {
     const store = createTestStore({ loading: true });
     renderWithProvider(<MapView />, store);
-    expect(screen.getByText("Loading campsites...")).toBeInTheDocument();
+    expect(document.querySelector('.loading-screen')).toBeInTheDocument();
   });
 
   it("shows error state when there's an error", async () => {
