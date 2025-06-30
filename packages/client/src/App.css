@@ -1,132 +1,102 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@400;500;600;700&display=swap');
 
-html,
-body,
-#root,
-.app-container {
-  height: 100%;
+:root {
+  --font-header: 'Bebas Neue', sans-serif;
+  --font-body:   'Roboto', sans-serif;
+
+  --bg:           #F1EFE9;
+  --accent-light: #BDDAB1;
+  --accent-mid:   #2E8B57;
+  --accent-mid2:  #226D52;
+  --accent-dark:  #16563A;
+  --text-dark:    #16563A;
+  --text-light:   #FFFFFF;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html, body, #root {
   margin: 0;
   padding: 0;
-  min-width: 0;
-  min-height: 0;
-  box-sizing: border-box;
-  background: #F2EFE9;
+  height: 100%;
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text-dark);
 }
 
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  min-width: 0;
+  min-width: 0; 
   min-height: 0;
 }
 
 .app-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   padding: 2rem;
 }
 
 .app-header h1 {
-  font-family: 'Bebas Neue', Arial, Helvetica, sans-serif;
-  letter-spacing: 2px;
-  font-size: 3rem;
-  color: #213547;
   margin: 0;
-  padding: 0;
+  font-family: var(--font-header);
+  font-size: 3rem;
   font-weight: 400;
+  letter-spacing: 2px;
   text-transform: uppercase;
+  color: var(--text-dark);
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.app-nav a {
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: var(--text-dark);
+}
+
+.app-nav a:hover {
+  background-color: var(--accent-light);
+}
+
+.app-nav a.active {
+  background-color: var(--accent-dark);
+  color: var(--text-light);
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
   min-width: 0;
   min-height: 0;
-  padding: 0;
-  margin: 0;
 }
-
-.main-content>.MapView,
-.main-content>div {
-  height: 100%;
+.main-content > .MapView,
+.main-content > div {
+  flex: 1;
   min-width: 0;
   min-height: 0;
 }
 
-.plus-button {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #86BD7A;
-  color: #fff;
-  font-size: 2rem;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.plus-button:hover,
-.plus-button:focus {
-  background: #125ea2;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1002;
-  padding: 1rem;
-  box-sizing: border-box;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  min-width: 0;
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-}
-
-.close-modal {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: transparent;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: #888;
-}
 
 @media (max-width: 600px) {
   .app-header {
     padding: 1rem 0.5rem;
-    font-size: 1.2rem;
   }
-
+  .app-header h1 {
+    font-size: 2rem;
+  }
   .plus-button {
     width: 44px;
     height: 44px;
@@ -134,7 +104,6 @@ body,
     bottom: 1rem;
     right: 1rem;
   }
-
   .modal-content {
     padding: 1rem;
     max-width: 98vw;

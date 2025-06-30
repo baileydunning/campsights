@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap');
 
 .campsite-form {
-  font-family: 'Outfit', Arial, Helvetica, sans-serif;
-  background: #f8fff3;
   border-radius: 14px;
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   box-shadow: 0 2px 12px rgba(33, 53, 71, 0.08);
@@ -35,10 +33,9 @@
 }
 
 .form-input {
-  font-family: inherit;
   font-size: 1rem;
   padding: 0.6rem 0.9rem;
-  border: 1.5px solid #b6d7a8;
+  border: 1.5px solid var(--accent-mid);
   border-radius: 7px;
   background: #fff;
   color: #213547;
@@ -47,17 +44,14 @@
 }
 
 .form-input:focus {
-  border-color: #86bd7a;
-  background: #f4fff0;
+  border-color: var(--accent-mid);
+  background: var(--bg);
 }
 
 .submit-btn {
   margin-top: 0.5rem;
-  background: #86bd7a;
-  color: #fff;
-  font-family: inherit;
-  font-size: 1.1rem;
-  font-weight: 600;
+  background: var(--accent-mid);
+  color: var(--text-light);
   border: none;
   border-radius: 7px;
   padding: 0.7rem 1.2rem;
@@ -68,5 +62,5 @@
 
 .submit-btn:hover,
 .submit-btn:focus {
-  background: #1976d2;
+  background: var(--accent-mid2);
 }
