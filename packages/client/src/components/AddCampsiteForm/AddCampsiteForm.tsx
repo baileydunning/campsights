@@ -3,13 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Campsite } from "../../types/Campsite";
 import { postCampsite, selectLoading, selectError } from "../../store/campsiteSlice";
 import type { AppDispatch } from "../../store/store";
-import "./CampsiteForm.css";
+import "./AddCampsiteForm.css";
 
-interface CampsiteFormProps {
+interface AddCampsiteFormProps {
   onSuccess: () => void;
 }
 
-const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
+const AddCampsiteForm: React.FC<AddCampsiteFormProps> = ({ onSuccess }) => {
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
@@ -162,4 +162,4 @@ const CampsiteForm: React.FC<CampsiteFormProps> = ({ onSuccess }) => {
   );
 };
 
-export default CampsiteForm;
+export default AddCampsiteForm;

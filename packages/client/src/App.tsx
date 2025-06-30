@@ -1,15 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import MapView from "./components/MapView/MapView";
-import CampsiteForm from "./components/CampsiteForm/CampsiteForm";
 import "./App.css";
 
 const App: React.FC = () => {
-  const [showModal, setShowModal] = useState<boolean>(false);
-
-  const handleSuccess = useCallback(() => {
-    setShowModal(false);
-  }, []);
-
   return (
     <div className="app">
       <header className="app-header">
@@ -18,30 +11,6 @@ const App: React.FC = () => {
       <div className="app-container">
         <main className="main-content">
           <MapView />
-          <button
-            className="plus-button"
-            onClick={() => setShowModal(true)}
-            aria-label="Add Campsite"
-          >
-            +
-          </button>
-          {showModal && (
-            <div className="modal-overlay" onClick={() => setShowModal(false)}>
-              <div
-                className="modal-content"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className="close-modal"
-                  onClick={() => setShowModal(false)}
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-                <CampsiteForm onSuccess={handleSuccess}/>
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>

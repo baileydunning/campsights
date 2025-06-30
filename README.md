@@ -41,7 +41,7 @@ flowchart TD
     B --> D[React App Component]
     
     D --> E[MapView Component]
-    D --> F[CampsiteForm Component]
+    D --> F[AddCampsiteForm Component]
     D --> G[CampsiteMarker Component]
     
     E --> C

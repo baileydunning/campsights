@@ -5,7 +5,7 @@ import App from "./App";
 vi.mock("./components/MapView/MapView", () => ({
   default: () => <div data-testid="map-view" />,
 }));
-vi.mock("./components/CampsiteForm/CampsiteForm", () => ({
+vi.mock("./components/AddCampsiteForm/AddCampsiteForm", () => ({
   default: ({ onSuccess }: { onSuccess: () => void }) => (
     <button onClick={onSuccess} data-testid="campsite-form-success">
       Submit Campsite
@@ -45,7 +45,7 @@ describe("App", () => {
     expect(screen.queryByTestId("campsite-form-success")).not.toBeInTheDocument();
   });
 
-  it("calls handleSuccess and closes modal when CampsiteForm onSuccess is triggered", () => {
+  it("calls handleSuccess and closes modal when AddCampsiteForm onSuccess is triggered", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /Add Campsite/i }));
     fireEvent.click(screen.getByTestId("campsite-form-success"));
