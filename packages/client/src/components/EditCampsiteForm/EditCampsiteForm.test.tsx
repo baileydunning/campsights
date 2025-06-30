@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EditCampsiteForm from './EditCampsiteForm';
 import { useAppDispatch, useAppSelector } from '../../store/store';
@@ -7,13 +6,11 @@ import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Mock } from 'vitest';
 
-// Mock the Redux hooks
 vi.mock('../../store/store', () => ({
   useAppDispatch: vi.fn(),
   useAppSelector: vi.fn(),
 }));
 
-// Mock the action creators
 vi.mock('../../store/campsiteSlice', () => {
   const mockPut = vi.fn();
   (mockPut as any).fulfilled = { match: (action: any) => action.type === 'put/fulfilled' };
@@ -39,25 +36,21 @@ describe('EditCampsiteForm', () => {
   const onCancelMock = vi.fn();
 
   beforeEach(() => {
-    // Reset mocks
     vi.clearAllMocks();
     dispatchMock = vi.fn();
     (useAppDispatch as unknown as Mock).mockReturnValue(dispatchMock);
-    // Default: no global error in selector
     (useAppSelector as unknown as Mock).mockReturnValue(null);
   });
 
   it('renders fields with initial values and buttons', () => {
     render(<EditCampsiteForm site={site} onCancel={onCancelMock} />);
 
-    // Inputs
     expect(screen.getByPlaceholderText('Name')).toHaveValue(site.name);
     expect(screen.getByPlaceholderText('Description')).toHaveValue(site.description);
     expect(screen.getByPlaceholderText('Lat')).toHaveValue(site.lat);
     expect(screen.getByPlaceholderText('Lng')).toHaveValue(site.lng);
     expect(screen.getByLabelText('4WD')).not.toBeChecked();
 
-    // Buttons
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
@@ -82,14 +75,12 @@ describe('EditCampsiteForm', () => {
   });
 
   it('dispatches putCampsite and calls onCancel on successful save', async () => {
-    // Stub dispatch to resolve with a fulfilled action
     dispatchMock.mockResolvedValue({ type: 'put/fulfilled', payload: {} });
 
     render(<EditCampsiteForm site={site} onCancel={onCancelMock} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    // Loading state
     expect(screen.getByRole('button', { name: 'Saving...' })).toBeDisabled();
 
     await waitFor(() => {
@@ -102,7 +93,6 @@ describe('EditCampsiteForm', () => {
   });
 
   it('shows error message on failed save', async () => {
-    // Stub dispatch to resolve with a rejected action
     dispatchMock.mockResolvedValue({ type: 'put/rejected', payload: 'Update failed' });
 
     render(<EditCampsiteForm site={site} onCancel={onCancelMock} />);
@@ -114,7 +104,6 @@ describe('EditCampsiteForm', () => {
   });
 
   it('dispatches deleteCampsite and shows error on failed delete', async () => {
-    // Stub dispatch to resolve with a rejected delete action
     dispatchMock.mockResolvedValue({ type: 'delete/rejected', payload: 'Delete failed' });
 
     render(<EditCampsiteForm site={site} onCancel={onCancelMock} />);
