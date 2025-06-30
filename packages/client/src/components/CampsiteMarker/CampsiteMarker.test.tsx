@@ -1,21 +1,37 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-vi.mock('react-leaflet', () => ({
-  Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
-  Popup: ({ children, eventHandlers }: any) => (
-    <div
-      data-testid="popup"
-      onClick={() => eventHandlers?.popupclose?.()}
-    >
-      {children}
-    </div>
-  ),
-}));
+vi.mock('react-leaflet', () => {
+  const React = require('react');
+  return {
+    Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
+    Popup: function Popup(props: any) {
+      // Always evaluate children as a function if possible to reflect state changes
+      const children =
+        typeof props.children === 'function' ? props.children() : props.children;
+      return (
+        <div
+          onClick={() => props.eventHandlers?.popupclose?.()}
+        >
+          {children}
+        </div>
+      );
+    },
+  };
+});
 
-vi.mock('leaflet', () => ({
-  DivIcon: class {},
-}));
+vi.mock('leaflet', () => {
+  class DivIconMock {
+    constructor(opts: any) {
+      Object.assign(this, opts);
+    }
+  }
+  return {
+    __esModule: true,
+    default: { DivIcon: DivIconMock },
+    DivIcon: DivIconMock,
+  };
+});
 
 vi.mock('../EditCampsiteForm/EditCampsiteForm', () => ({
   __esModule: true,
@@ -47,6 +63,9 @@ const sampleSite: Campsite & { weather: any[] } = {
       windSpeed: '5 mph',
       windDirection: 'NE',
       detailedForecast: 'Sunny',
+      startTime: '2024-01-01T06:00:00Z',
+      endTime: '2024-01-01T12:00:00Z',
+      shortForecast: 'Sunny',
     },
     {
       number: 2,
@@ -57,6 +76,9 @@ const sampleSite: Campsite & { weather: any[] } = {
       windSpeed: '3 mph',
       windDirection: 'SW',
       detailedForecast: 'Clear',
+      startTime: '2024-01-01T18:00:00Z',
+      endTime: '2024-01-02T00:00:00Z',
+      shortForecast: 'Clear',
     },
   ],
   last_updated: '2024-01-01T00:00:00Z',
@@ -79,13 +101,14 @@ describe('<CampsiteMarker />', () => {
     expect(screen.getByText('Evening (Night)')).toBeInTheDocument();
   });
 
-  it('toggles edit mode when clicking Edit Campsite button', () => {
+  it('toggles edit mode when clicking Edit Campsite button', async () => {
     render(<CampsiteMarker site={sampleSite} />);
 
     const editButton = screen.getByRole('button', { name: /Edit Campsite/i });
     fireEvent.click(editButton);
 
-    expect(screen.getByTestId('edit-form')).toBeInTheDocument();
+    // Wait for the edit form to appear
+    expect(await screen.findByTestId('edit-form')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('edit-form'));
     expect(screen.queryByTestId('edit-form')).not.toBeInTheDocument();

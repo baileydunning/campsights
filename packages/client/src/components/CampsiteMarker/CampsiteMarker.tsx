@@ -64,26 +64,26 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
               </div>
               <div className="weather-section">
                 <strong>Weather Forecast:</strong>
-                  <div className="weather-forecast-list">
-                    {site.weather.map((p: any) => (
-                      <div key={p.number} className="weather-period-card">
-                        <div className="weather-period-header">
-                          {p.name} ({p.isDaytime ? "Day" : "Night"})
-                        </div>
-                        <div className="weather-period-details">
-                          <span className="weather-temp">
-                            <strong>Temp:</strong> {p.temperature}°{p.temperatureUnit}
-                          </span>
-                          <span className="weather-wind">
-                            <strong>Wind:</strong> {p.windSpeed} {p.windDirection}
-                          </span>
-                          <span className="weather-short">
-                            <strong>Forecast:</strong> {p.detailedForecast}
-                          </span>
-                        </div>
+                <div className="weather-forecast-list">
+                  {site.weather.map((p: any) => (
+                    <div key={p.number} className="weather-period-card">
+                      <div className="weather-period-header">
+                        {p.name} ({p.isDaytime ? "Day" : "Night"})
                       </div>
-                    ))}
-                  </div>
+                      <div className="weather-period-details">
+                        <span className="weather-temp">
+                          <strong>Temp:</strong> {p.temperature}°{p.temperatureUnit}
+                        </span>
+                        <span className="weather-wind">
+                          <strong>Wind:</strong> {p.windSpeed} {p.windDirection}
+                        </span>
+                        <span className="weather-short">
+                          <strong>Forecast:</strong> {p.detailedForecast}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="directions-btn-container" style={{ gap: 8 }}>
                 <a
@@ -98,7 +98,10 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
                 <button
                   className="popup-button"
                   type="button"
-                  onClick={() => setEditing(true)}
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    setEditing(true);
+                  }}
                 >
                   Edit Campsite
                 </button>

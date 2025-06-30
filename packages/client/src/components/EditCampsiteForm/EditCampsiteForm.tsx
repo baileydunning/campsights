@@ -19,6 +19,7 @@ const EditCampsiteForm: React.FC<EditCampsiteFormProps> = ({ site, onCancel }) =
     lat: site.lat,
     lng: site.lng,
     requires_4wd: site.requires_4wd,
+    weather: site.weather, 
     last_updated: site.last_updated,
   });
   const [loading, setLoading] = useState({ save: false, del: false });
