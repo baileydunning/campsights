@@ -12,14 +12,14 @@ export async function getWeatherForecast(
       headers: { 'Accept': 'application/geo+json, application/json, application/cap+xml' }
     });
     if (!pointsRes.ok) {
-      console.error(`Error fetching points for campsite ${id}: ${pointsRes.status} ${pointsRes.statusText}`);
+      console.error('Error fetching points for campsite %s: %s %s', id, pointsRes.status, pointsRes.statusText);
       return [];
     }
 
     const pointsData = await pointsRes.json() as { properties?: { forecast?: string } };
     const forecastUrl: string | undefined = pointsData.properties?.forecast;
     if (!forecastUrl) {
-      console.error(`No forecast URL returned for campsite ${id}`);
+      console.error('No forecast URL returned for campsite %s', id);
       return [];
     }
 
@@ -27,7 +27,7 @@ export async function getWeatherForecast(
       headers: { 'Accept': 'application/geo+json, application/json, application/cap+xml' }
     });
     if (!forecastRes.ok) {
-      console.error(`Error fetching forecast for campsite ${id}: ${forecastRes.status} ${forecastRes.statusText}`);
+      console.error('Error fetching forecast for campsite %s: %s %s', id, forecastRes.status, forecastRes.statusText);
       return [];
     }
 
@@ -35,7 +35,7 @@ export async function getWeatherForecast(
     const periods: WeatherPeriod[] = forecastData.properties?.periods || [];
     return periods;
   } catch (error) {
-    console.error(`Error fetching weather for campsite ${id}:`, error);
+    console.error('Error fetching weather for campsite %s:', id, error);
     return [];
   }
 }

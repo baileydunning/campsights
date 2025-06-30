@@ -96,7 +96,7 @@ export const deleteCampsite = async (id: string): Promise<boolean> => {
     weatherCache.delete(id);
     return true;
   } catch (err) {
-    console.error(`Error deleting campsite ${id}:`, err);
+    console.error('Error deleting campsite %s:', id, err);
     throw err;
   }
 };
