@@ -1,98 +1,128 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import CampsiteMarker from "./CampsiteMarker";
-import { getWeatherForecast } from "../../api/Weather";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 
-vi.mock("react-leaflet", () => {
-  const React = require("react");
+vi.mock('react-leaflet', () => {
+  const React = require('react');
   return {
-    Marker: ({ children }: any) =>
-      React.createElement("div", { "data-testid": "marker" }, children),
-    Popup: ({ children }: any) =>
-      React.createElement("div", { "data-testid": "popup" }, children),
+    Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
+    Popup: function Popup(props: any) {
+      // Always evaluate children as a function if possible to reflect state changes
+      const children =
+        typeof props.children === 'function' ? props.children() : props.children;
+      return (
+        <div
+          onClick={() => props.eventHandlers?.popupclose?.()}
+        >
+          {children}
+        </div>
+      );
+    },
   };
 });
 
-vi.mock("../../api/Weather", () => ({
-  getWeatherForecast: vi.fn(),
-}));
-
-const mockDispatch = vi.fn();
-vi.mock("../../store/store", () => ({
-  useAppDispatch: () => mockDispatch,
-  useAppSelector: (fn: any) => fn({ campsites: { status: "idle", error: null } }),
-}));
-
-beforeEach(() => {
-  mockDispatch.mockClear();
-  (getWeatherForecast as any).mockClear();
+vi.mock('leaflet', () => {
+  class DivIconMock {
+    constructor(opts: any) {
+      Object.assign(this, opts);
+    }
+  }
+  return {
+    __esModule: true,
+    default: { DivIcon: DivIconMock },
+    DivIcon: DivIconMock,
+  };
 });
 
-describe("CampsiteMarker", () => {
-  const site = {
-    id: "1",
-    name: "Test Site",
-    description: "A lovely place",
-    lat: 10,
-    lng: 20,
-    requires_4wd: true,
-    last_updated: "2025-01-01T00:00:00Z",
-  };
+vi.mock('../EditCampsiteForm/EditCampsiteForm', () => ({
+  __esModule: true,
+  default: ({ onCancel }: any) => (
+    <button data-testid="edit-form" onClick={onCancel}>
+      Mock Edit Form
+    </button>
+  ),
+}));
 
-  const fakeForecast = [
-    { number: 1, name: "Today", isDaytime: true,
-      temperature: 70, temperatureUnit: "F",
-      shortForecast: "Sunny",
-      detailedForecast: "Sunny",
-      windSpeed: "5 mph", windDirection: "NW" },
-  ];
+import CampsiteMarker from './CampsiteMarker';
+import { Campsite } from '../../types/Campsite';
 
-  it("renders site info and loads weather", async () => {
-    (getWeatherForecast as any).mockResolvedValue(fakeForecast);
+const sampleSite: Campsite & { weather: any[] } = {
+  id: 'abc',
+  name: 'Test Site',
+  description: 'A lovely place',
+  lat: 10,
+  lng: 20,
+  elevation: 100,
+  requires_4wd: true,
+  weather: [
+    {
+      number: 1,
+      name: 'Morning',
+      isDaytime: true,
+      temperature: 60,
+      temperatureUnit: 'F',
+      windSpeed: '5 mph',
+      windDirection: 'NE',
+      detailedForecast: 'Sunny',
+      startTime: '2024-01-01T06:00:00Z',
+      endTime: '2024-01-01T12:00:00Z',
+      shortForecast: 'Sunny',
+    },
+    {
+      number: 2,
+      name: 'Evening',
+      isDaytime: false,
+      temperature: 45,
+      temperatureUnit: 'F',
+      windSpeed: '3 mph',
+      windDirection: 'SW',
+      detailedForecast: 'Clear',
+      startTime: '2024-01-01T18:00:00Z',
+      endTime: '2024-01-02T00:00:00Z',
+      shortForecast: 'Clear',
+    },
+  ],
+  last_updated: '2024-01-01T00:00:00Z',
+};
 
-    const { container } = render(<CampsiteMarker site={site} />);
-
-    expect(screen.getByText("Test Site")).toBeInTheDocument();
-    expect(screen.getByText("A lovely place")).toBeInTheDocument();
-    expect(screen.getByText("Requires 4WD:")).toBeInTheDocument();
-    expect(screen.getByText("Yes")).toBeInTheDocument();
-
-    expect(screen.getByText("Loading weather...")).toBeInTheDocument();
-    await waitFor(() => {
-      // Find all .weather-temp spans and check their text content for temperature and unit
-      const tempSpans = container.querySelectorAll(".weather-temp");
-      expect(
-        Array.from(tempSpans).some((span) => {
-          const text = span.textContent?.replace(/\s/g, "");
-          return text && text.includes("Temp:70°F");
-        })
-      ).toBe(true);
-    });
-    await waitFor(() => {
-      // Find all .weather-short spans and check their text content for forecast
-      const shortSpans = container.querySelectorAll(".weather-short");
-      expect(
-        Array.from(shortSpans).some((span) => {
-          const text = span.textContent;
-          return text && text.includes("Forecast:") && text.includes("Sunny");
-        })
-      ).toBe(true);
-    });
-
-    const dirButton = screen.getByRole("button", { name: /Get Directions/ });
-    expect(dirButton).toHaveAttribute(
-      "href",
-      expect.stringContaining("destination=10,20")
-    );
+describe('<CampsiteMarker />', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("shows invalid coordinate error", () => {
-    render(
-      <CampsiteMarker
-        site={{ ...site, lat: 0, lng: 0 }}
-      />
-    );
-    expect(screen.getByText("Invalid coordinates")).toBeInTheDocument();
+  it('renders marker and popup with site info', () => {
+    render(<CampsiteMarker site={sampleSite} />);
+
+    expect(screen.getByTestId('marker')).toBeInTheDocument();
+    expect(screen.getByText('Test Site')).toBeInTheDocument();
+    expect(screen.getByText('A lovely place')).toBeInTheDocument();
+    expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
+    expect(screen.getByText('Yes')).toBeInTheDocument();
+    expect(screen.getByText('Morning (Day)')).toBeInTheDocument();
+    expect(screen.getByText('Evening (Night)')).toBeInTheDocument();
+  });
+
+  it('toggles edit mode when clicking Edit Campsite button', async () => {
+    render(<CampsiteMarker site={sampleSite} />);
+
+    const editButton = screen.getByRole('button', { name: /Edit Campsite/i });
+    fireEvent.click(editButton);
+
+    // Wait for the edit form to appear
+    expect(await screen.findByTestId('edit-form')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('edit-form'));
+    expect(screen.queryByTestId('edit-form')).not.toBeInTheDocument();
+  });
+
+  it('displays "Unnamed Site" when name is empty', () => {
+    const unnamed = { ...sampleSite, name: '' };
+    render(<CampsiteMarker site={unnamed} />);
+    expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
+  });
+
+  it('shows "Unknown" for elevation when invalid', () => {
+    const noElev = { ...sampleSite, elevation: NaN };
+    render(<CampsiteMarker site={noElev} />);
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
   });
 });

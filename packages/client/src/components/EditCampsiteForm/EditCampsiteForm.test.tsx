@@ -31,6 +31,7 @@ describe('EditCampsiteForm', () => {
     lng: -120,
     requires_4wd: false,
     last_updated: '2025-06-01T00:00:00.000Z',
+    weather: [], // Add an empty array or mock WeatherPeriod[] as needed
   };
   let dispatchMock: ReturnType<typeof vi.fn>;
   const onCancelMock = vi.fn();
