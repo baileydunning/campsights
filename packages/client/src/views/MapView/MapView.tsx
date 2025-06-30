@@ -27,7 +27,6 @@ const personIcon = new L.DivIcon({
 });
 
 const MapView: React.FC = () => {
-  const [showModal, setShowModal] = useState<boolean>(false);
   const dispatch = useDispatch<AppDispatch>();
   const campsites = useSelector(selectCampsites);
   const loading = useSelector(selectLoading);
@@ -46,10 +45,6 @@ const MapView: React.FC = () => {
       );
     }
   }, []);
-
-  const handleSuccess = useCallback(() => {
-      setShowModal(false);
-    }, []);
 
   const createCampsiteMarker = () => {
     return campsites.map((site) => (
@@ -98,30 +93,6 @@ const MapView: React.FC = () => {
           </Marker>
         )}
       </MapContainer>
-      <button
-        className="plus-button"
-        onClick={() => setShowModal(true)}
-        aria-label="Add Campsite"
-      >
-        +
-      </button>
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="close-modal"
-              onClick={() => setShowModal(false)}
-              aria-label="Close"
-            >
-              &times;
-            </button>
-            <AddCampsiteForm onSuccess={handleSuccess} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

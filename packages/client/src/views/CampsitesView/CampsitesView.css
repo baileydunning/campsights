@@ -1,0 +1,192 @@
+.campsites-view {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 2rem;
+}
+
+.campsites-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.campsites-header h1 {
+  font-family: var(--font-header);
+  color: var(--text-dark);
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.campsites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.campsite-card {
+  background: var(--text-light);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(33, 53, 71, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--accent-light);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.campsite-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0;
+  flex: 1;
+}
+
+.fourwd-badge {
+  background: var(--accent-mid);
+  color: var(--text-light);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.campsite-description {
+  margin-bottom: 1.5rem;
+  height: 4.8rem; /* Fixed height for exactly 4 lines (1.2rem line-height * 4) */
+  overflow-y: auto;
+}
+
+.campsite-description p {
+  color: var(--text-dark);
+  line-height: 1.2rem;
+  margin: 0;
+  opacity: 0.8;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.campsite-details {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-mid);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  text-align: right;
+  opacity: 0.8;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.directions-btn {
+  background: var(--accent-mid);
+  color: var(--text-light);
+}
+
+.directions-btn:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-dark);
+  font-size: 1.1rem;
+}
+
+.error-state {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .campsites-view {
+    padding: 1rem;
+  }
+  
+  .campsites-header h1 {
+    font-size: 2rem;
+  }
+  
+  .campsites-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .campsite-card {
+    padding: 1rem;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .detail-value {
+    text-align: left;
+  }
+}
