@@ -1,11 +1,14 @@
+import { WeatherPeriod } from "./Weather";
+
 export interface Campsite {
   id: string;
   name: string;
   description: string;
   lat: number;
   lng: number;
-  elevation?: number | null;
   requires_4wd: boolean;
+  elevation?: number | null;
+  weather: WeatherPeriod[]; 
   last_updated: string;
 }
 
