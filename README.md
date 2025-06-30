@@ -7,7 +7,7 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 ## Tech Stack
 
 - **Frontend:** React, Vite, TypeScript, Redux Toolkit, React-Leaflet, Vitest, CSS Modules
-- **Backend:** Express, TypeScript, LMDB (for fast key-value storage), National Weather Service API integration
+- **Backend:** Express, TypeScript, LMDB (for fast key-value storage), National Weather Service API integration, Open Elevation API integration
 - **Monorepo:** Managed with [Lerna](https://lerna.js.org/)
 - **Testing:** Vitest (client & server)
 - **Containerization:** Docker, Docker Compose
@@ -15,12 +15,11 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 ## Features
 
 - View campsites on an interactive Leaflet map
-- See multi-day weather forecasts for each campsite
+- See multi-day weather forecasts and elevation data for each campsite
 - Get directions to any campsite via Google Maps
 - Add new campsites with name, description, coordinates, and 4WD requirement
 - Edit and delete campsites
 - Data is stored in LMDB (server) and served via REST API
-- All weather and directions UI is styled via CSS for maintainability
 - Comprehensive unit and integration tests using Vitest
 
 ## Monorepo & Lerna
