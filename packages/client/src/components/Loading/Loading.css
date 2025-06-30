@@ -1,0 +1,17 @@
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.breathing-tent {
+  animation: breathe 2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes breathe {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

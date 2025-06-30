@@ -6,6 +6,7 @@ import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../
 import type { AppDispatch } from "../../store/store";
 import "./MapView.css";
 import CampsiteMarker from "../CampsiteMarker/CampsiteMarker";
+import Loading from "../Loading/Loading";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
@@ -53,11 +54,7 @@ const MapView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="MapView">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          Loading campsites...
-        </div>
-      </div>
+      <Loading />
     );
   }
 
