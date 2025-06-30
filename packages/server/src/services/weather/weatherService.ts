@@ -8,7 +8,6 @@ export async function getWeatherForecast(
   const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
 
   try {
-    // Discover forecast endpoint
     const pointsRes = await fetch(pointsUrl, {
       headers: { 'Accept': 'application/geo+json, application/json, application/cap+xml' }
     });
@@ -24,7 +23,6 @@ export async function getWeatherForecast(
       return [];
     }
 
-    // Fetch the actual forecast periods
     const forecastRes = await fetch(forecastUrl, {
       headers: { 'Accept': 'application/geo+json, application/json, application/cap+xml' }
     });

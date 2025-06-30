@@ -4,14 +4,11 @@ import { getElevation } from '../elevation/elevationService';
 import { getWeatherForecast } from '../weather/weatherService';
 import { WeatherPeriod } from '../../models/weatherModel';
 
-// in-memory cache for weather only
 const weatherCache = new Map<string, WeatherPeriod[]>();
 
-// Attach weather forecast to a campsite record
 async function attachWeather(
   campsite: Campsite
 ): Promise<{ weather: WeatherPeriod[] }> {
-  // Use cached value if available
   if (weatherCache.has(campsite.id)) {
     return { weather: weatherCache.get(campsite.id)! };
   }
@@ -26,7 +23,6 @@ async function attachWeather(
   }
 }
 
-// Fetch all campsites with elevation and weather
 export const getCampsites = async (): Promise<
   (Campsite & { elevation: number | null; weather: WeatherPeriod[] })[]
 > => {
@@ -48,17 +44,14 @@ export const getCampsites = async (): Promise<
   }
 };
 
-// Create a new campsite, persisting elevation (weather not stored)
 export const addCampsite = async (
   campsite: Campsite
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] }> => {
   try {
-    // Fetch elevation once, store in DB
     const elevation = await getElevation(campsite.lat, campsite.lng);
     const newSite = { ...campsite, elevation };
     await db.put(newSite.id, newSite);
 
-    // Optionally fetch weather on creation (not persisted)
     const weather = await getWeatherForecast(newSite);
     return { ...newSite, weather };
   } catch (err) {
@@ -67,7 +60,6 @@ export const addCampsite = async (
   }
 };
 
-// Update existing campsite
 export const updateCampsite = async (
   id: string,
   campsite: Campsite
@@ -77,7 +69,6 @@ export const updateCampsite = async (
     if (!existing) return null;
 
     let elevation = existing.elevation ?? null;
-    // Only fetch if lat/lng changed or elevation missing
     if (
       existing.lat !== campsite.lat ||
       existing.lng !== campsite.lng ||
@@ -97,13 +88,11 @@ export const updateCampsite = async (
   }
 };
 
-// Delete a campsite
 export const deleteCampsite = async (id: string): Promise<boolean> => {
   try {
     const exists = await db.get(id);
     if (!exists) return false;
     await db.remove(id);
-    // clear weather cache
     weatherCache.delete(id);
     return true;
   } catch (err) {
