@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../store/store';
 import { putCampsite, deleteCampsite } from '../../store/campsiteSlice';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 
 // Mock the Redux hooks
 vi.mock('../../store/store', () => ({
@@ -34,16 +35,16 @@ describe('EditCampsiteForm', () => {
     requires_4wd: false,
     last_updated: '2025-06-01T00:00:00.000Z',
   };
-  let dispatchMock: jest.Mock;
+  let dispatchMock: ReturnType<typeof vi.fn>;
   const onCancelMock = vi.fn();
 
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
     dispatchMock = vi.fn();
-    (useAppDispatch as vi.Mock).mockReturnValue(dispatchMock);
+    (useAppDispatch as unknown as Mock).mockReturnValue(dispatchMock);
     // Default: no global error in selector
-    (useAppSelector as vi.Mock).mockReturnValue(null);
+    (useAppSelector as unknown as Mock).mockReturnValue(null);
   });
 
   it('renders fields with initial values and buttons', () => {
