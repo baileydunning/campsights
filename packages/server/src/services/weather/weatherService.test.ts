@@ -73,7 +73,7 @@ describe('getWeatherForecast', () => {
 
         const result = await getWeatherForecast(mockCampsite);
         expect(result).toEqual([]);
-        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(fetchSpy).toHaveBeenCalledTimes(3); // 1 initial + 2 retries
     });
 
     it('returns empty array if forecast url is missing', async () => {
@@ -108,7 +108,7 @@ describe('getWeatherForecast', () => {
 
         const result = await getWeatherForecast(mockCampsite);
         expect(result).toEqual([]);
-        expect(fetchSpy).toHaveBeenCalledTimes(2);
+        expect(fetchSpy).toHaveBeenCalledTimes(4); // 1 for points + 3 for forecast (with retries)
     });
 
     it('returns empty array if an exception is thrown', async () => {
@@ -118,6 +118,6 @@ describe('getWeatherForecast', () => {
 
         const result = await getWeatherForecast(mockCampsite);
         expect(result).toEqual([]);
-        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(fetchSpy).toHaveBeenCalledTimes(3); // 3 attempts due to retries
     });
 });
