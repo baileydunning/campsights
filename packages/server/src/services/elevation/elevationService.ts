@@ -13,10 +13,8 @@ const getElevations = async (
 
   for (const [index, key] of keys.entries()) {
     if (elevationCache.has(key)) {
-      console.log(`[elevationService] Cache hit for ${key}`);
       results[index] = elevationCache.get(key)!;
     } else {
-      console.log(`[elevationService] Cache miss for ${key}`);
       uncached.push(locations[index]);
       uncachedIndexes.push(index);
     }
@@ -25,7 +23,6 @@ const getElevations = async (
   if (uncached.length > 0) {
     let payload: { results: Elevation[] } | null = null;
     try {
-      console.log(`[elevationService] Fetching elevations for ${uncached.length} uncached locations`);
       const response = await fetchWithRetry('https://api.open-elevation.com/api/v1/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,7 +50,6 @@ const getElevations = async (
       const elevation = payload!.results[i].elevation;
       elevationCache.set(key, elevation);
       results[uncachedIndexes[i]] = elevation;
-      console.log(`[elevationService] Cached elevation for ${key}: ${elevation}`);
     });
   }
 
@@ -64,7 +60,6 @@ export const getElevation = async (
   latitude: number,
   longitude: number
 ): Promise<number | null> => {
-  console.log(`[elevationService] Fetching elevation for ${latitude}, ${longitude}`);
   const [elevation] = await getElevations([{ latitude, longitude }]);
   return elevation;
 };

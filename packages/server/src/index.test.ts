@@ -3,6 +3,11 @@ import type { Mock } from 'vitest';
 import request from 'supertest';
 import * as campsitesService from './services/campsites/campsitesService';
 
+vi.mock('express-rate-limit', () => ({
+  __esModule: true,
+  default: () => (req: any, res: any, next: any) => next(),
+}));
+
 vi.mock('./config/db', () => ({
   seedDB: vi.fn(() => Promise.resolve()),
   db: {
@@ -12,7 +17,6 @@ vi.mock('./config/db', () => ({
   }
 }));
 
-// Corrected mock path to match actual file structure
 vi.mock('./services/campsites/campsitesService', () => ({
   getCampsites: vi.fn(() => Promise.resolve([])),
   addCampsite: vi.fn((campsite) => Promise.resolve(campsite)),
@@ -148,4 +152,25 @@ describe('Campsites API', () => {
     expect(lastRes!.status).toBe(429);
     expect(lastRes!.body).toHaveProperty('error');
   });
+
+  it('handles 100 sequential GET /api/v1/campsites requests in under 2 seconds', async () => {
+      const start = Date.now();
+      for (let i = 0; i < 100; i++) {
+        const res = await request(app).get('/api/v1/campsites');
+        expect(res.status).toBe(200);
+      }
+      const duration = Date.now() - start;
+      console.log(`100 sequential GET requests took ${duration}ms`);
+      expect(duration).toBeLessThan(2000);
+    });
+
+    it('handles 100 parallel GET /api/v1/campsites requests in under 1 second', async () => {
+      const start = Date.now();
+      const requests = Array.from({ length: 100 }, () => request(app).get('/api/v1/campsites'));
+      const results = await Promise.all(requests);
+      results.forEach(res => expect(res.status).toBe(200));
+      const duration = Date.now() - start;
+      console.log(`100 parallel GET requests took ${duration}ms`);
+      expect(duration).toBeLessThan(1000);
+    });
 });
