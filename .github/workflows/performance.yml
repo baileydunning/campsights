@@ -78,12 +78,35 @@ jobs:
       with:
         header: performance-backend
         message: |
+          ### Backend Latency Metrics
+          - name: Post or update PR comment with backend results
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: performance-backend
+        message: |
           ## Backend Latency Metrics
-          - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms
-          - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms
-          - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms
-          - 95th percentile: ${{ steps.extract-artillery.outputs.p95_latency }} ms
-          - 99th percentile: ${{ steps.extract-artillery.outputs.p99_latency }} ms
+
+          - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms \
+            ${{ if lt( steps.extract-artillery.outputs.mean_latency, '1' ) }}Excellent${{ 
+               else if lt( steps.extract-artillery.outputs.mean_latency, '2' ) }}Good${{ 
+               else }}Needs Improvement${{ end }}
+
+          - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms \
+            ${{ if eq( steps.extract-artillery.outputs.min_latency, '0' ) }}Perfect${{ 
+               else }}Check Minimum${{ end }}
+
+          - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms \
+            ${{ if lt( steps.extract-artillery.outputs.max_latency, '5' ) }}Excellent${{ 
+               else if lt( steps.extract-artillery.outputs.max_latency, '10' ) }}Good${{ 
+               else }}Needs Attention${{ end }}
+
+          - 95th percentile: ${{ steps.extract-artillery.outputs.p95_latency }} ms \
+            ${{ if lt( steps.extract-artillery.outputs.p95_latency, '2' ) }}Good${{ 
+               else }}Needs Improvement${{ end }}
+
+          - 99th percentile: ${{ steps.extract-artillery.outputs.p99_latency }} ms \
+            ${{ if lt( steps.extract-artillery.outputs.p99_latency, '3' ) }}Good${{ 
+               else }}Needs Improvement${{ end }}
 
   client:
     needs: server
@@ -139,13 +162,28 @@ jobs:
         echo "best=$best" >> $GITHUB_OUTPUT
         echo "seo=$seo" >> $GITHUB_OUTPUT
 
-    - name: Post or update PR comment with frontend results
+        - name: Post or update PR comment with frontend results
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: performance-frontend
         message: |
-          ## Lighthouse Scores
-          - Performance: ${{ steps.extract-lhci.outputs.perf }}
-          - Accessibility: ${{ steps.extract-lhci.outputs.acc }}
-          - Best Practices: ${{ steps.extract-lhci.outputs.best }}
-          - SEO: ${{ steps.extract-lhci.outputs.seo }}
+          ### Frontend Performance Metrics
+
+          - Performance: ${{ steps.extract-lhci.outputs.perf }} \
+            ${{ if gt( steps.extract-lhci.outputs.perf, '0.90' ) }}Excellent${{ 
+               else if gt( steps.extract-lhci.outputs.perf, '0.50' ) }}Needs Improvement${{ 
+               else }}Poor${{ end }}
+
+          - Accessibility: ${{ steps.extract-lhci.outputs.acc }} \
+            ${{ if eq( steps.extract-lhci.outputs.acc, '1.00' ) }}Perfect${{ 
+               else }}Review Accessibility${{ end }}
+
+          - Best Practices: ${{ steps.extract-lhci.outputs.best }} \
+            ${{ if gt( steps.extract-lhci.outputs.best, '0.90' ) }}Good${{ 
+               else }}Check Best Practices${{ end }}
+
+          - SEO: ${{ steps.extract-lhci.outputs.seo }} \
+            ${{ if gt( steps.extract-lhci.outputs.seo, '0.90' ) }}Strong${{ 
+               else if gt( steps.extract-lhci.outputs.seo, '0.75' ) }}Could Improve${{ 
+               else }}Needs Work${{ end }}
+
