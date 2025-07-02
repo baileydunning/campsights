@@ -6,6 +6,7 @@ import campsitesRouter from './campsitesRoutes';
 // Fix mock path to match router import
 vi.mock('../../controllers/campsites/campsitesController', () => ({
     getCampsites: vi.fn((req, res) => res.status(200).json([{ id: 1, name: 'Test Campsite' }])),
+    getCampsiteById: vi.fn((req, res) => res.status(200).json({ id: req.params.id, name: 'Test Campsite By ID' })),
     addCampsite: vi.fn((req, res) => res.status(201).json({ id: 2, ...req.body })),
     updateCampsite: vi.fn((req, res) => res.status(200).json({ id: req.params.id, ...req.body })),
     deleteCampsite: vi.fn((req, res) => res.status(204).json({})),
@@ -20,6 +21,12 @@ describe('campsitesRouter', () => {
         const res = await request(app).get('/campsites');
         expect(res.status).toBe(200);
         expect(res.body).toEqual([{ id: 1, name: 'Test Campsite' }]);
+    });
+
+    it('GET /campsites/:id should call getCampsiteById and return the campsite', async () => {
+        const res = await request(app).get('/campsites/123');
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ id: '123', name: 'Test Campsite By ID' });
     });
 
     it('POST /campsites should call addCampsite and return new campsite', async () => {

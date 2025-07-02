@@ -35,6 +35,7 @@ It provides a REST API for managing campsite data, which is stored in an LMDB da
 ## API Endpoints
 
 - `GET /api/v1/campsites` — List all campsites
+- `GET /api/v1/campsites/:id` - Get a campsite by id
 - `POST /api/v1/campsites` — Add a new campsite
 - `PUT /api/v1/campsites/:id` — Update an existing campsite
 - `DELETE /api/v1/campsites/:id` — Delete a campsite
