@@ -138,7 +138,6 @@ describe('Campsites API', () => {
     const indexHtmlPath = path.join(staticPath, "index.html");
 
     if (!fs.existsSync(indexHtmlPath)) {
-      // Skip the test if static file is not present
       console.warn("client/dist/index.html not found, skipping rate limit test.");
       return;
     }
