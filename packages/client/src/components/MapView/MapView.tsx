@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../../store/campsiteSlice";
 import type { AppDispatch } from "../../store/store";
 import "./MapView.css";
-import CampsiteMarker from "../CampsiteMarker/CampsiteMarker";
+import type { Campsite } from '../../types/Campsite';
+const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
 import Loading from "../Loading/Loading";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
@@ -47,17 +48,19 @@ const MapView: React.FC = () => {
   }, []);
 
 
-  const campsiteMarkers = useMemo(
-    () => campsites.map((site) => (
-      <CampsiteMarker key={site.id} site={site} />
-    )),
-    [campsites]
+  const renderCampsiteMarker = useCallback(
+    (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
+    []
   );
 
+  const campsiteMarkers = useMemo(
+    () => campsites.map(renderCampsiteMarker),
+    [campsites, renderCampsiteMarker]
+  );
+
+
   if (loading) {
-    return (
-      <Loading />
-    );
+    return <Loading />;
   }
 
   if (error) {
@@ -72,25 +75,27 @@ const MapView: React.FC = () => {
 
   return (
     <div className="MapView">
-      <MapContainer
-        center={currentPosition || defaultPosition}
-        zoom={8}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {campsiteMarkers}
-        {currentPosition && (
-          <Marker position={currentPosition} icon={personIcon}>
-            <Popup>You are here</Popup>
-            <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
-              You are here
-            </Tooltip>
-          </Marker>
-        )}
-      </MapContainer>
+      <Suspense fallback={<Loading />}>
+        <MapContainer
+          center={currentPosition || defaultPosition}
+          zoom={8}
+          style={{ height: "100%", width: "100%" }}
+        >
+          <TileLayer
+            attribution="&copy; OpenStreetMap contributors"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {campsiteMarkers}
+          {currentPosition && (
+            <Marker position={currentPosition} icon={personIcon}>
+              <Popup>You are here</Popup>
+              <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
+                You are here
+              </Tooltip>
+            </Marker>
+          )}
+        </MapContainer>
+      </Suspense>
     </div>
   );
 };

@@ -21,18 +21,20 @@ vi.mock("react-leaflet", () => ({
   Tooltip: ({ children }: any) => <div data-testid="person-tooltip">{children}</div>,
 }));
 
-vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
-  __esModule: true,
-  default: ({ site }: any) => (
-    <div data-testid="marker">
-      <div data-testid="popup">
-        <div>{site.name ? site.name : "Unnamed Site"}</div>
-        <div>{site.description}</div>
-        <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
+vi.mock("../CampsiteMarker/CampsiteMarker", async () => {
+  return {
+    __esModule: true,
+    default: ({ site }: any) => (
+      <div data-testid="marker">
+        <div data-testid="popup">
+          <div>{site.name ? site.name : "Unnamed Site"}</div>
+          <div>{site.description}</div>
+          <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
+        </div>
       </div>
-    </div>
-  ),
-}));
+    ),
+  };
+});
 
 const mockCampsites = [
   {
