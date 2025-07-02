@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fetch from 'node-fetch';
-import { getElevation } from './elevationService';
+import { getElevation, __clearElevationCache } from './elevationService';
 
 vi.mock('node-fetch', async () => {
     const actual = await vi.importActual<typeof import('node-fetch')>('node-fetch');
@@ -18,6 +18,7 @@ describe('getElevation', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+        __clearElevationCache();
     });
 
     it('returns elevation when API responds with valid data', async () => {
@@ -64,5 +65,20 @@ describe('getElevation', () => {
         await expect(getElevation(latitude, longitude)).rejects.toThrow(
             'Elevation data missing or mismatched for requested coordinates.'
         );
+    });
+
+    it('caches batch elevation requests', async () => {
+        mockedFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                results: [{ elevation: 123 }],
+            }),
+        } as any);
+
+        const elevation1 = await getElevation(latitude, longitude);
+        const elevation2 = await getElevation(latitude, longitude);
+        expect(elevation1).toBe(123);
+        expect(elevation2).toBe(123);
+        expect(mockedFetch).toHaveBeenCalledTimes(1);
     });
 });
