@@ -1,0 +1,343 @@
+name: Performance
+
+permissions:
+  pull-requests: write
+
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/server
+    outputs:
+      mean_latency: ${{ steps.extract-artillery.outputs.mean_latency }}
+      min_latency: ${{ steps.extract-artillery.outputs.min_latency }}
+      max_latency: ${{ steps.extract-artillery.outputs.max_latency }}
+      p95_latency: ${{ steps.extract-artillery.outputs.p95_latency }}
+      p99_latency: ${{ steps.extract-artillery.outputs.p99_latency }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+
+    - name: Install backend dependencies
+      run: npm ci
+
+    - name: Build backend
+      run: npm run build
+
+    - name: Start backend
+      run: NODE_ENV=test npm start &
+
+    - name: Wait for backend health endpoint
+      run: |
+        for i in {1..30}; do
+          if curl -sSf http://localhost:3000/health; then
+            echo "Backend is up!"; exit 0
+          fi
+          sleep 2
+        done
+        echo "Backend did not start in time"; exit 1
+
+    - name: Install Artillery
+      run: npm install -g artillery
+
+    - name: Run Artillery load test
+      id: artillery-run
+      run: |
+        printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
+        artillery run --output artillery-report.json artillery.yml
+
+    - name: Extract latency metrics from Artillery report
+      id: extract-artillery
+      run: |
+        mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
+        min_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].min // empty' artillery-report.json)
+        max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
+        p95_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p95 // empty' artillery-report.json)
+        p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
+        echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
+        echo "min_latency=$min_latency" >> $GITHUB_OUTPUT
+        echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
+        echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
+        echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
+
+    - name: Compute backend metric statuses
+      id: backend-status
+      run: |
+        mean=${{ steps.extract-artillery.outputs.mean_latency }}
+        min=${{ steps.extract-artillery.outputs.min_latency }}
+        max=${{ steps.extract-artillery.outputs.max_latency }}
+        p95=${{ steps.extract-artillery.outputs.p95_latency }}
+        p99=${{ steps.extract-artillery.outputs.p99_latency }}
+        # Mean
+        if (( $(echo "$mean < 0.5" | bc -l) )); then mean_status="Outstanding";
+        elif (( $(echo "$mean < 1" | bc -l) )); then mean_status="Excellent";
+        elif (( $(echo "$mean < 2" | bc -l) )); then mean_status="Good";
+        elif (( $(echo "$mean < 5" | bc -l) )); then mean_status="Fair";
+        else mean_status="Needs Major Improvement"; fi
+        # Min
+        if (( $(echo "$min == 0" | bc -l) )); then min_status="Perfect";
+        elif (( $(echo "$min < 1" | bc -l) )); then min_status="Great";
+        elif (( $(echo "$min < 2" | bc -l) )); then min_status="Good";
+        else min_status="Check Minimum"; fi
+        # Max
+        if (( $(echo "$max < 2" | bc -l) )); then max_status="Outstanding";
+        elif (( $(echo "$max < 5" | bc -l) )); then max_status="Excellent";
+        elif (( $(echo "$max < 10" | bc -l) )); then max_status="Good";
+        elif (( $(echo "$max < 20" | bc -l) )); then max_status="Fair";
+        else max_status="Needs Attention"; fi
+        # p95
+        if (( $(echo "$p95 < 1" | bc -l) )); then p95_status="Outstanding";
+        elif (( $(echo "$p95 < 2" | bc -l) )); then p95_status="Good";
+        elif (( $(echo "$p95 < 5" | bc -l) )); then p95_status="Fair";
+        else p95_status="Needs Improvement"; fi
+        # p99
+        if (( $(echo "$p99 < 1.5" | bc -l) )); then p99_status="Outstanding";
+        elif (( $(echo "$p99 < 3" | bc -l) )); then p99_status="Good";
+        elif (( $(echo "$p99 < 6" | bc -l) )); then p99_status="Fair";
+        else p99_status="Needs Improvement"; fi
+        echo "mean_status=$mean_status" >> $GITHUB_OUTPUT
+        echo "min_status=$min_status" >> $GITHUB_OUTPUT
+        echo "max_status=$max_status" >> $GITHUB_OUTPUT
+        echo "p95_status=$p95_status" >> $GITHUB_OUTPUT
+        echo "p99_status=$p99_status" >> $GITHUB_OUTPUT
+
+    - name: Post or update PR comment with backend results
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: performance-backend
+        message: |
+          ### Backend Latency Report
+
+          | Metric | Value (ms) | Status |
+          |--------|------------|--------|
+          | **Mean** | ${{ steps.extract-artillery.outputs.mean_latency }} | ${{ steps.backend-status.outputs.mean_status }} |
+          | **Min**  | ${{ steps.extract-artillery.outputs.min_latency }} | ${{ steps.backend-status.outputs.min_status }} |
+          | **Max**  | ${{ steps.extract-artillery.outputs.max_latency }} | ${{ steps.backend-status.outputs.max_status }} |
+          | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
+          | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
+
+  client:
+    needs: server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/client
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+
+    - name: Install frontend dependencies
+      run: npm ci
+
+    - name: Build frontend
+      run: npm run build
+
+    - name: Start frontend
+      run: npm run preview &
+
+    - name: Wait for frontend
+      run: |
+        for i in {1..30}; do
+          if curl -sSf http://localhost:4173; then
+            echo "Frontend is up!"; exit 0
+          fi
+          sleep 2
+        done
+        echo "Frontend did not start in time"; exit 1
+
+    - name: Install Lighthouse CI
+      run: npm install -g @lhci/cli
+
+    - name: Run Lighthouse CI
+      run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
+
+    - name: Extract Lighthouse scores and metrics
+      id: extract-lhci
+      run: |
+        # Find the representative run (isRepresentativeRun==true), fallback to first if not found
+        rep_index=$(jq 'map(.isRepresentativeRun) | index(true) // 0' lhci-report/manifest.json)
+        perf=$(jq -r ".[${rep_index}].summary.performance // empty" lhci-report/manifest.json)
+        acc=$(jq -r ".[${rep_index}].summary.accessibility // empty" lhci-report/manifest.json)
+        best=$(jq -r ".[${rep_index}].summary[\"best-practices\"] // empty" lhci-report/manifest.json)
+        seo=$(jq -r ".[${rep_index}].summary.seo // empty" lhci-report/manifest.json)
+        report_path=$(jq -r ".[${rep_index}].jsonPath" lhci-report/manifest.json)
+        # Extract key metrics from the report JSON
+        fcp=$(jq -r '.audits["first-contentful-paint"].displayValue // empty' "$report_path")
+        lcp=$(jq -r '.audits["largest-contentful-paint"].displayValue // empty' "$report_path")
+        tbt=$(jq -r '.audits["total-blocking-time"].displayValue // empty' "$report_path")
+        si=$(jq -r '.audits["speed-index"].displayValue // empty' "$report_path")
+        tti=$(jq -r '.audits["interactive"].displayValue // empty' "$report_path")
+        cls=$(jq -r '.audits["cumulative-layout-shift"].displayValue // empty' "$report_path")
+        echo "perf=$perf" >> $GITHUB_OUTPUT
+        echo "acc=$acc" >> $GITHUB_OUTPUT
+        echo "best=$best" >> $GITHUB_OUTPUT
+        echo "seo=$seo" >> $GITHUB_OUTPUT
+        echo "fcp=$fcp" >> $GITHUB_OUTPUT
+        echo "lcp=$lcp" >> $GITHUB_OUTPUT
+        echo "tbt=$tbt" >> $GITHUB_OUTPUT
+        echo "si=$si" >> $GITHUB_OUTPUT
+        echo "tti=$tti" >> $GITHUB_OUTPUT
+        echo "cls=$cls" >> $GITHUB_OUTPUT
+
+    - name: Compute frontend metric statuses
+      id: frontend-status
+      run: |
+        perf=${{ steps.extract-lhci.outputs.perf }}
+        acc=${{ steps.extract-lhci.outputs.acc }}
+        best=${{ steps.extract-lhci.outputs.best }}
+        seo=${{ steps.extract-lhci.outputs.seo }}
+        fcp=${{ steps.extract-lhci.outputs.fcp }}
+        lcp=${{ steps.extract-lhci.outputs.lcp }}
+        tbt=${{ steps.extract-lhci.outputs.tbt }}
+        si=${{ steps.extract-lhci.outputs.si }}
+        tti=${{ steps.extract-lhci.outputs.tti }}
+        cls=${{ steps.extract-lhci.outputs.cls }}
+        # Performance
+        if (( $(echo "$perf > 0.97" | bc -l) )); then perf_status="Outstanding";
+        elif (( $(echo "$perf > 0.93" | bc -l) )); then perf_status="Excellent";
+        elif (( $(echo "$perf > 0.85" | bc -l) )); then perf_status="Good";
+        elif (( $(echo "$perf > 0.70" | bc -l) )); then perf_status="Fair";
+        elif (( $(echo "$perf > 0.50" | bc -l) )); then perf_status="Needs Improvement";
+        else perf_status="Poor"; fi
+        # Accessibility
+        if (( $(echo "$acc == 1.00" | bc -l) )); then acc_status="Perfect";
+        elif (( $(echo "$acc > 0.95" | bc -l) )); then acc_status="Excellent";
+        elif (( $(echo "$acc > 0.90" | bc -l) )); then acc_status="Good";
+        elif (( $(echo "$acc > 0.80" | bc -l) )); then acc_status="Fair";
+        else acc_status="Review Accessibility"; fi
+        # Best Practices
+        if (( $(echo "$best > 0.97" | bc -l) )); then best_status="Outstanding";
+        elif (( $(echo "$best > 0.93" | bc -l) )); then best_status="Excellent";
+        elif (( $(echo "$best > 0.85" | bc -l) )); then best_status="Good";
+        elif (( $(echo "$best > 0.70" | bc -l) )); then best_status="Fair";
+        else best_status="Check Best Practices"; fi
+        # SEO
+        if (( $(echo "$seo > 0.97" | bc -l) )); then seo_status="Outstanding";
+        elif (( $(echo "$seo > 0.93" | bc -l) )); then seo_status="Excellent";
+        elif (( $(echo "$seo > 0.85" | bc -l) )); then seo_status="Good";
+        elif (( $(echo "$seo > 0.70" | bc -l) )); then seo_status="Fair";
+        elif (( $(echo "$seo > 0.50" | bc -l) )); then seo_status="Could Improve";
+        else seo_status="Needs Work"; fi
+        # FCP
+        fcp_val=$(echo "$fcp" | grep -oE '[0-9.]+')
+        if [[ "$fcp" == *"ms"* ]]; then fcp_sec=$(echo "scale=3; $fcp_val/1000" | bc); else fcp_sec=$fcp_val; fi
+        if (( $(echo "$fcp_sec < 1" | bc -l) )); then fcp_status="Excellent";
+        elif (( $(echo "$fcp_sec < 2" | bc -l) )); then fcp_status="Good";
+        elif (( $(echo "$fcp_sec < 3" | bc -l) )); then fcp_status="Fair";
+        else fcp_status="Slow"; fi
+        # LCP
+        lcp_val=$(echo "$lcp" | grep -oE '[0-9.]+')
+        if [[ "$lcp" == *"ms"* ]]; then lcp_sec=$(echo "scale=3; $lcp_val/1000" | bc); else lcp_sec=$lcp_val; fi
+        if (( $(echo "$lcp_sec < 1.2" | bc -l) )); then lcp_status="Excellent";
+        elif (( $(echo "$lcp_sec < 2.5" | bc -l) )); then lcp_status="Good";
+        elif (( $(echo "$lcp_sec < 4" | bc -l) )); then lcp_status="Fair";
+        else lcp_status="Slow"; fi
+        # TBT
+        tbt_val=$(echo "$tbt" | grep -oE '[0-9.]+')
+        if (( $(echo "$tbt_val < 100" | bc -l) )); then tbt_status="Excellent";
+        elif (( $(echo "$tbt_val < 300" | bc -l) )); then tbt_status="Good";
+        elif (( $(echo "$tbt_val < 600" | bc -l) )); then tbt_status="Fair";
+        else tbt_status="High"; fi
+        # Speed Index
+        si_val=$(echo "$si" | grep -oE '[0-9.]+')
+        if (( $(echo "$si_val < 2.5" | bc -l) )); then si_status="Excellent";
+        elif (( $(echo "$si_val < 4.0" | bc -l) )); then si_status="Good";
+        elif (( $(echo "$si_val < 6.0" | bc -l) )); then si_status="Fair";
+        else si_status="Slow"; fi
+        # TTI
+        tti_val=$(echo "$tti" | grep -oE '[0-9.]+')
+        if (( $(echo "$tti_val < 2.5" | bc -l) )); then tti_status="Excellent";
+        elif (( $(echo "$tti_val < 4.0" | bc -l) )); then tti_status="Good";
+        elif (( $(echo "$tti_val < 6.0" | bc -l) )); then tti_status="Fair";
+        else tti_status="Slow"; fi
+        # CLS
+        cls_val=$(echo "$cls" | grep -oE '[0-9.]+')
+        if (( $(echo "$cls_val < 0.1" | bc -l) )); then cls_status="Excellent";
+        elif (( $(echo "$cls_val < 0.25" | bc -l) )); then cls_status="Good";
+        else cls_status="Needs Improvement"; fi
+        echo "perf_status=$perf_status" >> $GITHUB_OUTPUT
+        echo "acc_status=$acc_status" >> $GITHUB_OUTPUT
+        echo "best_status=$best_status" >> $GITHUB_OUTPUT
+        echo "seo_status=$seo_status" >> $GITHUB_OUTPUT
+        echo "fcp_status=$fcp_status" >> $GITHUB_OUTPUT
+        echo "lcp_status=$lcp_status" >> $GITHUB_OUTPUT
+        echo "tbt_status=$tbt_status" >> $GITHUB_OUTPUT
+        echo "si_status=$si_status" >> $GITHUB_OUTPUT
+        echo "tti_status=$tti_status" >> $GITHUB_OUTPUT
+        echo "cls_status=$cls_status" >> $GITHUB_OUTPUT
+
+    - name: Interpret Lighthouse key metrics (granular)
+      id: interpret-lhci
+      run: |
+        rate_metric() {
+          metric="$1"; value="$2"; good="$3"; ok="$4"; fair="$5"; unit="$6";
+          if [[ "$value" == "" || "$value" == "N/A" ]]; then echo "N/A"; return; fi
+          num=$(echo "$value" | grep -oE '[0-9.]+')
+          if (( $(echo "$num < $good" | bc -l) )); then echo "Outstanding";
+          elif (( $(echo "$num < $ok" | bc -l) )); then echo "Good";
+          elif (( $(echo "$num < $fair" | bc -l) )); then echo "Fair";
+          else echo "Needs Improvement"; fi
+        }
+        fcp="${{ steps.extract-lhci.outputs.fcp }}"
+        lcp="${{ steps.extract-lhci.outputs.lcp }}"
+        tbt="${{ steps.extract-lhci.outputs.tbt }}"
+        si="${{ steps.extract-lhci.outputs.si }}"
+        tti="${{ steps.extract-lhci.outputs.tti }}"
+        cls="${{ steps.extract-lhci.outputs.cls }}"
+        fcp_status=$(rate_metric FCP "$fcp" 1 1.8 3 s)
+        lcp_status=$(rate_metric LCP "$lcp" 1.2 2.5 4 s)
+        tbt_status=$(rate_metric TBT "$tbt" 100 200 600 ms)
+        si_status=$(rate_metric SI "$si" 1.5 3 5 s)
+        tti_status=$(rate_metric TTI "$tti" 2 3.8 7.3 s)
+        cls_status=$(rate_metric CLS "$cls" 0.02 0.1 0.25 "")
+        echo "fcp_status=$fcp_status" >> $GITHUB_OUTPUT
+        echo "lcp_status=$lcp_status" >> $GITHUB_OUTPUT
+        echo "tbt_status=$tbt_status" >> $GITHUB_OUTPUT
+        echo "si_status=$si_status" >> $GITHUB_OUTPUT
+        echo "tti_status=$tti_status" >> $GITHUB_OUTPUT
+        echo "cls_status=$cls_status" >> $GITHUB_OUTPUT
+
+    - name: Post or update PR comment with frontend results
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: performance-frontend
+        message: |
+          ### Frontend Performance Report
+
+          | Category         | Score | Status                |
+          |------------------|-------|-----------------------|
+          | Performance      | ${{ steps.extract-lhci.outputs.perf }} | ${{ steps.frontend-status.outputs.perf_status }} |
+          | Accessibility    | ${{ steps.extract-lhci.outputs.acc }} | ${{ steps.frontend-status.outputs.acc_status }} |
+          | Best Practices   | ${{ steps.extract-lhci.outputs.best }} | ${{ steps.frontend-status.outputs.best_status }} |
+          | SEO              | ${{ steps.extract-lhci.outputs.seo }} | ${{ steps.frontend-status.outputs.seo_status }} |
+
+          #### Key Metrics
+
+          | Metric                        | Value   | Status                |
+          |-------------------------------|---------|-----------------------|
+          | First Contentful Paint (FCP)  | ${{ steps.extract-lhci.outputs.fcp }} | ${{ steps.interpret-lhci.outputs.fcp_status }} |
+          | Largest Contentful Paint (LCP)| ${{ steps.extract-lhci.outputs.lcp }} | ${{ steps.interpret-lhci.outputs.lcp_status }} |
+          | Total Blocking Time (TBT)     | ${{ steps.extract-lhci.outputs.tbt }} | ${{ steps.interpret-lhci.outputs.tbt_status }} |
+          | Speed Index                   | ${{ steps.extract-lhci.outputs.si }}  | ${{ steps.interpret-lhci.outputs.si_status }} |
+          | Time to Interactive (TTI)     | ${{ steps.extract-lhci.outputs.tti }} | ${{ steps.interpret-lhci.outputs.tti_status }} |
+          | Cumulative Layout Shift (CLS) | ${{ steps.extract-lhci.outputs.cls }} | ${{ steps.interpret-lhci.outputs.cls_status }} |
+
+          _Scores closer to 1 are better. For metrics, lower is better except for CLS (should be close to 0)._
