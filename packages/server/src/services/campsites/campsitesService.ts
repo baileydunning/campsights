@@ -48,9 +48,7 @@ export const getCampsiteById = async (
   id: string
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> => {
   try {
-    console.log(`Fetching campsite with id: ${id}`);
     const campsite = await db.get(id);
-    console.log(`Campsite found: ${campsite ? 'Yes' : 'No'}`, campsite);
     if (!campsite) return null;
 
     const { weather } = await attachWeather(campsite);
