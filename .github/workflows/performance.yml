@@ -57,20 +57,11 @@ jobs:
       id: artillery-run
       run: |
         printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
-        echo "--- Artillery config ---"
-        cat artillery.yml
-        echo "--- Running Artillery ---"
         artillery run --output artillery-report.json artillery.yml
-        echo "--- Artillery report.json (head) ---"
-        head -40 artillery-report.json || cat artillery-report.json
-        echo "--- Artillery report.json (size) ---"
-        ls -lh artillery-report.json
 
     - name: Extract latency metrics from Artillery report
       id: extract-artillery
       run: |
-        echo "--- jq Artillery metrics extraction ---"
-        jq '.' artillery-report.json || echo "jq failed to parse artillery-report.json"
         mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
         min_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].min // empty' artillery-report.json)
         max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
@@ -81,7 +72,6 @@ jobs:
         echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
         echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
         echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
-        echo "Extracted: mean=$mean_latency min=$min_latency max=$max_latency p95=$p95_latency p99=$p99_latency"
 
     - name: Post or update PR comment with backend results
       uses: marocchino/sticky-pull-request-comment@v2
@@ -130,24 +120,14 @@ jobs:
         echo "Frontend did not start in time"; exit 1
 
     - name: Install Lighthouse CI
-      run: |
-        echo "--- Installing Lighthouse CI ---"
-        npm install -g @lhci/cli
+      run: npm install -g @lhci/cli
 
     - name: Run Lighthouse CI
-      run: |
-        echo "--- Running Lighthouse CI ---"
-        lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
-        echo "--- LHCI report directory contents ---"
-        ls -l lhci-report || echo "lhci-report not found"
-        echo "--- LHCI manifest.json (head) ---"
-        head -40 lhci-report/manifest.json || cat lhci-report/manifest.json
+      run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
 
     - name: Extract Lighthouse scores
       id: extract-lhci
       run: |
-        echo "--- jq LHCI metrics extraction ---"
-        jq '.' lhci-report/manifest.json || echo "jq failed to parse manifest.json"
         # Find the representative run (isRepresentativeRun==true), fallback to first if not found
         rep_index=$(jq 'map(.isRepresentativeRun) | index(true) // 0' lhci-report/manifest.json)
         perf=$(jq -r ".[${rep_index}].summary.performance // empty" lhci-report/manifest.json)
@@ -158,7 +138,6 @@ jobs:
         echo "acc=$acc" >> $GITHUB_OUTPUT
         echo "best=$best" >> $GITHUB_OUTPUT
         echo "seo=$seo" >> $GITHUB_OUTPUT
-        echo "Extracted: perf=$perf acc=$acc best=$best seo=$seo"
 
     - name: Post or update PR comment with frontend results
       uses: marocchino/sticky-pull-request-comment@v2
