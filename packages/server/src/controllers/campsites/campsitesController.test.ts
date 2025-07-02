@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getCampsites, addCampsite, updateCampsite, deleteCampsite } from './campsitesController';
+import { getCampsites, getCampsiteById, addCampsite, updateCampsite, deleteCampsite } from './campsitesController';
 import * as campsitesService from '../../services/campsites/campsitesService';
 import { Request, Response } from 'express';
 
@@ -47,6 +47,32 @@ describe('campsitesController', () => {
             expect(statusMock).toHaveBeenCalledWith(500);
             expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({
                 error: 'Unable to fetch campsites',
+                message: 'fail'
+            }));
+        });
+    });
+
+    describe('getCampsiteById', () => {
+        it('should return campsite with status 200', async () => {
+            req.params = { id: '123' };
+            const fakeCampsite = { id: '123', name: 'Test Campsite By ID' };
+            vi.spyOn(campsitesService, 'getCampsiteById').mockResolvedValue(fakeCampsite);
+
+            await getCampsiteById(req as Request, res as Response);
+
+            expect(statusMock).toHaveBeenCalledWith(200);
+            expect(jsonMock).toHaveBeenCalledWith(fakeCampsite);
+        });
+
+        it('should handle errors and return status 500', async () => {
+            req.params = { id: '123' };
+            vi.spyOn(campsitesService, 'getCampsiteById').mockRejectedValue(new Error('fail'));
+
+            await getCampsiteById(req as Request, res as Response);
+
+            expect(statusMock).toHaveBeenCalledWith(500);
+            expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({
+                error: 'Unable to fetch campsite',
                 message: 'fail'
             }));
         });

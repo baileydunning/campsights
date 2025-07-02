@@ -187,13 +187,19 @@ npm run dev
     ]
     ```
 
+### `GET /api/v1/campsites/:id`
+- **Description:** Returns a campsite object by id.
+- **Response:**
+  - Status: `200 OK`
+  - Body: Campsite object with weather and elevation data attached
+
 ### `POST /api/v1/campsites`
 - **Description:** Add a new campsite.
 - **Request Body:**
   - JSON object with the following fields:
     ```json
     {
-      "id": "string", // required, unique
+      "id": "string", 
       "name": "string",
       "description": "string",
       "lat": number,
