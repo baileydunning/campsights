@@ -57,27 +57,43 @@ jobs:
       id: artillery-run
       run: |
         printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
+        echo "--- Artillery config ---"
+        cat artillery.yml
+        echo "--- Running Artillery ---"
         artillery run --output artillery-report.json artillery.yml
+        echo "--- Artillery report.json (head) ---"
+        head -40 artillery-report.json || cat artillery-report.json
+        echo "--- Artillery report.json (size) ---"
+        ls -lh artillery-report.json
 
     - name: Extract latency metrics from Artillery report
       id: extract-artillery
       run: |
-        mean_latency=$(jq '.aggregate["http.response_time"].mean' artillery-report.json)
-        min_latency=$(jq '.aggregate["http.response_time"].min' artillery-report.json)
-        max_latency=$(jq '.aggregate["http.response_time"].max' artillery-report.json)
-        p95_latency=$(jq '.aggregate["http.response_time"].p95' artillery-report.json)
-        p99_latency=$(jq '.aggregate["http.response_time"].p99' artillery-report.json)
+        echo "--- jq Artillery metrics extraction ---"
+        jq '.' artillery-report.json || echo "jq failed to parse artillery-report.json"
+        mean_latency=$(jq -r '.aggregate["http.response_time"].mean // empty' artillery-report.json)
+        min_latency=$(jq -r '.aggregate["http.response_time"].min // empty' artillery-report.json)
+        max_latency=$(jq -r '.aggregate["http.response_time"].max // empty' artillery-report.json)
+        p95_latency=$(jq -r '.aggregate["http.response_time"].p95 // empty' artillery-report.json)
+        p99_latency=$(jq -r '.aggregate["http.response_time"].p99 // empty' artillery-report.json)
         echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
         echo "min_latency=$min_latency" >> $GITHUB_OUTPUT
         echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
         echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
         echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
+        echo "Extracted: mean=$mean_latency min=$min_latency max=$max_latency p95=$p95_latency p99=$p99_latency"
 
-    - name: Upload Artillery report
-      uses: actions/upload-artifact@v4
+    - name: Post or update PR comment with backend results
+      uses: marocchino/sticky-pull-request-comment@v2
       with:
-        name: artillery-report
-        path: packages/server/artillery-report.json
+        header: performance-backend
+        message: |
+          ## Backend Latency Metrics
+          - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms
+          - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms
+          - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms
+          - 95th percentile: ${{ steps.extract-artillery.outputs.p95_latency }} ms
+          - 99th percentile: ${{ steps.extract-artillery.outputs.p99_latency }} ms
 
   client:
     needs: server
@@ -114,14 +130,24 @@ jobs:
         echo "Frontend did not start in time"; exit 1
 
     - name: Install Lighthouse CI
-      run: npm install -g @lhci/cli
+      run: |
+        echo "--- Installing Lighthouse CI ---"
+        npm install -g @lhci/cli
 
     - name: Run Lighthouse CI
-      run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
+      run: |
+        echo "--- Running Lighthouse CI ---"
+        lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
+        echo "--- LHCI report directory contents ---"
+        ls -l lhci-report || echo "lhci-report not found"
+        echo "--- LHCI manifest.json (head) ---"
+        head -40 lhci-report/manifest.json || cat lhci-report/manifest.json
 
     - name: Extract Lighthouse scores
       id: extract-lhci
       run: |
+        echo "--- jq LHCI metrics extraction ---"
+        jq '.' lhci-report/manifest.json || echo "jq failed to parse manifest.json"
         perf=$(jq '.[0].summary.categories.performance.score' lhci-report/manifest.json)
         acc=$(jq '.[0].summary.categories.accessibility.score' lhci-report/manifest.json)
         best=$(jq '.[0].summary.categories["best-practices"].score' lhci-report/manifest.json)
@@ -130,29 +156,14 @@ jobs:
         echo "acc=$acc" >> $GITHUB_OUTPUT
         echo "best=$best" >> $GITHUB_OUTPUT
         echo "seo=$seo" >> $GITHUB_OUTPUT
+        echo "Extracted: perf=$perf acc=$acc best=$best seo=$seo"
 
-    - name: Upload Lighthouse report
-      uses: actions/upload-artifact@v4
-      with:
-        name: lhci-report
-        path: lhci-report
-
-    - name: List LHCI report directory
-      run: ls -l lhci-report || echo "lhci-report not found"
-
-    - name: Post or update PR comment with results
+    - name: Post or update PR comment with frontend results
       uses: marocchino/sticky-pull-request-comment@v2
       with:
-        header: performance-lighthouse
+        header: performance-frontend
         message: |
-          ## Performance & Lighthouse Results
-          **Backend latency metrics:**
-          - Mean: ${{ needs.server.outputs.mean_latency }} ms
-          - Min: ${{ needs.server.outputs.min_latency }} ms
-          - Max: ${{ needs.server.outputs.max_latency }} ms
-          - 95th percentile: ${{ needs.server.outputs.p95_latency }} ms
-          - 99th percentile: ${{ needs.server.outputs.p99_latency }} ms
-          **Lighthouse scores:**
+          ## Lighthouse Scores
           - Performance: ${{ steps.extract-lhci.outputs.perf }}
           - Accessibility: ${{ steps.extract-lhci.outputs.acc }}
           - Best Practices: ${{ steps.extract-lhci.outputs.best }}
