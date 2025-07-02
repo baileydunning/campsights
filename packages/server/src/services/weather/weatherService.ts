@@ -26,7 +26,7 @@ export async function getWeatherForecast(
     const forecastData = (await forecastRes.json()) as { properties?: { periods?: WeatherPeriod[] } };
     return forecastData.properties?.periods ?? [];
   } catch (error) {
-    console.error(`Weather fetch error for campsite ${id}:`, error);
+    console.error('Weather fetch error for campsite %s:', id, error);
     return [];
   }
 }
