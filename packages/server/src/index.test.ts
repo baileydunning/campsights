@@ -19,6 +19,7 @@ vi.mock('./config/db', () => ({
 
 vi.mock('./services/campsites/campsitesService', () => ({
   getCampsites: vi.fn(() => Promise.resolve([])),
+  getCampsiteById: vi.fn((id) => Promise.resolve({ id, name: 'Test Campsite' })),
   addCampsite: vi.fn((campsite) => Promise.resolve(campsite)),
   updateCampsite: vi.fn((id, data) => Promise.resolve({ id, ...data })),
   deleteCampsite: vi.fn(() => Promise.resolve(true)),
@@ -37,6 +38,12 @@ describe('Campsites API', () => {
     const res = await request(app).get('/api/v1/campsites');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  it('GET /api/v1/campsites/:id returns 200 and campsite', async () => {
+    const res = await request(app).get('/api/v1/campsites/test_id');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id: "test_id", name: 'Test Campsite' });
   });
 
   it('POST /api/v1/campsites adds a campsite', async () => {
