@@ -47,6 +47,32 @@ describe('Campsites Service', () => {
     });
   });
 
+  describe('getCampsiteById', () => {
+    it('should return campsite with weather', async () => {
+      const campsite = { id: '123', lat: 10, lng: 20, elevation: 50 };
+      dbMock.get.mockResolvedValue(campsite);
+      const fakeWeather = [{ number: 1, name: 'Test', startTime: '', endTime: '', isDaytime: true, temperature: 70, temperatureUnit: 'F', windSpeed: '5 mph', windDirection: 'N', shortForecast: 'Sunny', detailedForecast: 'Clear skies' }];
+      getWeatherForecastMock.mockResolvedValue(fakeWeather);
+
+      const result = await campsitesService.getCampsiteById('123');
+
+      expect(dbMock.get).toHaveBeenCalledWith('123');
+      expect(getWeatherForecastMock).toHaveBeenCalledWith(campsite);
+      expect(result).toEqual({ ...campsite, weather: fakeWeather });
+    });
+
+    it('should return null if campsite does not exist', async () => {
+      dbMock.get.mockResolvedValue(null);
+      const result = await campsitesService.getCampsiteById('nope');
+      expect(result).toBeNull();
+    });
+
+    it('should throw on error', async () => {
+      dbMock.get.mockRejectedValue(new Error('DB failure'));
+      await expect(campsitesService.getCampsiteById('123')).rejects.toThrow('DB failure');
+    });
+  });
+
   describe('addCampsite', () => {
     it('should save elevation and return new campsite with weather', async () => {
       const input = { id: '2', lat: 30, lng: 40 };

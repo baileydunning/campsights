@@ -44,6 +44,23 @@ export const getCampsites = async (): Promise<
   }
 };
 
+export const getCampsiteById = async (
+  id: string
+): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> => {
+  try {
+    console.log(`Fetching campsite with id: ${id}`);
+    const campsite = await db.get(id);
+    console.log(`Campsite found: ${campsite ? 'Yes' : 'No'}`, campsite);
+    if (!campsite) return null;
+
+    const { weather } = await attachWeather(campsite);
+    return { ...campsite, elevation: campsite.elevation ?? null, weather };
+  } catch (err) {
+    console.error(`Error fetching campsite ${id}:`, err);
+    throw err;
+  }
+};
+
 export const addCampsite = async (
   campsite: Campsite
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] }> => {
