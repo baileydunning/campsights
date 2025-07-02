@@ -73,6 +73,37 @@ jobs:
         echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
         echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
 
+    - name: Compute backend metric statuses
+      id: backend-status
+      run: |
+        mean=${{ steps.extract-artillery.outputs.mean_latency }}
+        min=${{ steps.extract-artillery.outputs.min_latency }}
+        max=${{ steps.extract-artillery.outputs.max_latency }}
+        p95=${{ steps.extract-artillery.outputs.p95_latency }}
+        p99=${{ steps.extract-artillery.outputs.p99_latency }}
+        # Mean
+        if (( $(echo "$mean < 1" | bc -l) )); then mean_status="Excellent";
+        elif (( $(echo "$mean < 2" | bc -l) )); then mean_status="Good";
+        else mean_status="Needs Improvement"; fi
+        # Min
+        if (( $(echo "$min == 0" | bc -l) )); then min_status="Perfect";
+        else min_status="Check Minimum"; fi
+        # Max
+        if (( $(echo "$max < 5" | bc -l) )); then max_status="Excellent";
+        elif (( $(echo "$max < 10" | bc -l) )); then max_status="Good";
+        else max_status="Needs Attention"; fi
+        # p95
+        if (( $(echo "$p95 < 2" | bc -l) )); then p95_status="Good";
+        else p95_status="Needs Improvement"; fi
+        # p99
+        if (( $(echo "$p99 < 3" | bc -l) )); then p99_status="Good";
+        else p99_status="Needs Improvement"; fi
+        echo "mean_status=$mean_status" >> $GITHUB_OUTPUT
+        echo "min_status=$min_status" >> $GITHUB_OUTPUT
+        echo "max_status=$max_status" >> $GITHUB_OUTPUT
+        echo "p95_status=$p95_status" >> $GITHUB_OUTPUT
+        echo "p99_status=$p99_status" >> $GITHUB_OUTPUT
+
     - name: Post or update PR comment with backend results
       uses: marocchino/sticky-pull-request-comment@v2
       with:
@@ -80,23 +111,11 @@ jobs:
         message: |
           ### Backend Latency Metrics
 
-          - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms \
-            ${{ if lt( steps.extract-artillery.outputs.mean_latency, '1' ) }}Excellent${{ 
-               else if lt( steps.extract-artillery.outputs.mean_latency, '2' ) }}Good${{ 
-               else }}Needs Improvement${{ end }}
-          - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms \
-            ${{ if eq( steps.extract-artillery.outputs.min_latency, '0' ) }}Perfect${{ 
-               else }}Check Minimum${{ end }}
-          - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms \
-            ${{ if lt( steps.extract-artillery.outputs.max_latency, '5' ) }}Excellent${{ 
-               else if lt( steps.extract-artillery.outputs.max_latency, '10' ) }}Good${{ 
-               else }}Needs Attention${{ end }}
-          - p95: ${{ steps.extract-artillery.outputs.p95_latency }} ms \
-            ${{ if lt( steps.extract-artillery.outputs.p95_latency, '2' ) }}Good${{ 
-               else }}Needs Improvement${{ end }}
-          - p99: ${{ steps.extract-artillery.outputs.p99_latency }} ms \
-            ${{ if lt( steps.extract-artillery.outputs.p99_latency, '3' ) }}Good${{ 
-               else }}Needs Improvement${{ end }}
+          - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms ( ${{ steps.backend-status.outputs.mean_status }} )
+          - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms ( ${{ steps.backend-status.outputs.min_status }} )
+          - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms ( ${{ steps.backend-status.outputs.max_status }} )
+          - p95: ${{ steps.extract-artillery.outputs.p95_latency }} ms ( ${{ steps.backend-status.outputs.p95_status }} )
+          - p99: ${{ steps.extract-artillery.outputs.p99_latency }} ms ( ${{ steps.backend-status.outputs.p99_status }} )
 
   client:
     needs: server
@@ -152,6 +171,32 @@ jobs:
         echo "best=$best" >> $GITHUB_OUTPUT
         echo "seo=$seo" >> $GITHUB_OUTPUT
 
+    - name: Compute frontend metric statuses
+      id: frontend-status
+      run: |
+        perf=${{ steps.extract-lhci.outputs.perf }}
+        acc=${{ steps.extract-lhci.outputs.acc }}
+        best=${{ steps.extract-lhci.outputs.best }}
+        seo=${{ steps.extract-lhci.outputs.seo }}
+        # Performance
+        if (( $(echo "$perf > 0.90" | bc -l) )); then perf_status="Excellent";
+        elif (( $(echo "$perf > 0.50" | bc -l) )); then perf_status="Needs Improvement";
+        else perf_status="Poor"; fi
+        # Accessibility
+        if (( $(echo "$acc == 1.00" | bc -l) )); then acc_status="Perfect";
+        else acc_status="Review Accessibility"; fi
+        # Best Practices
+        if (( $(echo "$best > 0.90" | bc -l) )); then best_status="Good";
+        else best_status="Check Best Practices"; fi
+        # SEO
+        if (( $(echo "$seo > 0.90" | bc -l) )); then seo_status="Strong";
+        elif (( $(echo "$seo > 0.75" | bc -l) )); then seo_status="Could Improve";
+        else seo_status="Needs Work"; fi
+        echo "perf_status=$perf_status" >> $GITHUB_OUTPUT
+        echo "acc_status=$acc_status" >> $GITHUB_OUTPUT
+        echo "best_status=$best_status" >> $GITHUB_OUTPUT
+        echo "seo_status=$seo_status" >> $GITHUB_OUTPUT
+
     - name: Post or update PR comment with frontend results
       uses: marocchino/sticky-pull-request-comment@v2
       with:
@@ -159,17 +204,7 @@ jobs:
         message: |
           ### Frontend Performance Metrics
 
-          - Performance: ${{ steps.extract-lhci.outputs.perf }} \
-            ${{ if gt( steps.extract-lhci.outputs.perf, '0.90' ) }}Excellent${{ 
-               else if gt( steps.extract-lhci.outputs.perf, '0.50' ) }}Needs Improvement${{ 
-               else }}Poor${{ end }}
-          - Accessibility: ${{ steps.extract-lhci.outputs.acc }} \
-            ${{ if eq( steps.extract-lhci.outputs.acc, '1.00' ) }}Perfect${{ 
-               else }}Review Accessibility${{ end }}
-          - Best Practices: ${{ steps.extract-lhci.outputs.best }} \
-            ${{ if gt( steps.extract-lhci.outputs.best, '0.90' ) }}Good${{ 
-               else }}Check Best Practices${{ end }}
-          - SEO: ${{ steps.extract-lhci.outputs.seo }} \
-            ${{ if gt( steps.extract-lhci.outputs.seo, '0.90' ) }}Strong${{ 
-               else if gt( steps.extract-lhci.outputs.seo, '0.75' ) }}Could Improve${{ 
-               else }}Needs Work${{ end }}
+          - Performance: ${{ steps.extract-lhci.outputs.perf }} ( ${{ steps.frontend-status.outputs.perf_status }} )
+          - Accessibility: ${{ steps.extract-lhci.outputs.acc }} ( ${{ steps.frontend-status.outputs.acc_status }} )
+          - Best Practices: ${{ steps.extract-lhci.outputs.best }} ( ${{ steps.frontend-status.outputs.best_status }} )
+          - SEO: ${{ steps.extract-lhci.outputs.seo }} ( ${{ steps.frontend-status.outputs.seo_status }} )
