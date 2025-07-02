@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
@@ -9,7 +9,7 @@ export interface CampsiteMarkerProps {
   site: Campsite;
 }
 
-const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
+const CampsiteMarker: React.FC<CampsiteMarkerProps> = React.memo(({ site }) => {
   const [editing, setEditing] = useState(false);
   const popupRef = useRef<any>(null);
 
@@ -65,7 +65,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
               <div className="weather-section">
                 <strong>Weather Forecast:</strong>
                 <div className="weather-forecast-list">
-                  {site.weather.map((p: any) => (
+                  {useMemo(() => site.weather.map((p: any) => (
                     <div key={p.number} className="weather-period-card">
                       <div className="weather-period-header">
                         {p.name} ({p.isDaytime ? "Day" : "Night"})
@@ -82,7 +82,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )), [site.weather])}
                 </div>
               </div>
               <div className="directions-btn-container" style={{ gap: 8 }}>
@@ -114,6 +114,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
       </Popup>
     </Marker>
   );
-};
+});
 
 export default CampsiteMarker;

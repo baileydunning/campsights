@@ -9,7 +9,7 @@ interface AddCampsiteFormProps {
   onSuccess: () => void;
 }
 
-const AddCampsiteForm: React.FC<AddCampsiteFormProps> = ({ onSuccess }) => {
+const AddCampsiteForm: React.FC<AddCampsiteFormProps> = React.memo(({ onSuccess }) => {
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
@@ -160,6 +160,6 @@ const AddCampsiteForm: React.FC<AddCampsiteFormProps> = ({ onSuccess }) => {
       </button>
     </form>
   );
-};
+});
 
 export default AddCampsiteForm;

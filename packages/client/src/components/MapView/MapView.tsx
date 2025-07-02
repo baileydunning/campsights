@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import L from "leaflet";
@@ -46,11 +46,13 @@ const MapView: React.FC = () => {
     }
   }, []);
 
-  const createCampsiteMarker = () => {
-    return campsites.map((site) => (
+
+  const campsiteMarkers = useMemo(
+    () => campsites.map((site) => (
       <CampsiteMarker key={site.id} site={site} />
-    ));
-  };
+    )),
+    [campsites]
+  );
 
   if (loading) {
     return (
@@ -79,7 +81,7 @@ const MapView: React.FC = () => {
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {createCampsiteMarker()}
+        {campsiteMarkers}
         {currentPosition && (
           <Marker position={currentPosition} icon={personIcon}>
             <Popup>You are here</Popup>
