@@ -6,9 +6,9 @@ permissions:
 on:
   pull_request:
     types:
-      - opened
-      - synchronize
-      - reopened
+    - opened
+    - synchronize
+    - reopened
 
 jobs:
   server:
@@ -18,54 +18,66 @@ jobs:
         working-directory: packages/server
     outputs:
       mean_latency: ${{ steps.extract-artillery.outputs.mean_latency }}
+      min_latency: ${{ steps.extract-artillery.outputs.min_latency }}
+      max_latency: ${{ steps.extract-artillery.outputs.max_latency }}
+      p95_latency: ${{ steps.extract-artillery.outputs.p95_latency }}
+      p99_latency: ${{ steps.extract-artillery.outputs.p99_latency }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
+    - name: Use Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
 
-      - name: Install backend dependencies
-        run: npm ci
+    - name: Install backend dependencies
+      run: npm ci
 
-      - name: Build backend
-        run: npm run build
+    - name: Build backend
+      run: npm run build
 
-      - name: Start backend
-        run: npm start &
+    - name: Start backend
+      run: npm start &
 
-      - name: Wait for backend health endpoint
-        run: |
-          for i in {1..30}; do
-            if curl -sSf http://localhost:3000/health; then
-              echo "Backend is up!"; exit 0
-            fi
-            sleep 2
-          done
-          echo "Backend did not start in time"; exit 1
+    - name: Wait for backend health endpoint
+      run: |
+        for i in {1..30}; do
+          if curl -sSf http://localhost:3000/health; then
+            echo "Backend is up!"; exit 0
+          fi
+          sleep 2
+        done
+        echo "Backend did not start in time"; exit 1
 
-      - name: Install Artillery
-        run: npm install -g artillery
+    - name: Install Artillery
+      run: npm install -g artillery
 
-      - name: Run Artillery load test
-        id: artillery-run
-        run: |
-          printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
-          artillery run --output artillery-report.json artillery.yml
+    - name: Run Artillery load test
+      id: artillery-run
+      run: |
+        printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
+        artillery run --output artillery-report.json artillery.yml
 
-      - name: Extract mean latency from Artillery report
-        id: extract-artillery
-        run: |
-          mean_latency=$(jq '.aggregate.latency.mean' artillery-report.json)
-          echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
+    - name: Extract latency metrics from Artillery report
+      id: extract-artillery
+      run: |
+        mean_latency=$(jq '.aggregate.latency.mean' artillery-report.json)
+        min_latency=$(jq '.aggregate.latency.min' artillery-report.json)
+        max_latency=$(jq '.aggregate.latency.max' artillery-report.json)
+        p95_latency=$(jq '.aggregate.latency.p95' artillery-report.json)
+        p99_latency=$(jq '.aggregate.latency.p99' artillery-report.json)
+        echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
+        echo "min_latency=$min_latency" >> $GITHUB_OUTPUT
+        echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
+        echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
+        echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
 
-      - name: Upload Artillery report
-        uses: actions/upload-artifact@v4
-        with:
-          name: artillery-report
-          path: artillery-report.json
+    - name: Upload Artillery report
+      uses: actions/upload-artifact@v4
+      with:
+        name: artillery-report
+        path: artillery-report.json
 
   client:
     needs: server
@@ -74,66 +86,71 @@ jobs:
       run:
         working-directory: packages/client
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
+    - name: Use Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
 
-      - name: Install frontend dependencies
-        run: npm ci
+    - name: Install frontend dependencies
+      run: npm ci
 
-      - name: Build frontend
-        run: npm run build
+    - name: Build frontend
+      run: npm run build
 
-      - name: Start frontend
-        run: npm run preview &
+    - name: Start frontend
+      run: npm run preview &
 
-      - name: Wait for frontend
-        run: |
-          for i in {1..30}; do
-            if curl -sSf http://localhost:4173; then
-              echo "Frontend is up!"; exit 0
-            fi
-            sleep 2
-          done
-          echo "Frontend did not start in time"; exit 1
+    - name: Wait for frontend
+      run: |
+        for i in {1..30}; do
+          if curl -sSf http://localhost:4173; then
+            echo "Frontend is up!"; exit 0
+          fi
+          sleep 2
+        done
+        echo "Frontend did not start in time"; exit 1
 
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli
+    - name: Install Lighthouse CI
+      run: npm install -g @lhci/cli
 
-      - name: Run Lighthouse CI
-        run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
+    - name: Run Lighthouse CI
+      run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
 
-      - name: Extract Lighthouse scores
-        id: extract-lhci
-        run: |
-          perf=$(jq '.categories.performance.score' lhci-report/manifest.json | head -n1)
-          acc=$(jq '.categories.accessibility.score' lhci-report/manifest.json | head -n1)
-          best=$(jq '.categories."best-practices".score' lhci-report/manifest.json | head -n1)
-          seo=$(jq '.categories.seo.score' lhci-report/manifest.json | head -n1)
-          echo "perf=$perf" >> $GITHUB_OUTPUT
-          echo "acc=$acc" >> $GITHUB_OUTPUT
-          echo "best=$best" >> $GITHUB_OUTPUT
-          echo "seo=$seo" >> $GITHUB_OUTPUT
+    - name: Extract Lighthouse scores
+      id: extract-lhci
+      run: |
+        perf=$(jq '.categories.performance.score' lhci-report/manifest.json | head -n1)
+        acc=$(jq '.categories.accessibility.score' lhci-report/manifest.json | head -n1)
+        best=$(jq '.categories."best-practices".score' lhci-report/manifest.json | head -n1)
+        seo=$(jq '.categories.seo.score' lhci-report/manifest.json | head -n1)
+        echo "perf=$perf" >> $GITHUB_OUTPUT
+        echo "acc=$acc" >> $GITHUB_OUTPUT
+        echo "best=$best" >> $GITHUB_OUTPUT
+        echo "seo=$seo" >> $GITHUB_OUTPUT
 
-      - name: Upload Lighthouse report
-        uses: actions/upload-artifact@v4
-        with:
-          name: lhci-report
-          path: lhci-report
+    - name: Upload Lighthouse report
+      uses: actions/upload-artifact@v4
+      with:
+        name: lhci-report
+        path: lhci-report
 
-      - name: Post or update PR comment with results
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: performance-lighthouse
-          message: |
-            ## Performance & Lighthouse Results
-            **Backend mean latency:** ${{ needs.server.outputs.mean_latency }} ms
-            **Lighthouse scores:**
-            - Performance: ${{ steps.extract-lhci.outputs.perf }}
-            - Accessibility: ${{ steps.extract-lhci.outputs.acc }}
-            - Best Practices: ${{ steps.extract-lhci.outputs.best }}
-            - SEO: ${{ steps.extract-lhci.outputs.seo }}
+    - name: Post or update PR comment with results
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: performance-lighthouse
+        message: |
+          ## Performance & Lighthouse Results
+          **Backend latency metrics:**
+          - Mean: ${{ needs.server.outputs.mean_latency }} ms
+          - Min: ${{ needs.server.outputs.min_latency }} ms
+          - Max: ${{ needs.server.outputs.max_latency }} ms
+          - 95th percentile: ${{ needs.server.outputs.p95_latency }} ms
+          - 99th percentile: ${{ needs.server.outputs.p99_latency }} ms
+          **Lighthouse scores:**
+          - Performance: ${{ steps.extract-lhci.outputs.perf }}
+          - Accessibility: ${{ steps.extract-lhci.outputs.acc }}
+          - Best Practices: ${{ steps.extract-lhci.outputs.best }}
+          - SEO: ${{ steps.extract-lhci.outputs.seo }}
