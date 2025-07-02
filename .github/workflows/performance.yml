@@ -119,7 +119,7 @@ jobs:
       with:
         header: performance-backend
         message: |
-          ## Backend Latency Metrics
+          ## Server Latency Metrics
 
           | Metric | Value (ms) | Status |
           |--------|------------|--------|
@@ -320,7 +320,7 @@ jobs:
       with:
         header: performance-frontend
         message: |
-          ## Frontend Performance
+          ## Client Lighthouse Report
 
           | Category         | Score | Status                |
           |------------------|-------|-----------------------|
