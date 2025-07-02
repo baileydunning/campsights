@@ -119,13 +119,17 @@ jobs:
       with:
         header: performance-backend
         message: |
-          ### Backend Latency Metrics
+          ## Backend Latency Metrics
 
-          - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms ( ${{ steps.backend-status.outputs.mean_status }} )
-          - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms ( ${{ steps.backend-status.outputs.min_status }} )
-          - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms ( ${{ steps.backend-status.outputs.max_status }} )
-          - p95: ${{ steps.extract-artillery.outputs.p95_latency }} ms ( ${{ steps.backend-status.outputs.p95_status }} )
-          - p99: ${{ steps.extract-artillery.outputs.p99_latency }} ms ( ${{ steps.backend-status.outputs.p99_status }} )
+          | Metric | Value (ms) | Status |
+          |--------|------------|--------|
+          | **Mean** | ${{ steps.extract-artillery.outputs.mean_latency }} | ${{ steps.backend-status.outputs.mean_status }} |
+          | **Min**  | ${{ steps.extract-artillery.outputs.min_latency }} | ${{ steps.backend-status.outputs.min_status }} |
+          | **Max**  | ${{ steps.extract-artillery.outputs.max_latency }} | ${{ steps.backend-status.outputs.max_status }} |
+          | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
+          | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
+
+          _Lower is better. "Outstanding" and "Excellent" indicate top performance. "Needs Major Improvement" or "Needs Attention" should be addressed._
 
   client:
     needs: server
@@ -167,7 +171,7 @@ jobs:
     - name: Run Lighthouse CI
       run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
 
-    - name: Extract Lighthouse scores
+    - name: Extract Lighthouse scores and metrics
       id: extract-lhci
       run: |
         # Find the representative run (isRepresentativeRun==true), fallback to first if not found
@@ -176,10 +180,24 @@ jobs:
         acc=$(jq -r ".[${rep_index}].summary.accessibility // empty" lhci-report/manifest.json)
         best=$(jq -r ".[${rep_index}].summary[\"best-practices\"] // empty" lhci-report/manifest.json)
         seo=$(jq -r ".[${rep_index}].summary.seo // empty" lhci-report/manifest.json)
+        report_path=$(jq -r ".[${rep_index}].jsonPath" lhci-report/manifest.json)
+        # Extract key metrics from the report JSON
+        fcp=$(jq -r '.audits["first-contentful-paint"].displayValue // empty' "$report_path")
+        lcp=$(jq -r '.audits["largest-contentful-paint"].displayValue // empty' "$report_path")
+        tbt=$(jq -r '.audits["total-blocking-time"].displayValue // empty' "$report_path")
+        si=$(jq -r '.audits["speed-index"].displayValue // empty' "$report_path")
+        tti=$(jq -r '.audits["interactive"].displayValue // empty' "$report_path")
+        cls=$(jq -r '.audits["cumulative-layout-shift"].displayValue // empty' "$report_path")
         echo "perf=$perf" >> $GITHUB_OUTPUT
         echo "acc=$acc" >> $GITHUB_OUTPUT
         echo "best=$best" >> $GITHUB_OUTPUT
         echo "seo=$seo" >> $GITHUB_OUTPUT
+        echo "fcp=$fcp" >> $GITHUB_OUTPUT
+        echo "lcp=$lcp" >> $GITHUB_OUTPUT
+        echo "tbt=$tbt" >> $GITHUB_OUTPUT
+        echo "si=$si" >> $GITHUB_OUTPUT
+        echo "tti=$tti" >> $GITHUB_OUTPUT
+        echo "cls=$cls" >> $GITHUB_OUTPUT
 
     - name: Compute frontend metric statuses
       id: frontend-status
@@ -188,6 +206,12 @@ jobs:
         acc=${{ steps.extract-lhci.outputs.acc }}
         best=${{ steps.extract-lhci.outputs.best }}
         seo=${{ steps.extract-lhci.outputs.seo }}
+        fcp=${{ steps.extract-lhci.outputs.fcp }}
+        lcp=${{ steps.extract-lhci.outputs.lcp }}
+        tbt=${{ steps.extract-lhci.outputs.tbt }}
+        si=${{ steps.extract-lhci.outputs.si }}
+        tti=${{ steps.extract-lhci.outputs.tti }}
+        cls=${{ steps.extract-lhci.outputs.cls }}
         # Performance
         if (( $(echo "$perf > 0.97" | bc -l) )); then perf_status="Outstanding";
         elif (( $(echo "$perf > 0.93" | bc -l) )); then perf_status="Excellent";
@@ -214,19 +238,108 @@ jobs:
         elif (( $(echo "$seo > 0.70" | bc -l) )); then seo_status="Fair";
         elif (( $(echo "$seo > 0.50" | bc -l) )); then seo_status="Could Improve";
         else seo_status="Needs Work"; fi
+        # FCP
+        fcp_val=$(echo "$fcp" | grep -oE '[0-9.]+')
+        if [[ "$fcp" == *"ms"* ]]; then fcp_sec=$(echo "scale=3; $fcp_val/1000" | bc); else fcp_sec=$fcp_val; fi
+        if (( $(echo "$fcp_sec < 1" | bc -l) )); then fcp_status="Excellent";
+        elif (( $(echo "$fcp_sec < 2" | bc -l) )); then fcp_status="Good";
+        elif (( $(echo "$fcp_sec < 3" | bc -l) )); then fcp_status="Fair";
+        else fcp_status="Slow"; fi
+        # LCP
+        lcp_val=$(echo "$lcp" | grep -oE '[0-9.]+')
+        if [[ "$lcp" == *"ms"* ]]; then lcp_sec=$(echo "scale=3; $lcp_val/1000" | bc); else lcp_sec=$lcp_val; fi
+        if (( $(echo "$lcp_sec < 1.2" | bc -l) )); then lcp_status="Excellent";
+        elif (( $(echo "$lcp_sec < 2.5" | bc -l) )); then lcp_status="Good";
+        elif (( $(echo "$lcp_sec < 4" | bc -l) )); then lcp_status="Fair";
+        else lcp_status="Slow"; fi
+        # TBT
+        tbt_val=$(echo "$tbt" | grep -oE '[0-9.]+')
+        if (( $(echo "$tbt_val < 100" | bc -l) )); then tbt_status="Excellent";
+        elif (( $(echo "$tbt_val < 300" | bc -l) )); then tbt_status="Good";
+        elif (( $(echo "$tbt_val < 600" | bc -l) )); then tbt_status="Fair";
+        else tbt_status="High"; fi
+        # Speed Index
+        si_val=$(echo "$si" | grep -oE '[0-9.]+')
+        if (( $(echo "$si_val < 2.5" | bc -l) )); then si_status="Excellent";
+        elif (( $(echo "$si_val < 4.0" | bc -l) )); then si_status="Good";
+        elif (( $(echo "$si_val < 6.0" | bc -l) )); then si_status="Fair";
+        else si_status="Slow"; fi
+        # TTI
+        tti_val=$(echo "$tti" | grep -oE '[0-9.]+')
+        if (( $(echo "$tti_val < 2.5" | bc -l) )); then tti_status="Excellent";
+        elif (( $(echo "$tti_val < 4.0" | bc -l) )); then tti_status="Good";
+        elif (( $(echo "$tti_val < 6.0" | bc -l) )); then tti_status="Fair";
+        else tti_status="Slow"; fi
+        # CLS
+        cls_val=$(echo "$cls" | grep -oE '[0-9.]+')
+        if (( $(echo "$cls_val < 0.1" | bc -l) )); then cls_status="Excellent";
+        elif (( $(echo "$cls_val < 0.25" | bc -l) )); then cls_status="Good";
+        else cls_status="Needs Improvement"; fi
         echo "perf_status=$perf_status" >> $GITHUB_OUTPUT
         echo "acc_status=$acc_status" >> $GITHUB_OUTPUT
         echo "best_status=$best_status" >> $GITHUB_OUTPUT
         echo "seo_status=$seo_status" >> $GITHUB_OUTPUT
+        echo "fcp_status=$fcp_status" >> $GITHUB_OUTPUT
+        echo "lcp_status=$lcp_status" >> $GITHUB_OUTPUT
+        echo "tbt_status=$tbt_status" >> $GITHUB_OUTPUT
+        echo "si_status=$si_status" >> $GITHUB_OUTPUT
+        echo "tti_status=$tti_status" >> $GITHUB_OUTPUT
+        echo "cls_status=$cls_status" >> $GITHUB_OUTPUT
+
+    - name: Interpret Lighthouse key metrics (granular)
+      id: interpret-lhci
+      run: |
+        rate_metric() {
+          metric="$1"; value="$2"; good="$3"; ok="$4"; fair="$5"; unit="$6";
+          if [[ "$value" == "" || "$value" == "N/A" ]]; then echo "N/A"; return; fi
+          num=$(echo "$value" | grep -oE '[0-9.]+')
+          if (( $(echo "$num < $good" | bc -l) )); then echo "Outstanding";
+          elif (( $(echo "$num < $ok" | bc -l) )); then echo "Good";
+          elif (( $(echo "$num < $fair" | bc -l) )); then echo "Fair";
+          else echo "Needs Improvement"; fi
+        }
+        fcp="${{ steps.extract-lhci.outputs.fcp }}"
+        lcp="${{ steps.extract-lhci.outputs.lcp }}"
+        tbt="${{ steps.extract-lhci.outputs.tbt }}"
+        si="${{ steps.extract-lhci.outputs.si }}"
+        tti="${{ steps.extract-lhci.outputs.tti }}"
+        cls="${{ steps.extract-lhci.outputs.cls }}"
+        fcp_status=$(rate_metric FCP "$fcp" 1 1.8 3 s)
+        lcp_status=$(rate_metric LCP "$lcp" 1.2 2.5 4 s)
+        tbt_status=$(rate_metric TBT "$tbt" 100 200 600 ms)
+        si_status=$(rate_metric SI "$si" 1.5 3 5 s)
+        tti_status=$(rate_metric TTI "$tti" 2 3.8 7.3 s)
+        cls_status=$(rate_metric CLS "$cls" 0.02 0.1 0.25 "")
+        echo "fcp_status=$fcp_status" >> $GITHUB_OUTPUT
+        echo "lcp_status=$lcp_status" >> $GITHUB_OUTPUT
+        echo "tbt_status=$tbt_status" >> $GITHUB_OUTPUT
+        echo "si_status=$si_status" >> $GITHUB_OUTPUT
+        echo "tti_status=$tti_status" >> $GITHUB_OUTPUT
+        echo "cls_status=$cls_status" >> $GITHUB_OUTPUT
 
     - name: Post or update PR comment with frontend results
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: performance-frontend
         message: |
-          ### Frontend Performance Metrics
+          ## Frontend Performance
 
-          - Performance: ${{ steps.extract-lhci.outputs.perf }} ( ${{ steps.frontend-status.outputs.perf_status }} )
-          - Accessibility: ${{ steps.extract-lhci.outputs.acc }} ( ${{ steps.frontend-status.outputs.acc_status }} )
-          - Best Practices: ${{ steps.extract-lhci.outputs.best }} ( ${{ steps.frontend-status.outputs.best_status }} )
-          - SEO: ${{ steps.extract-lhci.outputs.seo }} ( ${{ steps.frontend-status.outputs.seo_status }} )
+          | Category         | Score | Status                |
+          |------------------|-------|-----------------------|
+          | Performance      | ${{ steps.extract-lhci.outputs.perf }} | ${{ steps.frontend-status.outputs.perf_status }} |
+          | Accessibility    | ${{ steps.extract-lhci.outputs.acc }} | ${{ steps.frontend-status.outputs.acc_status }} |
+          | Best Practices   | ${{ steps.extract-lhci.outputs.best }} | ${{ steps.frontend-status.outputs.best_status }} |
+          | SEO              | ${{ steps.extract-lhci.outputs.seo }} | ${{ steps.frontend-status.outputs.seo_status }} |
+
+          ### Key Metrics
+
+          | Metric                        | Value   | Status                |
+          |-------------------------------|---------|-----------------------|
+          | First Contentful Paint (FCP)  | ${{ steps.extract-lhci.outputs.fcp }} | ${{ steps.interpret-lhci.outputs.fcp_status }} |
+          | Largest Contentful Paint (LCP)| ${{ steps.extract-lhci.outputs.lcp }} | ${{ steps.interpret-lhci.outputs.lcp_status }} |
+          | Total Blocking Time (TBT)     | ${{ steps.extract-lhci.outputs.tbt }} | ${{ steps.interpret-lhci.outputs.tbt_status }} |
+          | Speed Index                   | ${{ steps.extract-lhci.outputs.si }}  | ${{ steps.interpret-lhci.outputs.si_status }} |
+          | Time to Interactive (TTI)     | ${{ steps.extract-lhci.outputs.tti }} | ${{ steps.interpret-lhci.outputs.tti_status }} |
+          | Cumulative Layout Shift (CLS) | ${{ steps.extract-lhci.outputs.cls }} | ${{ steps.interpret-lhci.outputs.cls_status }} |
+
+          _Scores closer to 1 are better. For metrics, lower is better except for CLS (should be close to 0)._
