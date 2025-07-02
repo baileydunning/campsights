@@ -1,7 +1,7 @@
 import React from 'react';
 import './Loading.css';
 
-const Loading: React.FC = React.memo(() => (
+const Loading: React.FC = () => (
   <div className="loading-screen">
     <div className="breathing-tent">
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', height: '150px', width: '150px' }}>
@@ -13,6 +13,6 @@ const Loading: React.FC = React.memo(() => (
       </div>
     </div>
   </div>
-));
+);
 
-export default Loading;
+export default React.memo(Loading);

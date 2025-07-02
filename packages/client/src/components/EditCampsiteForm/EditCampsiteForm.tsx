@@ -9,7 +9,7 @@ interface EditCampsiteFormProps {
   onCancel: () => void;
 }
 
-const EditCampsiteForm: React.FC<EditCampsiteFormProps> = React.memo(({ site, onCancel }) => {
+const EditCampsiteForm: React.FC<EditCampsiteFormProps> = ({ site, onCancel }) => {
   const dispatch = useAppDispatch();
   const globalError = useAppSelector(state => state.campsites.error);
 
@@ -173,6 +173,6 @@ const EditCampsiteForm: React.FC<EditCampsiteFormProps> = React.memo(({ site, on
       )}
     </form>
   );
-});
+};
 
-export default EditCampsiteForm;
+export default React.memo(EditCampsiteForm);

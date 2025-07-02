@@ -95,4 +95,4 @@ const MapView: React.FC = () => {
   );
 };
 
-export default MapView;
+export default React.memo(MapView);
