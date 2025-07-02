@@ -129,8 +129,6 @@ jobs:
           | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
           | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
 
-          _Lower is better. "Outstanding" and "Excellent" indicate top performance. "Needs Major Improvement" or "Needs Attention" should be addressed._
-
   client:
     needs: server
     runs-on: ubuntu-latest
