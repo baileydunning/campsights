@@ -84,7 +84,7 @@ jobs:
       with:
         header: performance-backend
         message: |
-          ## Backend Latency Metrics
+          ### Backend Latency Metrics
 
           - Mean: ${{ steps.extract-artillery.outputs.mean_latency }} ms \
             ${{ if lt( steps.extract-artillery.outputs.mean_latency, '1' ) }}Excellent${{ 
