@@ -42,7 +42,7 @@ const App: React.FC = () => {
                 >
                   &times;
                 </button>
-                <Suspense fallback={<Loading />}>
+                <Suspense fallback={null}>
                   <AddCampsiteForm onSuccess={handleSuccess}/>
                 </Suspense>
               </div>

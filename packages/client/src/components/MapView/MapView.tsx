@@ -46,7 +46,6 @@ const MapView: React.FC = () => {
     dispatch(fetchCampsites());
   }, [dispatch]);
 
-  // Defer geolocation until user requests it
   const [geoRequested, setGeoRequested] = useState(false);
   useEffect(() => {
     if (!geoRequested) return;
@@ -69,10 +68,8 @@ const MapView: React.FC = () => {
   );
 
 
-  if (loading) {
-    return <Loading />;
-  }
 
+  // Only show error if present
   if (error) {
     return (
       <div className="MapView">
@@ -86,7 +83,7 @@ const MapView: React.FC = () => {
   return (
     <div className="MapView">
       {showMap ? (
-        <Suspense fallback={<Loading />}>
+        <Suspense fallback={null}>
           <MapContainer
             center={currentPosition || defaultPosition}
             zoom={8}
@@ -106,17 +103,20 @@ const MapView: React.FC = () => {
               </Marker>
             )}
           </MapContainer>
-          <button
-            style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}
-            onClick={() => setGeoRequested(true)}
-            disabled={geoRequested}
-            aria-label="Show My Location"
-          >
-            {geoRequested ? 'Locating…' : 'Show My Location'}
-          </button>
+          {!geoRequested && (
+            <button
+              className="popup-button"
+              style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}
+              onClick={() => setGeoRequested(true)}
+              aria-label="Show My Location"
+            >
+              Show My Location
+            </button>
+          )}
         </Suspense>
       ) : (
-        <Loading />
+        // Return null to let Suspense fallback handle loading UI
+        null
       )}
     </div>
   );
