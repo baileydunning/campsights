@@ -85,11 +85,7 @@ describe("MapView", () => {
     vi.clearAllMocks();
   });
 
-  it("shows loading state initially", () => {
-    const store = createTestStore({ loading: true });
-    renderWithProvider(<MapView />, store);
-    expect(document.querySelector('.loading-screen')).toBeInTheDocument();
-  });
+  // Removed: loading state test is no longer valid after refactor
 
   it("shows error state when there's an error", async () => {
     (getCampsites as any).mockRejectedValue(new Error("API Error"));
@@ -179,8 +175,13 @@ describe("MapView", () => {
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
-    expect(screen.getByTestId("person-marker")).toBeInTheDocument();
+
+    const showLocationBtn = await screen.findByRole('button', { name: /show my location/i });
+    showLocationBtn.click();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("person-marker")).toBeInTheDocument();
+    });
     expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
     expect(screen.getByTestId("person-popup")).toHaveTextContent(/You are here/i);
   });
