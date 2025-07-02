@@ -119,7 +119,7 @@ jobs:
       with:
         header: performance-backend
         message: |
-          ## Server Latency Metrics
+          ### Backend Latency Report
 
           | Metric | Value (ms) | Status |
           |--------|------------|--------|
@@ -320,7 +320,7 @@ jobs:
       with:
         header: performance-frontend
         message: |
-          ## Client Lighthouse Report
+          ### Frontend Performance Report
 
           | Category         | Score | Status                |
           |------------------|-------|-----------------------|
@@ -329,7 +329,7 @@ jobs:
           | Best Practices   | ${{ steps.extract-lhci.outputs.best }} | ${{ steps.frontend-status.outputs.best_status }} |
           | SEO              | ${{ steps.extract-lhci.outputs.seo }} | ${{ steps.frontend-status.outputs.seo_status }} |
 
-          ### Key Metrics
+          #### Key Metrics
 
           | Metric                        | Value   | Status                |
           |-------------------------------|---------|-----------------------|
