@@ -100,11 +100,11 @@ jobs:
                else if lt( steps.extract-artillery.outputs.max_latency, '10' ) }}Good${{ 
                else }}Needs Attention${{ end }}
 
-          - 95th percentile: ${{ steps.extract-artillery.outputs.p95_latency }} ms \
+          - p95: ${{ steps.extract-artillery.outputs.p95_latency }} ms \
             ${{ if lt( steps.extract-artillery.outputs.p95_latency, '2' ) }}Good${{ 
                else }}Needs Improvement${{ end }}
 
-          - 99th percentile: ${{ steps.extract-artillery.outputs.p99_latency }} ms \
+          - p99: ${{ steps.extract-artillery.outputs.p99_latency }} ms \
             ${{ if lt( steps.extract-artillery.outputs.p99_latency, '3' ) }}Good${{ 
                else }}Needs Improvement${{ end }}
 
