@@ -56,7 +56,7 @@ export const getCampsiteById = async (
     const { weather } = await attachWeather(campsite);
     return { ...campsite, elevation: campsite.elevation ?? null, weather };
   } catch (err) {
-    console.error(`Error fetching campsite ${id}:`, err);
+    console.error('Error fetching campsite %s:', id, err);
     throw err;
   }
 };
