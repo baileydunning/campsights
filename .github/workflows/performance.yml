@@ -77,7 +77,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: artillery-report
-        path: artillery-report.json
+        path: packages/server/artillery-report.json
 
   client:
     needs: server
@@ -136,6 +136,9 @@ jobs:
       with:
         name: lhci-report
         path: lhci-report
+    
+    - name: List LHCI report directory
+      run: ls -l lhci-report || echo "lhci-report not found"
 
     - name: Post or update PR comment with results
       uses: marocchino/sticky-pull-request-comment@v2
