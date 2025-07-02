@@ -27,26 +27,36 @@ const personIcon = new L.DivIcon({
   iconAnchor: [16, 48],
 });
 
+
 const MapView: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const campsites = useSelector(selectCampsites);
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
+  const [showMap, setShowMap] = useState(false);
+
+  // Defer map rendering until after first paint 
+  useEffect(() => {
+    const timeout = setTimeout(() => setShowMap(true), 0); 
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     dispatch(fetchCampsites());
   }, [dispatch]);
 
+  // Defer geolocation until user requests it
+  const [geoRequested, setGeoRequested] = useState(false);
   useEffect(() => {
+    if (!geoRequested) return;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCurrentPosition([pos.coords.latitude, pos.coords.longitude]),
         () => setCurrentPosition(null)
       );
     }
-  }, []);
-
+  }, [geoRequested]);
 
   const renderCampsiteMarker = useCallback(
     (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
@@ -75,27 +85,39 @@ const MapView: React.FC = () => {
 
   return (
     <div className="MapView">
-      <Suspense fallback={<Loading />}>
-        <MapContainer
-          center={currentPosition || defaultPosition}
-          zoom={8}
-          style={{ height: "100%", width: "100%" }}
-        >
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {campsiteMarkers}
-          {currentPosition && (
-            <Marker position={currentPosition} icon={personIcon}>
-              <Popup>You are here</Popup>
-              <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
-                You are here
-              </Tooltip>
-            </Marker>
-          )}
-        </MapContainer>
-      </Suspense>
+      {showMap ? (
+        <Suspense fallback={<Loading />}>
+          <MapContainer
+            center={currentPosition || defaultPosition}
+            zoom={8}
+            style={{ height: "100%", width: "100%" }}
+          >
+            <TileLayer
+              attribution="&copy; OpenStreetMap contributors"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {campsiteMarkers}
+            {currentPosition && (
+              <Marker position={currentPosition} icon={personIcon}>
+                <Popup>You are here</Popup>
+                <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
+                  You are here
+                </Tooltip>
+              </Marker>
+            )}
+          </MapContainer>
+          <button
+            style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}
+            onClick={() => setGeoRequested(true)}
+            disabled={geoRequested}
+            aria-label="Show My Location"
+          >
+            {geoRequested ? 'Locating…' : 'Show My Location'}
+          </button>
+        </Suspense>
+      ) : (
+        <Loading />
+      )}
     </div>
   );
 };
