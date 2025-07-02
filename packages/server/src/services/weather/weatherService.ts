@@ -1,3 +1,4 @@
+import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { Campsite } from '../../models/campsiteModel';
 import { WeatherPeriod } from '../../models/weatherModel';
 
@@ -8,34 +9,24 @@ export async function getWeatherForecast(
   const pointsUrl = `https://api.weather.gov/points/${lat},${lng}`;
 
   try {
-    const pointsRes = await fetch(pointsUrl, {
-      headers: { 'Accept': 'application/geo+json, application/json, application/cap+xml' }
+    const pointsRes = await fetchWithRetry(pointsUrl, {
+      headers: { 'Accept': 'application/geo+json, application/json' }
     });
-    if (!pointsRes.ok) {
-      console.error('Error fetching points for campsite %s: %s %s', id, pointsRes.status, pointsRes.statusText);
-      return [];
-    }
+    if (!pointsRes.ok) throw new Error(`Points API ${pointsRes.status}`);
 
-    const pointsData = await pointsRes.json() as { properties?: { forecast?: string } };
-    const forecastUrl: string | undefined = pointsData.properties?.forecast;
-    if (!forecastUrl) {
-      console.error('No forecast URL returned for campsite %s', id);
-      return [];
-    }
+    const pointsData = (await pointsRes.json()) as { properties?: { forecast?: string } };
+    const forecastUrl = pointsData.properties?.forecast;
+    if (!forecastUrl) throw new Error('No forecast URL');
 
-    const forecastRes = await fetch(forecastUrl, {
-      headers: { 'Accept': 'application/geo+json, application/json, application/cap+xml' }
+    const forecastRes = await fetchWithRetry(forecastUrl, {
+      headers: { 'Accept': 'application/geo+json, application/json' }
     });
-    if (!forecastRes.ok) {
-      console.error('Error fetching forecast for campsite %s: %s %s', id, forecastRes.status, forecastRes.statusText);
-      return [];
-    }
+    if (!forecastRes.ok) throw new Error(`Forecast API ${forecastRes.status}`);
 
-    const forecastData = await forecastRes.json() as { properties?: { periods?: WeatherPeriod[] } };
-    const periods: WeatherPeriod[] = forecastData.properties?.periods || [];
-    return periods;
+    const forecastData = (await forecastRes.json()) as { properties?: { periods?: WeatherPeriod[] } };
+    return forecastData.properties?.periods ?? [];
   } catch (error) {
-    console.error('Error fetching weather for campsite %s:', id, error);
+    console.error(`Weather fetch error for campsite ${id}:`, error);
     return [];
   }
 }
