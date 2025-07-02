@@ -5,8 +5,14 @@
     <link rel="icon" href="/tent.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&display=swap" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&display=swap"></noscript>
     <link rel="preload" href="https://unpkg.com/leaflet/dist/leaflet.css" as="style" onload="this.rel='stylesheet'">
-
+    <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"></noscript>
+    <style>
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #root { min-height: 100vh; min-width: 100vw; display: flex; flex-direction: column; }
+    </style>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Campsights</title>
   </head>
