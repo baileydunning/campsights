@@ -83,6 +83,11 @@ const initializeApp = async (): Promise<void> => {
 // API routes for handling campsites and elevation data
 app.use('/api/v1/campsites', campsitesRouter);
 
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Handle 404 for API routes (not found)
 app.use('/api', (req, res) => {
   res.status(404).json({ error: "Not Found" });
