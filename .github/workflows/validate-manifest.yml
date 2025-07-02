@@ -1,0 +1,66 @@
+name: Validate Manifest
+
+on:
+  push:
+    paths:
+      - 'packages/client/public/manifest.webmanifest'
+      - 'packages/client/**'
+      - '.github/workflows/validate-manifest.yml'
+  pull_request:
+    paths:
+      - 'packages/client/public/manifest.webmanifest'
+      - 'packages/client/**'
+      - '.github/workflows/validate-manifest.yml'
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: |
+          cd packages/client
+          npm ci
+      - name: Build client
+        run: |
+          cd packages/client
+          npm run build
+      - name: Install server dependencies
+        run: |
+          cd packages/server
+          npm ci
+      - name: Copy client build to server
+        run: |
+          mkdir -p packages/server/public 
+          rm -rf packages/server/public/*
+          cp -r packages/client/dist/* packages/server/public/
+          cp packages/client/dist/sw.js packages/server/public/service-worker.js
+      - name: Stop any running server on port 3000
+        run: |
+          if lsof -i:3000 -t | grep -q .; then
+            kill -9 $(lsof -i:3000 -t)
+            echo "Killed process on port 3000."
+          else
+            echo "No process running on port 3000."
+          fi
+      - name: Start backend server
+        run: |
+          cd packages/server
+          npm run build || true
+          npm start &
+          sleep 5
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+      - name: Check manifest is served
+        run: |
+          curl -f http://localhost:3000/manifest.webmanifest
+      - name: Check service worker is served
+        run: |
+          curl -f http://localhost:3000/service-worker.js
+      - name: Run Lighthouse CI against backend server
+        run: lhci autorun --collect.url=http://localhost:3000
