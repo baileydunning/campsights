@@ -38,7 +38,7 @@ jobs:
       run: npm run build
 
     - name: Start backend
-      run: npm start &
+      run: NODE_ENV=test npm start &
 
     - name: Wait for backend health endpoint
       run: |
@@ -62,11 +62,11 @@ jobs:
     - name: Extract latency metrics from Artillery report
       id: extract-artillery
       run: |
-        mean_latency=$(jq '.aggregate.latency.mean' artillery-report.json)
-        min_latency=$(jq '.aggregate.latency.min' artillery-report.json)
-        max_latency=$(jq '.aggregate.latency.max' artillery-report.json)
-        p95_latency=$(jq '.aggregate.latency.p95' artillery-report.json)
-        p99_latency=$(jq '.aggregate.latency.p99' artillery-report.json)
+        mean_latency=$(jq '.aggregate["http.response_time"].mean' artillery-report.json)
+        min_latency=$(jq '.aggregate["http.response_time"].min' artillery-report.json)
+        max_latency=$(jq '.aggregate["http.response_time"].max' artillery-report.json)
+        p95_latency=$(jq '.aggregate["http.response_time"].p95' artillery-report.json)
+        p99_latency=$(jq '.aggregate["http.response_time"].p99' artillery-report.json)
         echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
         echo "min_latency=$min_latency" >> $GITHUB_OUTPUT
         echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
@@ -122,10 +122,10 @@ jobs:
     - name: Extract Lighthouse scores
       id: extract-lhci
       run: |
-        perf=$(jq '.categories.performance.score' lhci-report/manifest.json | head -n1)
-        acc=$(jq '.categories.accessibility.score' lhci-report/manifest.json | head -n1)
-        best=$(jq '.categories."best-practices".score' lhci-report/manifest.json | head -n1)
-        seo=$(jq '.categories.seo.score' lhci-report/manifest.json | head -n1)
+        perf=$(jq '.[0].summary.categories.performance.score' lhci-report/manifest.json)
+        acc=$(jq '.[0].summary.categories.accessibility.score' lhci-report/manifest.json)
+        best=$(jq '.[0].summary.categories["best-practices"].score' lhci-report/manifest.json)
+        seo=$(jq '.[0].summary.categories.seo.score' lhci-report/manifest.json)
         echo "perf=$perf" >> $GITHUB_OUTPUT
         echo "acc=$acc" >> $GITHUB_OUTPUT
         echo "best=$best" >> $GITHUB_OUTPUT
@@ -136,7 +136,7 @@ jobs:
       with:
         name: lhci-report
         path: lhci-report
-    
+
     - name: List LHCI report directory
       run: ls -l lhci-report || echo "lhci-report not found"
 
