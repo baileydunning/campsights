@@ -90,20 +90,16 @@ jobs:
             ${{ if lt( steps.extract-artillery.outputs.mean_latency, '1' ) }}Excellent${{ 
                else if lt( steps.extract-artillery.outputs.mean_latency, '2' ) }}Good${{ 
                else }}Needs Improvement${{ end }}
-
           - Min: ${{ steps.extract-artillery.outputs.min_latency }} ms \
             ${{ if eq( steps.extract-artillery.outputs.min_latency, '0' ) }}Perfect${{ 
                else }}Check Minimum${{ end }}
-
           - Max: ${{ steps.extract-artillery.outputs.max_latency }} ms \
             ${{ if lt( steps.extract-artillery.outputs.max_latency, '5' ) }}Excellent${{ 
                else if lt( steps.extract-artillery.outputs.max_latency, '10' ) }}Good${{ 
                else }}Needs Attention${{ end }}
-
           - p95: ${{ steps.extract-artillery.outputs.p95_latency }} ms \
             ${{ if lt( steps.extract-artillery.outputs.p95_latency, '2' ) }}Good${{ 
                else }}Needs Improvement${{ end }}
-
           - p99: ${{ steps.extract-artillery.outputs.p99_latency }} ms \
             ${{ if lt( steps.extract-artillery.outputs.p99_latency, '3' ) }}Good${{ 
                else }}Needs Improvement${{ end }}
@@ -173,15 +169,12 @@ jobs:
             ${{ if gt( steps.extract-lhci.outputs.perf, '0.90' ) }}Excellent${{ 
                else if gt( steps.extract-lhci.outputs.perf, '0.50' ) }}Needs Improvement${{ 
                else }}Poor${{ end }}
-
           - Accessibility: ${{ steps.extract-lhci.outputs.acc }} \
             ${{ if eq( steps.extract-lhci.outputs.acc, '1.00' ) }}Perfect${{ 
                else }}Review Accessibility${{ end }}
-
           - Best Practices: ${{ steps.extract-lhci.outputs.best }} \
             ${{ if gt( steps.extract-lhci.outputs.best, '0.90' ) }}Good${{ 
                else }}Check Best Practices${{ end }}
-
           - SEO: ${{ steps.extract-lhci.outputs.seo }} \
             ${{ if gt( steps.extract-lhci.outputs.seo, '0.90' ) }}Strong${{ 
                else if gt( steps.extract-lhci.outputs.seo, '0.75' ) }}Could Improve${{ 
