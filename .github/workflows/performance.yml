@@ -71,11 +71,11 @@ jobs:
       run: |
         echo "--- jq Artillery metrics extraction ---"
         jq '.' artillery-report.json || echo "jq failed to parse artillery-report.json"
-        mean_latency=$(jq -r '.aggregate["http.response_time"].mean // empty' artillery-report.json)
-        min_latency=$(jq -r '.aggregate["http.response_time"].min // empty' artillery-report.json)
-        max_latency=$(jq -r '.aggregate["http.response_time"].max // empty' artillery-report.json)
-        p95_latency=$(jq -r '.aggregate["http.response_time"].p95 // empty' artillery-report.json)
-        p99_latency=$(jq -r '.aggregate["http.response_time"].p99 // empty' artillery-report.json)
+        mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
+        min_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].min // empty' artillery-report.json)
+        max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
+        p95_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p95 // empty' artillery-report.json)
+        p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
         echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
         echo "min_latency=$min_latency" >> $GITHUB_OUTPUT
         echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
@@ -148,10 +148,12 @@ jobs:
       run: |
         echo "--- jq LHCI metrics extraction ---"
         jq '.' lhci-report/manifest.json || echo "jq failed to parse manifest.json"
-        perf=$(jq '.[0].summary.categories.performance.score' lhci-report/manifest.json)
-        acc=$(jq '.[0].summary.categories.accessibility.score' lhci-report/manifest.json)
-        best=$(jq '.[0].summary.categories["best-practices"].score' lhci-report/manifest.json)
-        seo=$(jq '.[0].summary.categories.seo.score' lhci-report/manifest.json)
+        # Find the representative run (isRepresentativeRun==true), fallback to first if not found
+        rep_index=$(jq 'map(.isRepresentativeRun) | index(true) // 0' lhci-report/manifest.json)
+        perf=$(jq -r ".[${rep_index}].summary.performance // empty" lhci-report/manifest.json)
+        acc=$(jq -r ".[${rep_index}].summary.accessibility // empty" lhci-report/manifest.json)
+        best=$(jq -r ".[${rep_index}].summary[\"best-practices\"] // empty" lhci-report/manifest.json)
+        seo=$(jq -r ".[${rep_index}].summary.seo // empty" lhci-report/manifest.json)
         echo "perf=$perf" >> $GITHUB_OUTPUT
         echo "acc=$acc" >> $GITHUB_OUTPUT
         echo "best=$best" >> $GITHUB_OUTPUT
