@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('react-leaflet', () => {
-  const React = require('react');
   return {
     Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
     Popup: function Popup(props: any) {

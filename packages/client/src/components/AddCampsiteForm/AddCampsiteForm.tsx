@@ -162,4 +162,4 @@ const AddCampsiteForm: React.FC<AddCampsiteFormProps> = ({ onSuccess }) => {
   );
 };
 
-export default AddCampsiteForm;
+export default React.memo(AddCampsiteForm);

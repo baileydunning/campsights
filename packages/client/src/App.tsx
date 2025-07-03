@@ -1,7 +1,9 @@
-import React, { useState, useCallback } from "react";
-import MapView from "./components/MapView/MapView";
-import AddCampsiteForm from "./components/AddCampsiteForm/AddCampsiteForm";
+import React, { useState, useCallback, Suspense, lazy } from "react";
 import "./App.css";
+import Loading from "./components/Loading/Loading";
+
+const MapView = lazy(() => import("./components/MapView/MapView"));
+const AddCampsiteForm = lazy(() => import("./components/AddCampsiteForm/AddCampsiteForm"));
 
 const App: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -17,7 +19,9 @@ const App: React.FC = () => {
       </header>
       <div className="app-container">
         <main className="main-content">
-          <MapView />
+          <Suspense fallback={<Loading />}>
+            <MapView />
+          </Suspense>
           <button
             className="plus-button"
             onClick={() => setShowModal(true)}
@@ -38,7 +42,9 @@ const App: React.FC = () => {
                 >
                   &times;
                 </button>
-                <AddCampsiteForm onSuccess={handleSuccess}/>
+                <Suspense fallback={null}>
+                  <AddCampsiteForm onSuccess={handleSuccess}/>
+                </Suspense>
               </div>
             </div>
           )}

@@ -175,4 +175,4 @@ const EditCampsiteForm: React.FC<EditCampsiteFormProps> = ({ site, onCancel }) =
   );
 };
 
-export default EditCampsiteForm;
+export default React.memo(EditCampsiteForm);
