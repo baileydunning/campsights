@@ -36,7 +36,6 @@ const MapView: React.FC = () => {
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
   const [showMap, setShowMap] = useState(false);
 
-  // Defer map rendering until after first paint 
   useEffect(() => {
     const timeout = setTimeout(() => setShowMap(true), 0); 
     return () => clearTimeout(timeout);
@@ -67,9 +66,6 @@ const MapView: React.FC = () => {
     [campsites, renderCampsiteMarker]
   );
 
-
-
-  // Only show error if present
   if (error) {
     return (
       <div className="MapView">
@@ -115,7 +111,6 @@ const MapView: React.FC = () => {
           )}
         </Suspense>
       ) : (
-        // Return null to let Suspense fallback handle loading UI
         null
       )}
     </div>

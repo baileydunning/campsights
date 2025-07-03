@@ -85,8 +85,6 @@ describe("MapView", () => {
     vi.clearAllMocks();
   });
 
-  // Removed: loading state test is no longer valid after refactor
-
   it("shows error state when there's an error", async () => {
     (getCampsites as any).mockRejectedValue(new Error("API Error"));
     await act(async () => {
