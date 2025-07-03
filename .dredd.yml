@@ -1,14 +1,7 @@
-dry-run: null
-hookfiles: []
 language: nodejs
 server: ''
 server-wait: 3
 init: false
-custom: []
-only: []
-skip: []
-reporter: []
-require: []
 details: false
 inline-errors: false
 sorted: false
