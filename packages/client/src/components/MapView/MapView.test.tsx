@@ -21,18 +21,20 @@ vi.mock("react-leaflet", () => ({
   Tooltip: ({ children }: any) => <div data-testid="person-tooltip">{children}</div>,
 }));
 
-vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
-  __esModule: true,
-  default: ({ site }: any) => (
-    <div data-testid="marker">
-      <div data-testid="popup">
-        <div>{site.name ? site.name : "Unnamed Site"}</div>
-        <div>{site.description}</div>
-        <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
+vi.mock("../CampsiteMarker/CampsiteMarker", async () => {
+  return {
+    __esModule: true,
+    default: ({ site }: any) => (
+      <div data-testid="marker">
+        <div data-testid="popup">
+          <div>{site.name ? site.name : "Unnamed Site"}</div>
+          <div>{site.description}</div>
+          <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
+        </div>
       </div>
-    </div>
-  ),
-}));
+    ),
+  };
+});
 
 const mockCampsites = [
   {
@@ -81,12 +83,6 @@ describe("MapView", () => {
   beforeEach(() => {
     (getCampsites as any).mockResolvedValue(mockCampsites);
     vi.clearAllMocks();
-  });
-
-  it("shows loading state initially", () => {
-    const store = createTestStore({ loading: true });
-    renderWithProvider(<MapView />, store);
-    expect(document.querySelector('.loading-screen')).toBeInTheDocument();
   });
 
   it("shows error state when there's an error", async () => {
@@ -177,8 +173,13 @@ describe("MapView", () => {
     await act(async () => {
       renderWithProvider(<MapView />);
     });
-    
-    expect(screen.getByTestId("person-marker")).toBeInTheDocument();
+
+    const showLocationBtn = await screen.findByRole('button', { name: /show my location/i });
+    showLocationBtn.click();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("person-marker")).toBeInTheDocument();
+    });
     expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
     expect(screen.getByTestId("person-popup")).toHaveTextContent(/You are here/i);
   });

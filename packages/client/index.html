@@ -2,12 +2,87 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/tent.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/tent.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="image" href="https://c.tile.openstreetmap.org/8/52/97.png" imagesrcset="https://c.tile.openstreetmap.org/8/52/97.png 1x">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&display=swap" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&display=swap"></noscript>
+    <link rel="preload" href="https://unpkg.com/leaflet/dist/leaflet.css" as="style" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"></noscript>
+    <link rel="preconnect" href="https://{s}.tile.openstreetmap.org" crossorigin>
+    <style>
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #root { min-height: 100vh; min-width: 100vw; display: flex; flex-direction: column; }
+      .app-header {
+        width: 100%;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        padding: 0 0 8px 0;
+        margin-bottom: 8px;
+        z-index: 10;
+      }
+      .app-header h1 {
+        font-family: 'Bebas Neue', 'Roboto', Arial, sans-serif;
+        font-size: 2.5rem;
+        margin: 0.5em 0 0.2em 0;
+        letter-spacing: 2px;
+        text-align: center;
+      }
+      .main-content {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .loading-screen {
+        width: 100%;
+        height: 400px;
+        min-width: 320px;
+        min-height: 300px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+        background: #e0e4e7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+    </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Campsights</title>
   </head>
   <body>
+    <div id="map-tile-placeholder" style="width:256px;height:256px;position:absolute;left:50%;top:180px;transform:translateX(-50%);z-index:1;overflow:hidden;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);background:#e0e4e7;">
+      <img
+        src="https://c.tile.openstreetmap.org/8/52/97.png"
+        alt="Map tile preview"
+        width="256" height="256"
+        style="display:block;width:256px;height:256px;object-fit:cover;"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </div>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" defer></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        const observer = new MutationObserver(() => {
+          const leafletTile = document.querySelector('.leaflet-tile');
+          if (leafletTile) {
+            const ph = document.getElementById('map-tile-placeholder');
+            if (ph) ph.style.display = 'none';
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { subtree: true, childList: true });
+      });
+    </script>
   </body>
 </html>
