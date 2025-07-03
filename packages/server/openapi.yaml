@@ -31,37 +31,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/Campsite'
         '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Bad Request
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Not Found
-          content:
-            application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not Found
+          $ref: '#/components/responses/NotFound'
         '429':
-          description: Too Many Requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too Many Requests
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal Server Error
+          $ref: '#/components/responses/InternalError'
   /campsites/{id}:
     get:
       tags:
@@ -78,37 +54,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/CampsiteWithWeather'
         '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Bad Request
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Not Found
-          content:
-            application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not Found
+          $ref: '#/components/responses/NotFound'
         '429':
-          description: Too Many Requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too Many Requests
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal Server Error
+          $ref: '#/components/responses/InternalError'
     post:
       tags:
       - Campsites
@@ -134,37 +86,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Campsite'
         '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Bad Request
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Not Found
-          content:
-            application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not Found
+          $ref: '#/components/responses/NotFound'
         '429':
-          description: Too Many Requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too Many Requests
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal Server Error
+          $ref: '#/components/responses/InternalError'
     put:
       tags:
       - Campsites
@@ -192,37 +120,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Campsite'
         '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Bad Request
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Not Found
-          content:
-            application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not Found
+          $ref: '#/components/responses/NotFound'
         '429':
-          description: Too Many Requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too Many Requests
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal Server Error
+          $ref: '#/components/responses/InternalError'
     delete:
       tags:
       - Campsites
@@ -234,37 +138,13 @@ paths:
         '204':
           description: Deleted successfully
         '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Bad Request
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Not Found
-          content:
-            application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not Found
+          $ref: '#/components/responses/NotFound'
         '429':
-          description: Too Many Requests
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Too Many Requests
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                error: Internal Server Error
+          $ref: '#/components/responses/InternalError'
 
   /health:
     get:
