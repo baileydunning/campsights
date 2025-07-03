@@ -167,7 +167,13 @@ jobs:
       run: npm install -g @lhci/cli
 
     - name: Run Lighthouse CI
-      run: lhci autorun --collect.url=http://localhost:4173 --upload.target=filesystem --upload.outputDir=lhci-report
+      run: |
+          lhci autorun \
+            --collect.settings.emulatedFormFactor=desktop \
+            --collect.settings.throttlingMethod=provided \
+            --collect.url=http://localhost:4173 \
+            --upload.target=filesystem \
+            --upload.outputDir=lhci-report
 
     - name: Extract Lighthouse scores and metrics
       id: extract-lhci
