@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import * as campsitesService from '../../services/campsites/campsitesService';
+import { getCachedCampsites, invalidateCampsitesCache } from '../../services/campsites/campsitesCache';
 
 export const getCampsites = async (req: Request, res: Response) => {
   try {
-    const campsites = await campsitesService.getCampsites();
+    const campsites = await getCachedCampsites();
+    res.set('Cache-Control', 'public, max-age=21600, stale-while-revalidate=86400'); // 6h cache, 1d SWR
     res.status(200).json(campsites);
   } catch (error) {
     console.error('Error in getCampsites controller:', error);
@@ -78,6 +80,7 @@ export const addCampsite = async (req: Request, res: Response) => {
     };
 
     const newCampsite = await campsitesService.addCampsite({ ...campsiteData });
+    invalidateCampsitesCache();
     res.status(201).json(newCampsite);
   } catch (error) {
     console.error('Error in addCampsite controller:', error);
@@ -132,11 +135,10 @@ export const updateCampsite = async (req: Request, res: Response) => {
     };
 
     const updatedCampsite = await campsitesService.updateCampsite(id, { ...campsiteData });
-    
+    invalidateCampsitesCache();
     if (!updatedCampsite) {
       return res.status(404).json({ error: 'Campsite not found' });
     }
-    
     res.status(200).json(updatedCampsite);
   } catch (error) {
     console.error('Error in updateCampsite controller:', error);
@@ -154,6 +156,7 @@ export const deleteCampsite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'id is required and must be a string' });
     }
     const deleted = await campsitesService.deleteCampsite(id);
+    invalidateCampsitesCache();
     if (!deleted) {
       return res.status(404).json({ error: 'Campsite not found' });
     }
