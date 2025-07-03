@@ -31,11 +31,62 @@ paths:
                 items:
                   $ref: '#/components/schemas/Campsite'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
-          $ref: '#/components/responses/TooManyRequests'
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
-          $ref: '#/components/responses/InternalError'
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /campsites/{id}:
+    get:
+      tags:
+      - Campsites
+      operationId: getCampsiteById
+      summary: Get a campsite by ID (with elevation and weather)
+      parameters:
+      - $ref: '#/components/parameters/campsiteId'
+      responses:
+        '200':
+          description: Campsite with elevation and weather
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampsiteWithWeather'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
       tags:
       - Campsites
@@ -66,30 +117,6 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  /campsites/{id}:
-    get:
-      tags:
-      - Campsites
-      operationId: getCampsiteById
-      summary: Get a campsite by ID (with elevation and weather)
-      parameters:
-      - $ref: '#/components/parameters/campsiteId'
-      responses:
-        '200':
-          description: Campsite with elevation and weather
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampsiteWithWeather'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalError'
     put:
       tags:
       - Campsites
@@ -112,47 +139,6 @@ paths:
       responses:
         '200':
           description: Updated campsite
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Campsite'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    patch:
-      tags:
-      - Campsites
-      operationId: patchCampsite
-      summary: Partially update a campsite
-      parameters:
-      - $ref: '#/components/parameters/campsiteId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                lat:
-                  type: number
-                lng:
-                  type: number
-                requires_4wd:
-                  type: boolean
-            example:
-              requires_4wd: true
-      responses:
-        '200':
-          description: Partially updated campsite
           content:
             application/json:
               schema:
@@ -220,7 +206,19 @@ components:
       properties:
         error:
           type: string
-          example: Not Found
+      examples:
+        BadRequest:
+          value:
+            error: Bad Request
+        NotFound:
+          value:
+            error: Not Found
+        TooManyRequests:
+          value:
+            error: Too Many Requests
+        InternalError:
+          value:
+            error: Internal Server Error
 
     Campsite:
       type: object
@@ -234,31 +232,53 @@ components:
       properties:
         id:
           type: string
-          example: "abc123"
+          example: camp_002
         name:
           type: string
-          example: "Hidden Valley"
+          example: Switzerland Trail
         description:
           type: string
-          example: "Secluded spot by the creek."
+          example: Situated amidst towering pines near Sugarloaf Mountain, this campsite provides a peaceful retreat with easy access to hiking trails and scenic overlooks. Ideal for families and adventurers looking for a relaxing getaway.
         lat:
           type: number
           format: float
-          example: 39.7392
+          example: 39.905347
         lng:
           type: number
           format: float
-          example: -104.9903
+          example: -105.57529
         requires_4wd:
           type: boolean
           example: false
         elevation:
           type: number
-          example: 1680
+          nullable: true
+          example: null
         last_updated:
           type: string
           format: date-time
-          example: "2025-06-19T12:00:00.000Z"
+          example: "2025-06-13T21:50:37.842404Z"
+        weather:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherPeriod'
+          example:
+          - number: 1
+            name: Today
+            startTime: "2025-07-03T07:00:00-06:00"
+            endTime: "2025-07-03T18:00:00-06:00"
+            isDaytime: true
+            temperature: 77
+            temperatureUnit: F
+            temperatureTrend: ""
+            probabilityOfPrecipitation:
+              unitCode: wmoUnit:percent
+              value: 41
+            windSpeed: 2 to 7 mph
+            windDirection: ENE
+            icon: https://api.weather.gov/icons/land/day/sct/tsra_hi,40?size=medium
+            shortForecast: Mostly Sunny then Chance Showers And Thunderstorms
+            detailedForecast: A chance of showers and thunderstorms after noon. Mostly sunny. High near 77, with temperatures falling to around 73 in the afternoon. East northeast wind 2 to 7 mph, with gusts as high as 18 mph. Chance of precipitation is 40%. New rainfall amounts less than a tenth of an inch possible.
 
     CampsiteInput:
       type: object
