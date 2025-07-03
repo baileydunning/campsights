@@ -44,4 +44,4 @@ jobs:
 
     - name: Run Dredd contract tests
       run: |
-        dredd packages/server/openapi.yaml http://localhost:3000/api/v1
+        dredd --config .dredd.yml
