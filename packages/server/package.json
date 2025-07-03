@@ -9,7 +9,8 @@
     "dev": "nodemon src/index.ts",
     "start": "ts-node src/index.ts",
     "start:prod": "node dist/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "start:fresh": "ts-node src/index.ts --force-seed"
   },
   "keywords": [],
   "author": "",
