@@ -38,24 +38,27 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
   };
 
   const weatherCards = useMemo(
-    () => site.weather.map((p: any) => (
-      <div key={p.number} className="weather-period-card">
-        <div className="weather-period-header">
-          {p.name} ({p.isDaytime ? "Day" : "Night"})
-        </div>
-        <div className="weather-period-details">
-          <span className="weather-temp">
-            <strong>Temp:</strong> {p.temperature}°{p.temperatureUnit}
-          </span>
-          <span className="weather-wind">
-            <strong>Wind:</strong> {p.windSpeed} {p.windDirection}
-          </span>
-          <span className="weather-short">
-            <strong>Forecast:</strong> {p.detailedForecast}
-          </span>
-        </div>
-      </div>
-    )),
+    () =>
+      Array.isArray(site.weather) && site.weather.length > 0
+        ? site.weather.map((p: any) => (
+            <div key={p.number} className="weather-period-card">
+              <div className="weather-period-header">
+                {p.name} ({p.isDaytime ? "Day" : "Night"})
+              </div>
+              <div className="weather-period-details">
+                <span className="weather-temp">
+                  <strong>Temp:</strong> {p.temperature}°{p.temperatureUnit}
+                </span>
+                <span className="weather-wind">
+                  <strong>Wind:</strong> {p.windSpeed} {p.windDirection}
+                </span>
+                <span className="weather-short">
+                  <strong>Forecast:</strong> {p.detailedForecast}
+                </span>
+              </div>
+            </div>
+          ))
+        : <span>No forecast</span>,
     [site.weather]
   );
 
