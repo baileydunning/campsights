@@ -10,6 +10,8 @@ export interface CampsiteMarkerProps {
 }
 
 const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
+  if (!site) return null;
+
   const [editing, setEditing] = useState(false);
   const popupRef = useRef<any>(null);
 
@@ -34,7 +36,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
   const handlePopupClose = () => {
     setEditing(false);
   };
-
 
   const weatherCards = useMemo(
     () => site.weather.map((p: any) => (
