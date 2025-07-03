@@ -173,6 +173,7 @@ components:
       required: true
       schema:
         type: string
+        example: camp_001
 
   schemas:
     Error:
