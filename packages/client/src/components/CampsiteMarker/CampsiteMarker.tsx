@@ -38,7 +38,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
   };
 
   const weatherCards = useMemo(() => {
-    if (!Array.isArray(site.weather)) return null;
+    if (!site.weather || site.weather.length === 0) {
+      return <div className="weather-period-card">No weather data available</div>;
+    }
     return site.weather.map((p: any) => (
       <div key={p.number} className="weather-period-card">
         <div className="weather-period-header">
