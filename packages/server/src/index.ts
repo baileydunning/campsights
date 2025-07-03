@@ -48,12 +48,16 @@ const setupStaticFileServing = async (): Promise<void> => {
 };
 
 // Initialize the app, including DB seeding and starting the server
-const initializeApp = async (): Promise<void> => {
+const initializeApp = async (forceSeed = false): Promise<void> => {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      const keysIterable = await db.getKeys({ limit: 1 });
-      const keys = Array.from(keysIterable);
-      if (keys.length === 0) {
+      let shouldSeed = forceSeed;
+      if (!forceSeed) {
+        const keysIterable = await db.getKeys({ limit: 1 });
+        const keys = Array.from(keysIterable);
+        shouldSeed = keys.length === 0;
+      }
+      if (shouldSeed) {
         await seedDB();
         console.log("Database seeded successfully.");
       } else {
@@ -101,9 +105,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
+// Check for --force-seed flag
+const forceSeed = process.argv.includes('--force-seed');
+
 // Initialize static file serving and then initialize the app
 setupStaticFileServing()
-  .then(() => initializeApp())
+  .then(() => initializeApp(forceSeed))
   .catch((err) => {
     console.error("Error during app setup:", err);
     process.exit(1);
