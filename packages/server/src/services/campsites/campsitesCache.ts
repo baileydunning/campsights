@@ -10,11 +10,13 @@ export async function getCachedCampsites(): Promise<Campsite[]> {
   if (cachedCampsites && (now - lastCacheTime < CACHE_TTL)) {
     return cachedCampsites;
   }
-  // Rebuild cache
+
   const campsites: Campsite[] = [];
+
   for (const { value } of db.getRange({})) {
     campsites.push(value as Campsite);
   }
+  
   cachedCampsites = campsites;
   lastCacheTime = now;
   return campsites;

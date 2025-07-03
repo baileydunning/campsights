@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getCampsites, getCampsiteById, addCampsite, updateCampsite, deleteCampsite } from './campsitesController';
 import * as campsitesService from '../../services/campsites/campsitesService';
+import * as campsitesCache from '../../services/campsites/campsitesCache';
 import { Request, Response } from 'express';
 
 describe('campsitesController', () => {
@@ -29,18 +30,23 @@ describe('campsitesController', () => {
     });
 
     describe('getCampsites', () => {
-        it('should return campsites with status 200', async () => {
+        it('should return campsites with status 200 and set Cache-Control', async () => {
             const fakeCampsites = [{ id: '1', name: 'Test', description: '', lat: 0, lng: 0, requires_4wd: false, last_updated: '2024-01-01' }];
-            vi.spyOn(campsitesService, 'getCampsites').mockResolvedValue(fakeCampsites);
+            vi.spyOn(campsitesCache, 'getCachedCampsites').mockResolvedValue(fakeCampsites);
+            const setMock = vi.fn().mockReturnThis();
+            (res as any).set = setMock;
 
             await getCampsites(req as Request, res as Response);
 
+            expect(setMock).toHaveBeenCalledWith('Cache-Control', expect.stringContaining('max-age'));
             expect(statusMock).toHaveBeenCalledWith(200);
             expect(jsonMock).toHaveBeenCalledWith(fakeCampsites);
         });
 
         it('should handle errors and return status 500', async () => {
-            vi.spyOn(campsitesService, 'getCampsites').mockRejectedValue(new Error('fail'));
+            vi.spyOn(campsitesCache, 'getCachedCampsites').mockRejectedValue(new Error('fail'));
+            const setMock = vi.fn().mockReturnThis();
+            (res as any).set = setMock;
 
             await getCampsites(req as Request, res as Response);
 
@@ -79,6 +85,13 @@ describe('campsitesController', () => {
     });
 
     describe('addCampsite', () => {
+        let invalidateSpy: vi.SpyInstance;
+        beforeEach(() => {
+            invalidateSpy = vi.spyOn(campsitesCache, 'invalidateCampsitesCache').mockImplementation(() => {});
+        });
+        afterEach(() => {
+            invalidateSpy.mockRestore();
+        });
         const validBody = {
             id: 'abc',
             name: 'Test Site',
@@ -89,13 +102,14 @@ describe('campsitesController', () => {
             last_updated: '2024-01-01'
         };
 
-        it('should add a campsite and return status 201', async () => {
+        it('should add a campsite, invalidate cache, and return status 201', async () => {
             req.body = { ...validBody };
             const fakeCampsite = { ...validBody };
             vi.spyOn(campsitesService, 'addCampsite').mockResolvedValue(fakeCampsite);
 
             await addCampsite(req as Request, res as Response);
 
+            expect(invalidateSpy).toHaveBeenCalled();
             expect(statusMock).toHaveBeenCalledWith(201);
             expect(jsonMock).toHaveBeenCalledWith(fakeCampsite);
         });
@@ -162,6 +176,13 @@ describe('campsitesController', () => {
     });
 
     describe('updateCampsite', () => {
+        let invalidateSpy: vi.SpyInstance;
+        beforeEach(() => {
+            invalidateSpy = vi.spyOn(campsitesCache, 'invalidateCampsitesCache').mockImplementation(() => {});
+        });
+        afterEach(() => {
+            invalidateSpy.mockRestore();
+        });
         const validBody = {
             name: 'Updated Test Site',
             description: 'An updated nice place',
@@ -175,13 +196,14 @@ describe('campsitesController', () => {
             req.params = { id: 'test-id' };
         });
 
-        it('should update a campsite and return status 200', async () => {
+        it('should update a campsite, invalidate cache, and return status 200', async () => {
             req.body = { ...validBody };
             const updatedCampsite = { id: 'test-id', ...validBody };
             vi.spyOn(campsitesService, 'updateCampsite').mockResolvedValue(updatedCampsite);
 
             await updateCampsite(req as Request, res as Response);
 
+            expect(invalidateSpy).toHaveBeenCalled();
             expect(statusMock).toHaveBeenCalledWith(200);
             expect(jsonMock).toHaveBeenCalledWith(updatedCampsite);
             expect(campsitesService.updateCampsite).toHaveBeenCalledWith('test-id', updatedCampsite);
@@ -252,13 +274,21 @@ describe('campsitesController', () => {
     });
 
     describe('deleteCampsite', () => {
+        let invalidateSpy: vi.SpyInstance;
+        beforeEach(() => {
+            invalidateSpy = vi.spyOn(campsitesCache, 'invalidateCampsitesCache').mockImplementation(() => {});
+        });
+        afterEach(() => {
+            invalidateSpy.mockRestore();
+        });
         beforeEach(() => {
             req.params = { id: 'test-id' };
         });
 
-        it('should delete a campsite and return status 204', async () => {
+        it('should delete a campsite, invalidate cache, and return status 204', async () => {
             vi.spyOn(campsitesService, 'deleteCampsite').mockResolvedValue(true);
             await deleteCampsite(req as Request, res as Response);
+            expect(invalidateSpy).toHaveBeenCalled();
             expect(statusMock).toHaveBeenCalledWith(204);
             expect(sendMock).toHaveBeenCalledWith();
             expect(campsitesService.deleteCampsite).toHaveBeenCalledWith('test-id');
