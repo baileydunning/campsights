@@ -4,6 +4,8 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 
 **Live project link:** https://campsights.onrender.com/
 
+**API documentation:** [Swagger UI (OpenAPI docs)](https://campsights.onrender.com/docs) — Interactive API explorer and schema
+
 ## Tech Stack
 
 - **Frontend:** React, Vite, TypeScript, Redux Toolkit, React-Leaflet, Vitest, CSS Modules
