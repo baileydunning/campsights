@@ -170,7 +170,7 @@ jobs:
       run: |
           lhci autorun \
             --collect.settings.emulatedFormFactor=desktop \
-            --collect.settings.throttlingMethod=provided \
+            --collect.settings.throttlingMethod=simulate \
             --collect.url=http://localhost:4173 \
             --upload.target=filesystem \
             --upload.outputDir=lhci-report
