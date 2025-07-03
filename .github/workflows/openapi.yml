@@ -44,4 +44,4 @@ jobs:
 
     - name: Run Dredd contract tests
       run: |
-        NODE_NO_WARNINGS=1 dredd --config .dredd.yml
+        dredd --config .dredd.yml
