@@ -36,18 +36,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Bad Request
+        '404':
+          description: Not Found
+          content:
+            application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
         '429':
           description: Too Many Requests
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Too Many Requests
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Internal Server Error
   /campsites/{id}:
     get:
       tags:
@@ -69,24 +83,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Bad Request
         '404':
           description: Not Found
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
         '429':
           description: Too Many Requests
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Too Many Requests
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Internal Server Error
     post:
       tags:
       - Campsites
@@ -112,11 +134,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Campsite'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Bad Request
+        '404':
+          description: Not Found
+          content:
+            application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
         '429':
-          $ref: '#/components/responses/TooManyRequests'
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too Many Requests
         '500':
-          $ref: '#/components/responses/InternalError'
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal Server Error
     put:
       tags:
       - Campsites
@@ -144,13 +192,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Campsite'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Bad Request
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: Not Found
+          content:
+            application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
         '429':
-          $ref: '#/components/responses/TooManyRequests'
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too Many Requests
         '500':
-          $ref: '#/components/responses/InternalError'
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal Server Error
     delete:
       tags:
       - Campsites
@@ -162,13 +234,37 @@ paths:
         '204':
           description: Deleted successfully
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Bad Request
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: Not Found
+          content:
+            application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
         '429':
-          $ref: '#/components/responses/TooManyRequests'
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too Many Requests
         '500':
-          $ref: '#/components/responses/InternalError'
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal Server Error
 
   /health:
     get:
@@ -206,19 +302,6 @@ components:
       properties:
         error:
           type: string
-      examples:
-        BadRequest:
-          value:
-            error: Bad Request
-        NotFound:
-          value:
-            error: Not Found
-        TooManyRequests:
-          value:
-            error: Too Many Requests
-        InternalError:
-          value:
-            error: Internal Server Error
 
     Campsite:
       type: object
