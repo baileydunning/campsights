@@ -14,7 +14,6 @@ inline-errors: false
 sorted: false
 names: false
 color: true
-timestamp: false
 loglevel: warning
 path: []
 blueprint: packages/server/openapi.yaml
