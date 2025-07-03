@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { db, seedDB } from './config/db';
 import campsitesRouter from './routes/campsites/campsitesRoutes';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 
 dotenv.config();
 
@@ -24,6 +25,10 @@ const globalLimiter = rateLimit({
 
 // Middleware
 app.use(cors());
+app.use(compression({
+  level: 6, 
+  threshold: 1024,
+}));
 app.use(express.json());
 app.use(globalLimiter);
 
