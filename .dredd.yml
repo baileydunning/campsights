@@ -12,5 +12,5 @@ blueprint: packages/server/openapi.yaml
 endpoint: http://localhost:3000/api/v1
 expectedContentTypes:
   application/json:
-    - application/json
-    - application/json; charset=utf-8
+  - application/json
+  - application/json; charset=utf-8
