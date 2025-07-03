@@ -37,8 +37,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
     setEditing(false);
   };
 
-  const weatherCards = useMemo(
-    () => site.weather.map((p: any) => (
+  const weatherCards = useMemo(() => {
+    if (!Array.isArray(site.weather)) return null;
+    return site.weather.map((p: any) => (
       <div key={p.number} className="weather-period-card">
         <div className="weather-period-header">
           {p.name} ({p.isDaytime ? "Day" : "Night"})
@@ -55,9 +56,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
           </span>
         </div>
       </div>
-    )),
-    [site.weather]
-  );
+    ));
+  }, [site.weather]);
 
   return (
     <Marker
