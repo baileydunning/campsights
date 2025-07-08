@@ -23,6 +23,11 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - Edit and delete campsites
 - Data is stored in LMDB (server) and served via REST API
 - Comprehensive unit and integration tests using Vitest
+- Installable as a **Progressive Web App (PWA)** for offline use:
+  - Add to your home screen or desktop for a native app experience
+  - Works offline: previously loaded data and the app shell are available without a network connection
+  - Offline status indicator with clear messaging
+  - Caches static assets and API responses for fast repeat visits
 
 ## Monorepo & Lerna
 
@@ -61,11 +66,13 @@ flowchart TD
     L --> M
     
     M --> N[GET /api/v1/campsites]
+    M --> N2[GET /api/v1/campsites/:id]
     M --> O[POST /api/v1/campsites]
     M --> P[PUT /api/v1/campsites/:id]
     M --> Q[DELETE /api/v1/campsites/:id]
     
     N --> T[Backend Server]
+    N2 --> T
     O --> T
     P --> T
     Q --> T
@@ -79,11 +86,13 @@ flowchart TD
     B --> C[Router Layer]
     
     C --> D[GET /api/v1/campsites]
+    C --> D2[GET /api/v1/campsites/:id]
     C --> E[POST /api/v1/campsites]
     C --> F[PUT /api/v1/campsites/:id]
     C --> G[DELETE /api/v1/campsites/:id]
     
     D --> I[Campsites Controller]
+    D2 --> I
     E --> I
     F --> I
     G --> I

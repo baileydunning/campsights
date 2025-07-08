@@ -26,6 +26,7 @@ body,
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  background: #F1EFE9;
 }
 
 .app-header h1 {
