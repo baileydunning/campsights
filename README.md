@@ -114,7 +114,7 @@ From the project root, run:
 docker-compose up --build
 ```
 
-- The app will be available at [http://localhost:3000](http://localhost:3000)
+- The app will be available at [http://localhost:4000](http://localhost:4000)
 - Both the frontend (React) and backend API are served from this address.
 
 ### Stopping the app
