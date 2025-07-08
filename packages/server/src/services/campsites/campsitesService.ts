@@ -1,6 +1,6 @@
 import { db } from '../../config/db';
 import { Campsite } from '../../models/campsiteModel';
-import { getElevation } from '../elevation/elevationService';
+import { getElevation, getElevations } from '../elevation/elevationService';
 import { getWeatherForecast } from '../weather/weatherService';
 import { WeatherPeriod } from '../../models/weatherModel';
 
@@ -24,7 +24,7 @@ async function attachWeather(
 }
 
 export const getCampsites = async (): Promise<
-  (Campsite & { elevation: number | null; weather: WeatherPeriod[] })[]
+  (Campsite & { elevation: number | null })[]
 > => {
   try {
     const raw: Campsite[] = [];
@@ -32,15 +32,35 @@ export const getCampsites = async (): Promise<
       raw.push(value as Campsite);
     }
 
-    return await Promise.all(
-      raw.map(async (site) => {
-        const { weather } = await attachWeather(site);
+    const sitesNeedingElevation = raw
+      .map((site, idx) => ({ site, idx }))
+      .filter(({ site }) => (site.elevation == null && site.lat != null && site.lng != null));
+
+    const locations = sitesNeedingElevation.map(({ site }) => ({ latitude: site.lat, longitude: site.lng }));
+    let elevations: (number | null)[] = [];
+    if (locations.length > 0) {
+      console.log(`[campsitesService] Requesting batch elevations for ${locations.length} locations`);
+      elevations = await getElevations(locations);
+      console.log(`[campsitesService] Received elevations:`, elevations);
+    }
+
+    const result = await Promise.all(
+      raw.map(async (site, idx) => {
         let elevation = site.elevation ?? null;
-        if (elevation == null && site.lat != null && site.lng != null) {
-          elevation = await getElevation(site.lat, site.lng);
+        const batchIdx = sitesNeedingElevation.findIndex(({ idx: i }) => i === idx);
+        if (batchIdx !== -1) {
+          console.log(`[campsitesService] Assigning batch elevation for site ${site.id}: ${elevations[batchIdx]}`);
+          elevation = elevations[batchIdx];
         }
-        return { ...site, elevation, weather };
+        return { ...site, elevation };
       })
+    );
+
+    return result.filter(site =>
+      typeof site.lat === 'number' &&
+      typeof site.lng === 'number' &&
+      !isNaN(site.lat) &&
+      !isNaN(site.lng)
     );
   } catch (err) {
     console.error('Error fetching campsites:', err);

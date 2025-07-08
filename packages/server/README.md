@@ -103,13 +103,31 @@ Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's i
 - When a campsite is **created** or its coordinates are **updated**, the backend fetches the elevation for the provided coordinates using the [Open-Elevation API](https://github.com/Jorl17/open-elevation/blob/master/docs/api.md). The elevation (in meters) is stored with each campsite record in the database and included in all API responses. Elevation is only fetched once per campsite (on creation or coordinate change); all reads use the stored value. If the elevation cannot be fetched, it is set to `null`.
 - When a campsite is **requested** (GET), the backend fetches the weather forecast for the campsite's coordinates from the [National Weather Service API](https://www.weather.gov/documentation/services-web-api) and includes it in the API response. The weather is always fetched live (not stored in the DB), and if the NWS API is unavailable, weather data is omitted for that campsite.
 
-## Caching & Retry Logic
+### Elevation Caching & Batching
 
-**Elevation Cache:** In-memory map keyed by coordinates; batch support; cleared in tests for isolation.
+- **In-Memory Cache:** Elevation lookups are cached in memory, keyed by coordinate, to avoid redundant API calls for the same location. This cache is used for both single and batch elevation requests.
+- **Database Cache:** Once elevation is fetched for a campsite, it is stored in the LMDB database and reused for all future reads, unless the coordinates change.
+- **Batching:** When multiple campsites need elevation (e.g., on initial load), the backend batches requests to the Open-Elevation API using the `/lookup` endpoint, which allows multiple coordinates in a single call. This reduces network overhead and speeds up the `/api/v1/campsites` endpoint.
+- **Assignment:** Batched elevations are assigned to the correct campsites by index, and any failures are logged. If elevation cannot be fetched, the value is set to `null` for that site.
 
-**Weather Cache:** Short-lived in-memory cache (default TTL 10 mins).
+### Weather Fetching (Detail Only)
 
-**Retries:** Configurable retry count with exponential backoff for both services.
+- **Weather is only fetched for the detail endpoint** (`GET /api/v1/campsites/:id`). The list endpoint (`GET /api/v1/campsites`) does **not** include weather data for performance reasons.
+- **Caching:** Weather responses are cached in memory for a short TTL (default 10 minutes) to reduce load on the NWS API and improve responsiveness for repeated requests.
+- **On-Demand:** Weather is fetched on demand when a user requests a specific campsite's details, ensuring up-to-date forecasts without slowing down the list endpoint.
+- **Error Handling:** If the weather API fails or rate limits, the response omits weather data for that campsite, but the rest of the data is still returned.
 
-**Fallbacks:** Return null (elevation) or omit field (weather) if external APIs fail.
+## Retry Logic
+
+Both the Elevation and Weather services implement robust retry logic to handle transient errors and improve reliability when communicating with external APIs:
+
+- **Exponential Backoff:** If a request to the Open-Elevation or National Weather Service API fails (due to network issues, 5xx errors, or timeouts), the service will automatically retry the request after a short delay. The delay increases exponentially with each retry attempt (e.g., 200ms, 400ms, 800ms, etc.), up to a configurable maximum.
+- **Retry Limits:** The number of retry attempts is configurable (default: 3 for elevation, 2 for weather). If all retries fail, the service logs the error and returns a fallback value (`null` for elevation, omits weather for weather failures).
+- **429 Handling:** If a 429 (Too Many Requests) response is received, the retry logic will not continue retrying, and the error is logged immediately to avoid further rate limiting.
+- **Error Logging:** All failed attempts and final errors are logged with details for debugging and monitoring.
+- **No Duplicate Requests:** The in-memory cache ensures that repeated requests for the same coordinate or campsite do not trigger redundant retries.
+
+This approach ensures that temporary network issues or API hiccups do not cause user-facing errors, while also respecting external API rate limits and providing clear diagnostics for persistent failures.
+
+
 
