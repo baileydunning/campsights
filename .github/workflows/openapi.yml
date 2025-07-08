@@ -28,3 +28,7 @@ jobs:
     - name: Validate OpenAPI spec
       working-directory: packages/server
       run: swagger-cli validate openapi.yaml
+
+    - name: Validate endpoints
+      working-directory: packages/server
+      run: npx ts-node src/utils/validateEndpoints.ts
