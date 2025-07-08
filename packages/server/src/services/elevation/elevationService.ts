@@ -1,5 +1,6 @@
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { Elevation } from '../../models/elevationModel';
+import { db } from '../../config/db';
 
 const elevationCache = new Map<string, number | null>();
 
@@ -14,10 +15,20 @@ const getElevations = async (
   for (const [index, key] of keys.entries()) {
     if (elevationCache.has(key)) {
       results[index] = elevationCache.get(key)!;
-    } else {
-      uncached.push(locations[index]);
-      uncachedIndexes.push(index);
+      continue;
     }
+    const dbKey = `elevation:${key}`;
+    let dbElevation: number | null | undefined = undefined;
+    try {
+      dbElevation = await db.get(dbKey);
+    } catch {}
+    if (typeof dbElevation === 'number' || dbElevation === null) {
+      elevationCache.set(key, dbElevation);
+      results[index] = dbElevation;
+      continue;
+    }
+    uncached.push(locations[index]);
+    uncachedIndexes.push(index);
   }
 
   if (uncached.length > 0) {
@@ -29,11 +40,11 @@ const getElevations = async (
         body: JSON.stringify({ locations: uncached }),
       });
       payload = (await response.json()) as { results: Elevation[] };
+
       if (!Array.isArray(payload.results) || payload.results.length !== uncached.length) {
         throw new Error('Elevation data missing or mismatched for requested coordinates.');
       }
-    } catch (err) {
-      console.warn('[elevationService] Elevation API failed, serving stale or null data');
+    } catch (err: any) {
       uncached.forEach((loc, i) => {
         const key = `${loc.latitude},${loc.longitude}`;
         if (elevationCache.has(key)) {
@@ -49,10 +60,11 @@ const getElevations = async (
       const key = `${loc.latitude},${loc.longitude}`;
       const elevation = payload!.results[i].elevation;
       elevationCache.set(key, elevation);
+      const dbKey = `elevation:${key}`;
+      db.put(dbKey, elevation).catch(() => {});
       results[uncachedIndexes[i]] = elevation;
     });
   }
-
   return results as (number | null)[];
 };
 
@@ -60,6 +72,7 @@ export const getElevation = async (
   latitude: number,
   longitude: number
 ): Promise<number | null> => {
+
   const [elevation] = await getElevations([{ latitude, longitude }]);
   return elevation;
 };
