@@ -14,8 +14,6 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - **Testing:** Vitest (client & server)
 - **Containerization:** Docker, Docker Compose
 
-
-
 ## Features
 
 - View campsites on an interactive Leaflet map
