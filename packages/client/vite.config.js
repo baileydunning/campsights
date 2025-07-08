@@ -1,7 +1,9 @@
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
@@ -14,6 +16,40 @@ export default defineConfig({
       gzipSize: true,
       brotliSize: true,
     }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.png', 'tent.png'],
+      manifest: {
+        name: 'Campsights',
+        short_name: 'Campsights',
+        start_url: '.',
+        display: 'standalone',
+        background_color: '#ffffff',
+        description: 'Discover and share campsites!',
+        icons: [
+          {
+            src: 'tent.png',
+            sizes: '192x192',
+            type: 'image/png'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 50, maxAgeSeconds: 3600 }
+            }
+          }
+        ],
+        navigateFallback: '/index.html'
+      }
+    })
   ],
   server: {
     port: 5173,
