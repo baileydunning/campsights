@@ -13,6 +13,7 @@ This is the frontend for the Campsights app, built with React, Vite, and TypeScr
 - **CSS Modules**: Scoped and maintainable component styles.
 - **Axios/Fetch**: For API and weather data requests.
 
+
 ## Features
 
 - View campsites on a Leaflet map with interactive markers
@@ -24,6 +25,18 @@ This is the frontend for the Campsights app, built with React, Vite, and TypeScr
 - Robust error and loading states for weather and data fetching
 - All weather and directions UI is styled via CSS for maintainability
 - Comprehensive unit and integration tests using Vitest
+- Works offline: previously loaded data and app shell are available without a network connection
+- Offline status indicator with clear messaging
+- Caches static assets and API responses for fast repeat visits
+
+
+## PWA Usage
+
+You can install Campsights as a PWA on your device:
+
+- On desktop, click the install icon in your browser address bar or use the browser menu to "Install App".
+- On mobile, use "Add to Home Screen" from your browser menu.
+- When offline, the app will show an offline indicator and allow you to view any data you've already loaded.
 
 ## Getting Started
 

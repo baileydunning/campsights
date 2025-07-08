@@ -14,6 +14,8 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - **Testing:** Vitest (client & server)
 - **Containerization:** Docker, Docker Compose
 
+
+
 ## Features
 
 - View campsites on an interactive Leaflet map
@@ -23,6 +25,11 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - Edit and delete campsites
 - Data is stored in LMDB (server) and served via REST API
 - Comprehensive unit and integration tests using Vitest
+- Installable as a **Progressive Web App (PWA)** for offline use:
+  - Add to your home screen or desktop for a native app experience
+  - Works offline: previously loaded data and the app shell are available without a network connection
+  - Offline status indicator with clear messaging
+  - Caches static assets and API responses for fast repeat visits
 
 ## Monorepo & Lerna
 
