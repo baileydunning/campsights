@@ -29,6 +29,10 @@ jobs:
       working-directory: packages/server
       run: swagger-cli validate openapi.yaml
 
+    - name: Install server dependencies
+      working-directory: packages/server
+      run: npm install
+
     - name: Validate endpoints
       working-directory: packages/server
       run: npx ts-node src/utils/validateEndpoints.ts
