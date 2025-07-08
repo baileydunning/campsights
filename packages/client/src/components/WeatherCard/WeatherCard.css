@@ -43,10 +43,11 @@
 }
 
 .weather-loading {
-  color: #92C689;
   height: 200px;
+  text-align: center;
 }
 
 .weather-error {
-  color: #92C689;
+  color: red;
+  text-align: center;
 }

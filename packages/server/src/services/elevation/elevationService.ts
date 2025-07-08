@@ -17,7 +17,6 @@ export const getElevations = async (
   const dbIndexesToFetch: number[] = [];
   for (const [index, key] of keys.entries()) {
     if (elevationCache.has(key)) {
-      console.log(`[elevationService] In-memory cache hit for ${key}`);
       results[index] = elevationCache.get(key)!;
       continue;
     }
@@ -29,13 +28,11 @@ export const getElevations = async (
   let dbResults: (number | null | undefined)[] = [];
   if (dbKeysToFetch.length > 0 && typeof db.getMany === 'function') {
     try {
-      console.log(`[elevationService] Batch DB getMany for ${dbKeysToFetch.length} keys`);
       dbResults = await db.getMany(dbKeysToFetch);
     } catch {
       dbResults = [];
     }
   } else if (dbKeysToFetch.length > 0) {
-    console.log(`[elevationService] Sequential DB get for ${dbKeysToFetch.length} keys`);
     dbResults = await Promise.all(dbKeysToFetch.map(async (k) => {
       try { return await db.get(k); } catch { return undefined; }
     }));
@@ -47,18 +44,15 @@ export const getElevations = async (
     const index = dbIndexesToFetch[i];
     const key = keys[index];
     if (typeof dbElevation === 'number' || dbElevation === null) {
-      console.log(`[elevationService] DB cache hit for ${key}`);
       elevationCache.set(key, dbElevation);
       results[index] = dbElevation;
     } else {
-      console.log(`[elevationService] Cache miss for ${key}, will fetch from API`);
       uncached.push(locations[index]);
       uncachedIndexes.push(index);
     }
   }
 
   if (uncached.length > 0) {
-    console.log(`[elevationService] Fetching elevations for ${uncached.length} uncached locations from API`);
     let payload: { results: Elevation[] } | null = null;
     try {
       const response = await fetchWithRetry('https://api.open-elevation.com/api/v1/lookup', {
@@ -89,9 +83,9 @@ export const getElevations = async (
       elevationCache.set(key, elevation);
       const dbKey = `elevation:${key}`;
       db.put(dbKey, elevation).then(() => {
-        console.log(`[elevationService] Saved elevation for ${key} to DB cache`);
+        // saved to DB cache
       }).catch(() => {
-        console.warn(`[elevationService] Failed to save elevation for ${key} to DB cache`);
+        // failed to save to DB cache
       });
       results[uncachedIndexes[i]] = elevation;
     });
