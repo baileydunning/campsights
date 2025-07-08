@@ -10,6 +10,11 @@ interface Failure {
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000/api/v1';
 
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
 async function main(): Promise<void> {
   try {
     console.log('Validating and dereferencing OpenAPI spec...');
