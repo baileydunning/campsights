@@ -25,19 +25,17 @@ beforeEach(async () => {
 
 describe('Campsites Service', () => {
   describe('getCampsites', () => {
-    it('should return campsites with existing elevation and fetched weather', async () => {
+    it('should return campsites with existing elevation', async () => {
       const campsite = { id: '1', lat: 10, lng: 20, elevation: 50 };
       dbMock.getRange.mockReturnValue([{ value: campsite }]);
-      const fakeWeather = [{ number: 1, name: 'Test', startTime: '', endTime: '', isDaytime: true, temperature: 70, temperatureUnit: 'F', windSpeed: '5 mph', windDirection: 'N', shortForecast: 'Sunny', detailedForecast: 'Clear skies' }];
-      getWeatherForecastMock.mockResolvedValue(fakeWeather);
+      // No weather fetching for list endpoint
 
       const result = await campsitesService.getCampsites();
 
       expect(dbMock.getRange).toHaveBeenCalled();
-      expect(getWeatherForecastMock).toHaveBeenCalledWith(campsite);
+      expect(getWeatherForecastMock).not.toHaveBeenCalled();
       expect(result).toEqual([{
-        ...campsite,
-        weather: fakeWeather
+        ...campsite
       }]);
     });
 

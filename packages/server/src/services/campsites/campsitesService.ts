@@ -39,9 +39,7 @@ export const getCampsites = async (): Promise<
     const locations = sitesNeedingElevation.map(({ site }) => ({ latitude: site.lat, longitude: site.lng }));
     let elevations: (number | null)[] = [];
     if (locations.length > 0) {
-      console.log(`[campsitesService] Requesting batch elevations for ${locations.length} locations`);
       elevations = await getElevations(locations);
-      console.log(`[campsitesService] Received elevations:`, elevations);
     }
 
     const result = await Promise.all(
@@ -49,7 +47,6 @@ export const getCampsites = async (): Promise<
         let elevation = site.elevation ?? null;
         const batchIdx = sitesNeedingElevation.findIndex(({ idx: i }) => i === idx);
         if (batchIdx !== -1) {
-          console.log(`[campsitesService] Assigning batch elevation for site ${site.id}: ${elevations[batchIdx]}`);
           elevation = elevations[batchIdx];
         }
         return { ...site, elevation };

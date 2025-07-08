@@ -2,7 +2,7 @@ import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { Elevation } from '../../models/elevationModel';
 import { db } from '../../config/db';
 
-const elevationCache = new Map<string, number | null>();
+export const elevationCache = new Map<string, number | null>();
 
 export const getElevations = async (
   locations: { latitude: number; longitude: number }[]
