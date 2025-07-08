@@ -14,17 +14,6 @@ const App: React.FC = () => {
     setShowModal(false);
   }, []);
 
-  React.useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
   return (
     <div className="app">
       <header className="app-header">
@@ -61,7 +50,6 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-          {isOffline && <OfflineStatus />}
         </main>
       </div>
     </div>
