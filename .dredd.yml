@@ -1,6 +1,5 @@
 language: nodejs
-server: ''
-server-wait: 3
+server: 'node packages/server/src/index.ts'
 init: false
 details: false
 inline-errors: false
@@ -10,7 +9,3 @@ color: true
 loglevel: warning
 blueprint: packages/server/openapi.yaml
 endpoint: http://localhost:3000/api/v1
-expectedContentTypes:
-  application/json:
-  - application/json
-  - application/json; charset=utf-8
