@@ -35,7 +35,11 @@ export const getCampsites = async (): Promise<
     return await Promise.all(
       raw.map(async (site) => {
         const { weather } = await attachWeather(site);
-        return { ...site, elevation: site.elevation ?? null, weather };
+        let elevation = site.elevation ?? null;
+        if (elevation == null && site.lat != null && site.lng != null) {
+          elevation = await getElevation(site.lat, site.lng);
+        }
+        return { ...site, elevation, weather };
       })
     );
   } catch (err) {
@@ -52,7 +56,11 @@ export const getCampsiteById = async (
     if (!campsite) return null;
 
     const { weather } = await attachWeather(campsite);
-    return { ...campsite, elevation: campsite.elevation ?? null, weather };
+    let elevation = campsite.elevation ?? null;
+    if (elevation == null && campsite.lat != null && campsite.lng != null) {
+      elevation = await getElevation(campsite.lat, campsite.lng);
+    }
+    return { ...campsite, elevation, weather };
   } catch (err) {
     console.error('Error fetching campsite %s:', id, err);
     throw err;
