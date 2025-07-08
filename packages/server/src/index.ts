@@ -6,7 +6,10 @@ import dotenv from 'dotenv';
 import { db, seedDB } from './config/db';
 import campsitesRouter from './routes/campsites/campsitesRoutes';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 
+const swaggerDocument = YAML.load(__dirname + '/../openapi.yaml');
 dotenv.config();
 
 const app = express();
@@ -86,6 +89,9 @@ const initializeApp = async (forceSeed = false): Promise<void> => {
 
 // API routes for handling campsites and elevation data
 app.use('/api/v1/campsites', campsitesRouter);
+
+// Serve API documentation using Swagger UI
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Health check route
 app.get('/health', (req, res) => {

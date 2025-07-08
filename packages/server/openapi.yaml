@@ -1,0 +1,351 @@
+openapi: 3.0.3
+info:
+  title: Campsights API
+  version: 1.0.0
+  description: API for Campsights app (campsites, elevation, weather)
+servers:
+  - url: https://campsights.onrender.com/api/v1
+    description: Production server (Render)
+  - url: http://localhost:3000/api/v1
+    description: Development server (Local)
+tags:
+  - name: Campsites
+    description: Operations related to campsite resources
+  - name: Health
+    description: Health check endpoint
+
+paths:
+  /campsites:
+    get:
+      tags:
+        - Campsites
+      operationId: listCampsites
+      summary: Get all campsites
+      responses:
+        '200':
+          description: List of campsites with elevation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Campsite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Campsites
+      operationId: createCampsite
+      summary: Add a new campsite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampsiteInput'
+            example:
+              name: "Hidden Valley"
+              description: "Secluded spot by the creek."
+              lat: 39.7392
+              lng: -104.9903
+              requires_4wd: false
+      responses:
+        '201':
+          description: Created campsite
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campsite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /campsites/{id}:
+    get:
+      tags:
+        - Campsites
+      operationId: getCampsiteById
+      summary: Get a campsite by ID (with elevation and weather)
+      parameters:
+        - $ref: '#/components/parameters/campsiteId'
+      responses:
+        '200':
+          description: Campsite with elevation and weather
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampsiteWithWeather'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags:
+        - Campsites
+      operationId: updateCampsite
+      summary: Update a campsite
+      parameters:
+        - $ref: '#/components/parameters/campsiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampsiteInput'
+            example:
+              name: "Hidden Valley"
+              description: "Secluded spot by the creek."
+              lat: 39.7392
+              lng: -104.9903
+              requires_4wd: true
+      responses:
+        '200':
+          description: Updated campsite
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campsite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - Campsites
+      operationId: deleteCampsite
+      summary: Delete a campsite
+      parameters:
+        - $ref: '#/components/parameters/campsiteId'
+      responses:
+        '204':
+          description: Deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health:
+    get:
+      tags:
+        - Health
+      operationId: healthCheck
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+components:
+  parameters:
+    campsiteId:
+      name: id
+      in: path
+      description: Unique identifier for a campsite
+      required: true
+      schema:
+        type: string
+      example: camp_001
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+
+    Campsite:
+      type: object
+      required:
+        - id
+        - name
+        - lat
+        - lng
+        - requires_4wd
+        - elevation
+      properties:
+        id:
+          type: string
+          example: camp_002
+        name:
+          type: string
+          example: Switzerland Trail
+        description:
+          type: string
+          example: Situated amidst towering pines near Sugarloaf Mountain, this campsite provides a peaceful retreat with easy access to hiking trails and scenic overlooks. Ideal for families and adventurers looking for a relaxing getaway.
+        lat:
+          type: number
+          format: float
+          example: 39.905347
+        lng:
+          type: number
+          format: float
+          example: -105.57529
+        requires_4wd:
+          type: boolean
+          example: false
+        elevation:
+          type: number
+          nullable: true
+          example: null
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-06-13T21:50:37.842404Z"
+        weather:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherPeriod'
+          example:
+            - number: 1
+              name: Today
+              startTime: "2025-07-03T07:00:00-06:00"
+              endTime: "2025-07-03T18:00:00-06:00"
+              isDaytime: true
+              temperature: 77
+              temperatureUnit: F
+              temperatureTrend: ""
+              probabilityOfPrecipitation:
+                unitCode: wmoUnit:percent
+                value: 41
+              windSpeed: 2 to 7 mph
+              windDirection: ENE
+              icon: https://api.weather.gov/icons/land/day/sct/tsra_hi,40?size=medium
+              shortForecast: Mostly Sunny then Chance Showers And Thunderstorms
+              detailedForecast: A chance of showers and thunderstorms after noon. Mostly sunny. High near 77, with temperatures falling to around 73 in the afternoon. East northeast wind 2 to 7 mph, with gusts as high as 18 mph. Chance of precipitation is 40%. New rainfall amounts less than a tenth of an inch possible.
+
+    CampsiteInput:
+      type: object
+      required:
+        - name
+        - lat
+        - lng
+        - requires_4wd
+      properties:
+        name:
+          type: string
+          example: "Hidden Valley"
+        description:
+          type: string
+          example: "Secluded spot by the creek."
+        lat:
+          type: number
+          format: float
+          example: 39.7392
+        lng:
+          type: number
+          format: float
+          example: -104.9903
+        requires_4wd:
+          type: boolean
+          example: false
+
+    WeatherPeriod:
+      type: object
+      required:
+        - name
+        - startTime
+        - endTime
+        - temperature
+        - temperatureUnit
+        - windSpeed
+        - windDirection
+        - shortForecast
+        - detailedForecast
+      properties:
+        name:
+          type: string
+          example: "Tonight"
+        startTime:
+          type: string
+          format: date-time
+          example: "2025-07-03T18:00:00-06:00"
+        endTime:
+          type: string
+          format: date-time
+          example: "2025-07-04T06:00:00-06:00"
+        temperature:
+          type: number
+          example: 60
+        temperatureUnit:
+          type: string
+          example: "F"
+        windSpeed:
+          type: string
+          example: "5 mph"
+        windDirection:
+          type: string
+          example: "NW"
+        shortForecast:
+          type: string
+          example: "Clear"
+        detailedForecast:
+          type: string
+          example: "Clear skies tonight with a light breeze."
+
+    CampsiteWithWeather:
+      allOf:
+        - $ref: '#/components/schemas/Campsite'
+        - type: object
+          properties:
+            weather:
+              type: array
+              items:
+                $ref: '#/components/schemas/WeatherPeriod'
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
