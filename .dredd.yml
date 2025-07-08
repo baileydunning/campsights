@@ -1,5 +1,4 @@
 language: nodejs
-server: 'node packages/server/src/index.ts'
 init: false
 details: false
 inline-errors: false
