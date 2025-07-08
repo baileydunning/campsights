@@ -18,8 +18,9 @@ describe("OfflineStatus", () => {
 
     it("renders the SVG icon", () => {
         render(<OfflineStatus />);
-        const svg = screen.getByRole("img", { name: /offline/i }).querySelector("svg");
+        const svg = screen.getByRole("img", { name: /offline/i });
         expect(svg).toBeInTheDocument();
+        expect(svg.tagName.toLowerCase()).toBe("svg");
         expect(svg).toHaveAttribute("width", "32");
         expect(svg).toHaveAttribute("height", "32");
     });
