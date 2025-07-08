@@ -44,8 +44,10 @@
 
 .weather-loading {
   height: 200px;
+  text-align: center;
 }
 
 .weather-error {
   color: red;
+  text-align: center;
 }
