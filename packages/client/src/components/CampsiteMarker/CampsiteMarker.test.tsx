@@ -41,6 +41,7 @@ vi.mock('../EditCampsiteForm/EditCampsiteForm', () => ({
   ),
 }));
 
+import * as CampsitesApi from '../WeatherCard/../../api/Campsites';
 import CampsiteMarker from './CampsiteMarker';
 import { Campsite } from '../../types/Campsite';
 
@@ -83,12 +84,15 @@ const sampleSite: Campsite & { weather: any[] } = {
   last_updated: '2024-01-01T00:00:00Z',
 };
 
+vi.mock('../WeatherCard/../../api/Campsites');
+
 describe('<CampsiteMarker />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (CampsitesApi.getCampsiteById as any).mockResolvedValue({ weather: sampleSite.weather });
   });
 
-  it('renders marker and popup with site info', () => {
+  it('renders marker and popup with site info', async () => {
     render(<CampsiteMarker site={sampleSite} />);
 
     expect(screen.getByTestId('marker')).toBeInTheDocument();
@@ -96,8 +100,16 @@ describe('<CampsiteMarker />', () => {
     expect(screen.getByText('A lovely place')).toBeInTheDocument();
     expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
     expect(screen.getByText('Yes')).toBeInTheDocument();
-    expect(screen.getByText('Morning (Day)')).toBeInTheDocument();
-    expect(screen.getByText('Evening (Night)')).toBeInTheDocument();
+
+    await screen.findByText((content, node) =>
+      node?.textContent?.replace(/\s+/g, '') === 'Morning(Day)'
+    );
+    expect(screen.getByText((content, node) =>
+      node?.textContent?.replace(/\s+/g, '') === 'Morning(Day)'
+    )).toBeInTheDocument();
+    expect(screen.getByText((content, node) =>
+      node?.textContent?.replace(/\s+/g, '') === 'Evening(Night)'
+    )).toBeInTheDocument();
   });
 
   it('toggles edit mode when clicking Edit Campsite button', async () => {

@@ -1,6 +1,6 @@
 import { db } from '../../config/db';
 import { Campsite } from '../../models/campsiteModel';
-import { getElevation } from '../elevation/elevationService';
+import { getElevation, getElevations } from '../elevation/elevationService';
 import { getWeatherForecast } from '../weather/weatherService';
 import { WeatherPeriod } from '../../models/weatherModel';
 
@@ -24,7 +24,7 @@ async function attachWeather(
 }
 
 export const getCampsites = async (): Promise<
-  (Campsite & { elevation: number | null; weather: WeatherPeriod[] })[]
+  (Campsite & { elevation: number | null })[]
 > => {
   try {
     const raw: Campsite[] = [];
@@ -32,11 +32,32 @@ export const getCampsites = async (): Promise<
       raw.push(value as Campsite);
     }
 
-    return await Promise.all(
-      raw.map(async (site) => {
-        const { weather } = await attachWeather(site);
-        return { ...site, elevation: site.elevation ?? null, weather };
+    const sitesNeedingElevation = raw
+      .map((site, idx) => ({ site, idx }))
+      .filter(({ site }) => (site.elevation == null && site.lat != null && site.lng != null));
+
+    const locations = sitesNeedingElevation.map(({ site }) => ({ latitude: site.lat, longitude: site.lng }));
+    let elevations: (number | null)[] = [];
+    if (locations.length > 0) {
+      elevations = await getElevations(locations);
+    }
+
+    const result = await Promise.all(
+      raw.map(async (site, idx) => {
+        let elevation = site.elevation ?? null;
+        const batchIdx = sitesNeedingElevation.findIndex(({ idx: i }) => i === idx);
+        if (batchIdx !== -1) {
+          elevation = elevations[batchIdx];
+        }
+        return { ...site, elevation };
       })
+    );
+
+    return result.filter(site =>
+      typeof site.lat === 'number' &&
+      typeof site.lng === 'number' &&
+      !isNaN(site.lat) &&
+      !isNaN(site.lng)
     );
   } catch (err) {
     console.error('Error fetching campsites:', err);
@@ -52,7 +73,11 @@ export const getCampsiteById = async (
     if (!campsite) return null;
 
     const { weather } = await attachWeather(campsite);
-    return { ...campsite, elevation: campsite.elevation ?? null, weather };
+    let elevation = campsite.elevation ?? null;
+    if (elevation == null && campsite.lat != null && campsite.lng != null) {
+      elevation = await getElevation(campsite.lat, campsite.lng);
+    }
+    return { ...campsite, elevation, weather };
   } catch (err) {
     console.error('Error fetching campsite %s:', id, err);
     throw err;

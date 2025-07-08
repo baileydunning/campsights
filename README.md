@@ -150,7 +150,7 @@ npm run dev
 - **Description:** Returns a list of all campsites.
 - **Response:**
   - Status: `200 OK`
-  - Body: Array of campsite objects with weather and elevation data attached
+  - Body: Array of campsite objects with elevation data attached
     ```json
     [
       {
@@ -162,28 +162,6 @@ npm run dev
         "requires_4wd": boolean,
         "last_updated": "ISO8601 string",
         "elevation": number,
-        "weather": [
-          {
-                "number": number,
-                "name": "string",
-                "startTime": "string",
-                "endTime": "string",
-                "isDaytime": boolean,
-                "temperature": number,
-                "temperatureUnit": "string",
-                "temperatureTrend": "string",
-                "probabilityOfPrecipitation": {
-                    "unitCode": "string",
-                    "value": number
-                },
-                "windSpeed": "string",
-                "windDirection": "string",
-                "icon": "string",
-                "shortForecast": "string",
-                "detailedForecast": "string"
-            },
-            ...
-        ] 
       },
       ...
     ]
@@ -194,6 +172,40 @@ npm run dev
 - **Response:**
   - Status: `200 OK`
   - Body: Campsite object with weather and elevation data attached
+```json
+    {
+      "id": "string",
+      "name": "string",
+      "description": "string",
+      "lat": number,
+      "lng": number,
+      "requires_4wd": boolean,
+      "last_updated": "ISO8601 string",
+      "elevation": number,
+      "weather": [
+        {
+              "number": number,
+              "name": "string",
+              "startTime": "string",
+              "endTime": "string",
+              "isDaytime": boolean,
+              "temperature": number,
+              "temperatureUnit": "string",
+              "temperatureTrend": "string",
+              "probabilityOfPrecipitation": {
+                  "unitCode": "string",
+                  "value": number
+              },
+              "windSpeed": "string",
+              "windDirection": "string",
+              "icon": "string",
+              "shortForecast": "string",
+              "detailedForecast": "string"
+          },
+          ...
+      ] 
+    }
+```
 
 ### `POST /api/v1/campsites`
 - **Description:** Add a new campsite.

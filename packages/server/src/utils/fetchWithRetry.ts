@@ -11,6 +11,10 @@ export async function fetchWithRetry(
     try {
       const res = await fetch(url, init);
       if (res.ok) return res;
+      if (res.status === 429) {
+        lastError = new Error(`API responded with status 429 (Too Many Requests)`);
+        break; // Stop retrying on 429
+      }
       lastError = new Error(`API responded with status ${res.status}`);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));

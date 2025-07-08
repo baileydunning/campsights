@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
 import EditCampsiteForm from "../EditCampsiteForm/EditCampsiteForm";
+import WeatherCard from "../WeatherCard/WeatherCard";
 import "./CampsiteMarker.css";
 
 export interface CampsiteMarkerProps {
@@ -14,6 +15,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
 
   const [editing, setEditing] = useState(false);
   const popupRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
 
   const tentIcon = new L.DivIcon({
     html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 50px; width: 50px;">
@@ -37,41 +39,18 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
     setEditing(false);
   };
 
-  const weatherCards = useMemo(() => {
-    if (!site.weather || site.weather.length === 0) {
-      return <div className="weather-period-card">No weather data available</div>;
-    }
-    return site.weather.map((p: any) => (
-      <div key={p.number} className="weather-period-card">
-        <div className="weather-period-header">
-          {p.name} ({p.isDaytime ? "Day" : "Night"})
-        </div>
-        <div className="weather-period-details">
-          <span className="weather-temp">
-            <strong>Temp:</strong> {p.temperature}°{p.temperatureUnit}
-          </span>
-          <span className="weather-wind">
-            <strong>Wind:</strong> {p.windSpeed} {p.windDirection}
-          </span>
-          <span className="weather-short">
-            <strong>Forecast:</strong> {p.detailedForecast}
-          </span>
-        </div>
-      </div>
-    ));
-  }, [site.weather]);
-
   return (
     <Marker
       key={site.id}
       position={[site.lat, site.lng] as [number, number]}
       icon={tentIcon}
+      ref={markerRef}
     >
       <Popup
         data-testid="popup"
         ref={popupRef}
-        autoClose={false}
-        closeOnClick={false}
+        autoClose={true}
+        closeOnClick={true}
         eventHandlers={{ popupclose: handlePopupClose }}
       >
         <div>
@@ -90,9 +69,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
               </div>
               <div className="weather-section">
                 <strong>Weather Forecast:</strong>
-                <div className="weather-forecast-list">
-                  {weatherCards}
-                </div>
+                <WeatherCard campsiteId={site.id} />
               </div>
               <div className="directions-btn-container" style={{ gap: 8 }}>
                 <a
