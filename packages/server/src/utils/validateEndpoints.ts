@@ -12,35 +12,46 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000/api/v1';
 
 async function main(): Promise<void> {
   try {
-    // Validate & dereference the spec, cast to OpenAPI v3 document
+    console.log('Validating and dereferencing OpenAPI spec...');
     const api = (await SwaggerParser.validate(
       'openapi.yaml'
     )) as OpenAPIV3.Document;
+    console.log('OpenAPI spec validated.');
 
     const failures: Failure[] = [];
     const paths = api.paths as Record<string, OpenAPIV3.PathItemObject>;
+    console.log(`Found ${Object.keys(paths).length} paths in spec.`);
 
     for (const [rawPath, pathItem] of Object.entries(paths)) {
+      console.log(`Checking path: ${rawPath}`);
       for (const method of Object.keys(pathItem)) {
         if (method === 'parameters') continue;
 
-        // substitute dummy values into path parameters
-        const testPath = rawPath.replace(/\{[^}]+\}/g, '1');
+        let testPath = rawPath;
+
+        if (rawPath.includes('{id}')) {
+          testPath = rawPath.replace(/\{id\}/g, 'camp_001');
+        } else {
+          testPath = rawPath.replace(/\{[^}]+\}/g, '1');
+        }
         const url = `${BASE_URL}${testPath}`;
+        console.log(`  [${method.toUpperCase()}] ${url}`);
 
         try {
-          // Try a HEAD first
           await axios.head(url);
+          console.log(`    HEAD succeeded for ${url}`);
         } catch (err) {
           const error = err as AxiosError;
           const status = error.response?.status;
+          console.log(`    HEAD failed for ${url} with status ${status}`);
 
           if (status === 405) {
-            // HEAD not allowed → fallback to GET
             try {
               await axios.get(url);
+              console.log(`    GET succeeded for ${url}`);
             } catch (err2) {
               const error2 = err2 as AxiosError;
+              console.log(`    GET failed for ${url} with status ${error2.response?.status}`);
               failures.push({
                 method: method.toUpperCase(),
                 path: rawPath,

@@ -44,4 +44,4 @@ jobs:
 
     - name: Validate endpoints
       working-directory: packages/server
-      run: npx ts-node utils/validateEndpoints.ts
+      run: npx ts-node src/utils/validateEndpoints.ts
