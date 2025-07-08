@@ -39,11 +39,11 @@ jobs:
       - name: Wait for server and test API
         run: |
           sleep 10
-          curl -f http://localhost:3000/api/v1/campsites
+          curl -f http://localhost:4000/api/v1/campsites
 
       - name: Test frontend is being served
         run: |
-          curl -f http://localhost:3000
+          curl -f http://localhost:4000
 
       - name: Tear down containers
         run: docker-compose down
