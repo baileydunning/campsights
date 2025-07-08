@@ -18,18 +18,24 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'tent.png'],
+      includeAssets: ['tent.png', 'tent-192.png'],
       manifest: {
         name: 'Campsights',
         short_name: 'Campsights',
         start_url: '.',
         display: 'standalone',
         background_color: '#ffffff',
+        theme_color: '#BDDAB1',
         description: 'Discover and share campsites!',
         icons: [
           {
-            src: 'tent.png',
+            src: 'tent-192.png',
             sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'tent.png',
+            sizes: '512x512',
             type: 'image/png'
           }
         ]
