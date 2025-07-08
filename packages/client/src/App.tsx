@@ -1,14 +1,12 @@
 import React, { useState, useCallback, Suspense, lazy } from "react";
 import "./App.css";
 import Loading from "./components/Loading/Loading";
-import OfflineStatus from "./components/OfflineStatus/OfflineStatus";
 
 const MapView = lazy(() => import("./components/MapView/MapView"));
 const AddCampsiteForm = lazy(() => import("./components/AddCampsiteForm/AddCampsiteForm"));
 
 const App: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const handleSuccess = useCallback(() => {
     setShowModal(false);
