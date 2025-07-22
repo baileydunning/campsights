@@ -1,6 +1,6 @@
 import { open } from "lmdb";
 import { Campsite } from '../models/campsiteModel';
-import campsites from "../../data/campsites.json" 
+import campsites from "../../data/campsites.json";
 import { isValidCoordinate } from "../utils/isValidCoordinate";
 
 export const db = open({

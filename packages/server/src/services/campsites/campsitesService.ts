@@ -1,4 +1,4 @@
-import { db } from '../../config/db';
+import { db } from '../../config/campsitesDb';
 import { Campsite } from '../../models/campsiteModel';
 import { getElevation, getElevations } from '../elevation/elevationService';
 import { getWeatherForecast } from '../weather/weatherService';

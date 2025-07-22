@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import campsitesRouter from './campsitesRoutes';
+import authRoutes from '../auth/authRoutes';
 
 // Fix mock path to match router import
 vi.mock('../../controllers/campsites/campsitesController', () => ({
@@ -14,9 +15,18 @@ vi.mock('../../controllers/campsites/campsitesController', () => ({
 
 const app = express();
 app.use(express.json());
+app.use('/api/v1/auth', authRoutes);
 app.use('/campsites', campsitesRouter);
 
 describe('campsitesRouter', () => {
+    let token: string;
+    beforeAll(async () => {
+        // Register and login a user to get a JWT
+        const user = { username: 'apitestuser', password: 'apitestpass' };
+        await request(app).post('/api/v1/auth/register').send(user);
+        const res = await request(app).post('/api/v1/auth/login').send(user);
+        token = res.body.token;
+    });
     it('GET /campsites should call getCampsites and return campsites', async () => {
         const res = await request(app).get('/campsites');
         expect(res.status).toBe(200);
@@ -53,7 +63,10 @@ describe('campsitesRouter', () => {
           requires_4wd: true,
           last_updated: new Date().toISOString()
         };
-        const res = await request(app).put('/campsites/123').send(updatedCampsite);
+        const res = await request(app)
+          .put('/campsites/123')
+          .set('Authorization', `Bearer ${token}`)
+          .send(updatedCampsite);
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({ id: '123', name: 'Updated Campsite', description: 'Updated description' });
     });
@@ -64,7 +77,9 @@ describe('campsitesRouter', () => {
     });
 
     it('DELETE /campsites/:id should return 204', async () => {
-        const res = await request(app).delete('/campsites/123');
+        const res = await request(app)
+          .delete('/campsites/123')
+          .set('Authorization', `Bearer ${token}`);
         expect(res.status).toBe(204);
         expect(res.body).toEqual({});
     });

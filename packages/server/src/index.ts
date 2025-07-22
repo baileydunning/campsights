@@ -3,8 +3,10 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
-import { db, seedDB } from './config/db';
+import { db, seedDB } from './config/campsitesDb';
 import campsitesRouter from './routes/campsites/campsitesRoutes';
+import authRoutes from './routes/auth/authRoutes';
+
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
@@ -68,27 +70,29 @@ const initializeApp = async (forceSeed = false): Promise<void> => {
       }
     }
 
-    // Start the Express server
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    }).on('error', (err) => {
-      console.error("Failed to start server:", err);
-      if (process.env.NODE_ENV === 'test') {
-        // Don't exit the process during tests
-        throw err;
-      } else {
-        process.exit(1); // Exit if the server fails to start in production
-      }
-    });
-
+    // Only start the server if not in test mode
+    if (process.env.NODE_ENV !== 'test') {
+      app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+      }).on('error', (err) => {
+        console.error("Failed to start server:", err);
+        process.exit(1);
+      });
+    }
   } catch (err) {
     console.error("Error during initialization:", err);
     process.exit(1); // Exit if there's an error during DB seeding or server setup
   }
 };
 
-// API routes for handling campsites and elevation data
+
+// Auth routes
+app.use('/api/v1/auth', authRoutes);
+
+// Public campsites routes
 app.use('/api/v1/campsites', campsitesRouter);
+
+
 
 // Serve API documentation using Swagger UI
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

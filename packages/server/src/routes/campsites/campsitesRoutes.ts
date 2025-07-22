@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getCampsites, getCampsiteById, addCampsite, updateCampsite, deleteCampsite } from '../../controllers/campsites/campsitesController';
+import { requireAuth } from '../../middleware/requireAuth';
 
 const campsitesRouter = Router();
 
@@ -15,12 +16,9 @@ campsitesRouter.post('/', (req: Request, res: Response) => {
   addCampsite(req, res);
 });
 
-campsitesRouter.put('/:id', (req: Request, res: Response) => {
-  updateCampsite(req, res);
-});
+// Protected routes: require authentication
+campsitesRouter.put('/:id', requireAuth, updateCampsite);
 
-campsitesRouter.delete('/:id', (req: Request, res: Response) => {
-  deleteCampsite(req, res);
-});
+campsitesRouter.delete('/:id', requireAuth, deleteCampsite);
 
 export default campsitesRouter;
