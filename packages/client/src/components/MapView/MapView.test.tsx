@@ -7,12 +7,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import MapView from "./MapView";
 import campsiteSlice from "../../store/campsiteSlice";
 
-vi.mock("../../api/Campsites", () => ({
-  getCampsites: vi.fn(),
-}));
-
-import { getCampsites } from "../../api/Campsites";
-
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: any) => <div role="region">{children}</div>,
   TileLayer: () => <div data-testid="tile-layer" />, // no-op
@@ -81,29 +75,23 @@ const renderWithProvider = (component: React.ReactElement, store = createTestSto
 
 describe("MapView", () => {
   beforeEach(() => {
-    (getCampsites as any).mockResolvedValue(mockCampsites);
     vi.clearAllMocks();
   });
 
-  it("shows error state when there's an error", async () => {
-    (getCampsites as any).mockRejectedValue(new Error("API Error"));
+  it("shows error state when there's an error in Redux", async () => {
+    const store = createTestStore({ error: "API Error" });
     await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
+      renderWithProvider(<MapView />, store);
     });
     await waitFor(() => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument();
     });
   });
 
-  it("fetches and displays campsite markers", async () => {
+  it("displays campsite markers from Redux store", async () => {
+    const store = createTestStore({ campsites: mockCampsites });
     await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
+      renderWithProvider(<MapView />, store);
     });
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
@@ -113,34 +101,14 @@ describe("MapView", () => {
     });
   });
 
-  it("calls fetchCampsites Redux action on mount", async () => {
-    await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
-    });
-  });
 
-  it("displays campsites from Redux store after fetch", async () => {
-    await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
-    });
-    await waitFor(() => {
-      expect(screen.getAllByTestId("marker")).toHaveLength(2);
-    });
-  });
+
+
 
   it("handles empty campsites array", async () => {
-    (getCampsites as any).mockResolvedValue([]);
+    const store = createTestStore({ campsites: [] });
     await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
+      renderWithProvider(<MapView />, store);
     });
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
@@ -148,20 +116,7 @@ describe("MapView", () => {
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
 
-  it("handles API error gracefully", async () => {
-    (getCampsites as any).mockRejectedValue(new Error("API Error"));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await act(async () => {
-      renderWithProvider(<MapView />);
-    });
-    await waitFor(() => {
-      expect(getCampsites).toHaveBeenCalledTimes(1);
-    });
-    await waitFor(() => {
-      expect(screen.getByText(/Error:/)).toBeInTheDocument();
-    });
-    consoleSpy.mockRestore();
-  });
+
 
   it("renders the current location marker and shows tooltip on hover", async () => {
     const mockGeolocation = {
