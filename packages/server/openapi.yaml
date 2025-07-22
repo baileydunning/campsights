@@ -3,22 +3,26 @@ info:
   title: Campsights API
   version: 1.0.0
   description: API for Campsights app (campsites, elevation, weather)
+
 servers:
-- url: https://campsights.onrender.com/api/v1
-  description: Production server (Render)
-- url: http://localhost:3000/api/v1
-  description: Development server (Local)
+  - url: https://campsights.onrender.com/api/v1
+    description: Production server (Render)
+  - url: http://localhost:3000/api/v1
+    description: Development server (Local)
+
 tags:
-- name: Campsites
-  description: Operations related to campsite resources
-- name: Health
-  description: Health check endpoint
+  - name: Campsites
+    description: Operations related to campsite resources
+  - name: Health
+    description: Health check endpoint
+  - name: Auth
+    description: User registration and login
 
 paths:
   /campsites:
     get:
       tags:
-      - Campsites
+        - Campsites
       operationId: listCampsites
       summary: Get all campsites
       responses:
@@ -31,30 +35,30 @@ paths:
                 items:
                   $ref: '#/components/schemas/Campsite'
               example:
-              - id: camp_001
-                name: "Switzerland Trail"
-                description: "Situated amidst towering pines near Sugarloaf Mountain, this campsite provides a peaceful retreat with easy access to hiking trails and scenic overlooks. Ideal for families and adventurers looking for a relaxing getaway."
-                lat: 39.905347
-                lng: -105.57529
-                requires_4wd: false
-                elevation: 2650
-                last_updated: "2025-06-13T21:50:37.842404Z"
-              - id: camp_002
-                name: "Hidden Valley"
-                description: "Secluded spot by the creek."
-                lat: 39.7392
-                lng: -104.9903
-                requires_4wd: false
-                elevation: 1800
-                last_updated: "2025-06-19T12:00:00.000Z"
-              - id: camp_003
-                name: "Alpine Ridge"
-                description: "High elevation site with panoramic views."
-                lat: 40.015
-                lng: -105.2705
-                requires_4wd: true
-                elevation: 3000
-                last_updated: "2025-07-01T09:30:00.000Z"
+                - id: camp_001
+                  name: "Switzerland Trail"
+                  description: "Situated amidst towering pines near Sugarloaf Mountain, this campsite provides a peaceful retreat with easy access to hiking trails and scenic overlooks. Ideal for families and adventurers looking for a relaxing getaway."
+                  lat: 39.905347
+                  lng: -105.57529
+                  requires_4wd: false
+                  elevation: 2650
+                  last_updated: "2025-06-13T21:50:37.842404Z"
+                - id: camp_002
+                  name: "Hidden Valley"
+                  description: "Secluded spot by the creek."
+                  lat: 39.7392
+                  lng: -104.9903
+                  requires_4wd: false
+                  elevation: 1800
+                  last_updated: "2025-06-19T12:00:00.000Z"
+                - id: camp_003
+                  name: "Alpine Ridge"
+                  description: "High elevation site with panoramic views."
+                  lat: 40.015
+                  lng: -105.2705
+                  requires_4wd: true
+                  elevation: 3000
+                  last_updated: "2025-07-01T09:30:00.000Z"
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -63,9 +67,10 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
+
     post:
       tags:
-      - Campsites
+        - Campsites
       operationId: createCampsite
       summary: Add a new campsite
       requestBody:
@@ -99,11 +104,11 @@ paths:
   /campsites/{id}:
     get:
       tags:
-      - Campsites
+        - Campsites
       operationId: getCampsiteById
       summary: Get a campsite by ID (with elevation and weather)
       parameters:
-      - $ref: '#/components/parameters/campsiteId'
+        - $ref: '#/components/parameters/campsiteId'
       responses:
         '200':
           description: Campsite with elevation and weather
@@ -119,13 +124,16 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
+
     put:
       tags:
-      - Campsites
+        - Campsites
       operationId: updateCampsite
       summary: Update a campsite
+      security:
+        - bearerAuth: []
       parameters:
-      - $ref: '#/components/parameters/campsiteId'
+        - $ref: '#/components/parameters/campsiteId'
       requestBody:
         required: true
         content:
@@ -153,13 +161,16 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
+
     delete:
       tags:
-      - Campsites
+        - Campsites
       operationId: deleteCampsite
       summary: Delete a campsite
+      security:
+        - bearerAuth: []
       parameters:
-      - $ref: '#/components/parameters/campsiteId'
+        - $ref: '#/components/parameters/campsiteId'
       responses:
         '204':
           description: Deleted successfully
@@ -172,10 +183,74 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthInput'
+            example:
+              username: "newuser"
+              password: "yourpassword"
+      responses:
+        '200':
+          description: JWT token for the new user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Log in as a user
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthInput'
+            example:
+              username: "newuser"
+              password: "yourpassword"
+      responses:
+        '200':
+          description: JWT token for the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /health:
     get:
       tags:
-      - Health
+        - Health
       operationId: healthCheck
       summary: Health check
       responses:
@@ -201,24 +276,22 @@ components:
         type: string
       example: camp_001
 
-  schemas:
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
+  schemas:
     Campsite:
       type: object
       required:
-      - id
-      - name
-      - lat
-      - lng
-      - requires_4wd
-      - elevation
+        - id
+        - name
+        - lat
+        - lng
+        - requires_4wd
+        - elevation
       properties:
         id:
           type: string
@@ -252,10 +325,10 @@ components:
     CampsiteInput:
       type: object
       required:
-      - name
-      - lat
-      - lng
-      - requires_4wd
+        - name
+        - lat
+        - lng
+        - requires_4wd
       properties:
         name:
           type: string
@@ -275,18 +348,28 @@ components:
           type: boolean
           example: false
 
+    CampsiteWithWeather:
+      allOf:
+        - $ref: '#/components/schemas/Campsite'
+        - type: object
+          properties:
+            weather:
+              type: array
+              items:
+                $ref: '#/components/schemas/WeatherPeriod'
+
     WeatherPeriod:
       type: object
       required:
-      - name
-      - startTime
-      - endTime
-      - temperature
-      - temperatureUnit
-      - windSpeed
-      - windDirection
-      - shortForecast
-      - detailedForecast
+        - name
+        - startTime
+        - endTime
+        - temperature
+        - temperatureUnit
+        - windSpeed
+        - windDirection
+        - shortForecast
+        - detailedForecast
       properties:
         name:
           type: string
@@ -318,15 +401,35 @@ components:
           type: string
           example: "Clear skies tonight with a light breeze."
 
-    CampsiteWithWeather:
-      allOf:
-      - $ref: '#/components/schemas/Campsite'
-      - type: object
-        properties:
-          weather:
-            type: array
-            items:
-              $ref: '#/components/schemas/WeatherPeriod'
+    AuthInput:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "newuser"
+        password:
+          type: string
+          example: "yourpassword"
+
+    AuthToken:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
 
   responses:
     BadRequest:
