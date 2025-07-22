@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import campsiteReducer from '../../store/campsiteSlice';
+import userReducer, { setUser } from '../../store/userSlice';
 
 vi.mock('react-leaflet', () => {
   return {
@@ -86,6 +90,16 @@ const sampleSite: Campsite & { weather: any[] } = {
 
 vi.mock('../WeatherCard/../../api/Campsites');
 
+function renderWithProvider(ui: React.ReactElement, { user }: { user?: { token: string; username: string } } = {}) {
+  const store = configureStore({
+    reducer: { campsites: campsiteReducer, user: userReducer },
+  });
+  if (user) {
+    store.dispatch(setUser(user));
+  }
+  return render(<Provider store={store}>{ui}</Provider>);
+}
+
 describe('<CampsiteMarker />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -93,7 +107,7 @@ describe('<CampsiteMarker />', () => {
   });
 
   it('renders marker and popup with site info', async () => {
-    render(<CampsiteMarker site={sampleSite} />);
+    renderWithProvider(<CampsiteMarker site={sampleSite} />, { user: { token: 'abc', username: 'testuser' } });
 
     expect(screen.getByTestId('marker')).toBeInTheDocument();
     expect(screen.getByText('Test Site')).toBeInTheDocument();
@@ -113,8 +127,7 @@ describe('<CampsiteMarker />', () => {
   });
 
   it('toggles edit mode when clicking Edit Campsite button', async () => {
-    render(<CampsiteMarker site={sampleSite} />);
-
+    renderWithProvider(<CampsiteMarker site={sampleSite} />, { user: { token: 'abc', username: 'testuser' } });
     const editButton = screen.getByRole('button', { name: /Edit Campsite/i });
     fireEvent.click(editButton);
 
@@ -127,13 +140,13 @@ describe('<CampsiteMarker />', () => {
 
   it('displays "Unnamed Site" when name is empty', () => {
     const unnamed = { ...sampleSite, name: '' };
-    render(<CampsiteMarker site={unnamed} />);
+    renderWithProvider(<CampsiteMarker site={unnamed} />, { user: { token: 'abc', username: 'testuser' } });
     expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
   });
 
   it('shows "Unknown" for elevation when invalid', () => {
     const noElev = { ...sampleSite, elevation: NaN };
-    render(<CampsiteMarker site={noElev} />);
+    renderWithProvider(<CampsiteMarker site={noElev} />, { user: { token: 'abc', username: 'testuser' } });
     expect(screen.getByText('Unknown')).toBeInTheDocument();
   });
 });

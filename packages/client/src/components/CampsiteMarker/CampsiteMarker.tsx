@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
+import { useAppSelector } from '../../store/store';
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
@@ -38,6 +39,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
   const handlePopupClose = () => {
     setEditing(false);
   };
+
+  const user = useAppSelector((state) => state.user);
 
   return (
     <Marker
@@ -81,16 +84,20 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
                 >
                   Get Directions
                 </a>
-                <button
-                  className="popup-button"
-                  type="button"
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    setEditing(true);
-                  }}
-                >
-                  Edit Campsite
-                </button>
+                {user.token && (
+                  <>
+                    <button
+                      className="popup-button"
+                      type="button"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setEditing(true);
+                      }}
+                    >
+                      Edit Campsite
+                    </button>
+                  </>
+                )}
               </div>
             </>
           ) : (
