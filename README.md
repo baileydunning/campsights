@@ -19,9 +19,11 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - View campsites on an interactive Leaflet map
 - See multi-day weather forecasts and elevation data for each campsite
 - Get directions to any campsite via Google Maps
-- Add new campsites with name, description, coordinates, and 4WD requirement
-- Edit and delete campsites
-- Data is stored in LMDB (server) and served via REST API
+- Add new campsites with name, description, coordinates, and 4WD requirement (requires login)
+- Edit and delete campsites (requires login)
+- Auth-aware UI: edit/delete buttons only visible when logged in
+- Data is stored in LMDB (campsites) and SQLite (users) and served via REST API
+- JWT authentication for all protected endpoints (register/login, token-based access)
 - Comprehensive unit and integration tests using Vitest
 - Installable as a **Progressive Web App (PWA)** for offline use:
   - Add to your home screen or desktop for a native app experience
@@ -42,40 +44,40 @@ Lerna helps manage multiple packages (the frontend and backend) in a single repo
 
 ```mermaid
 flowchart TD
-    A[User's Browser] --> B[Redux Provider]
-    B --> C[Redux Store]
-    B --> D[React App Component]
-    
-    D --> E[MapView Component]
-    D --> F[AddCampsiteForm Component]
-    D --> G[CampsiteMarker Component]
-    
-    E --> C
-    F --> C
-    G --> C
-    
-    C --> H[campsiteSlice]
-    H --> I[fetchCampsites thunk]
-    H --> J[postCampsite thunk]
-    H --> K[putCampsite thunk]
-    H --> L[removeCampsite thunk]
-    
-    I --> M[API Client Layer]
-    J --> M
-    K --> M
-    L --> M
-    
-    M --> N[GET /api/v1/campsites]
-    M --> N2[GET /api/v1/campsites/:id]
-    M --> O[POST /api/v1/campsites]
-    M --> P[PUT /api/v1/campsites/:id]
-    M --> Q[DELETE /api/v1/campsites/:id]
-    
-    N --> T[Backend Server]
-    N2 --> T
-    O --> T
-    P --> T
-    Q --> T
+    A1[User's Browser] --> B1[Redux Provider]
+    B1 --> C1[Redux Store]
+    B1 --> D1[React App Component]
+    D1 --> E1[MapView Component]
+    D1 --> F1[AddCampsiteForm Component]
+    D1 --> G1[CampsiteMarker Component]
+    E1 --> C1
+    F1 --> C1
+    G1 --> C1
+    C1 --> H1[campsiteSlice]
+    C1 --> V1[userSlice_JWT]
+    H1 --> I1[fetchCampsites thunk]
+    H1 --> J1[postCampsite thunk]
+    H1 --> K1[putCampsite thunk]
+    H1 --> L1[removeCampsite thunk]
+    I1 --> M1[API Client Layer]
+    J1 --> M1
+    K1 --> M1
+    L1 --> M1
+    V1 --> M1
+    M1 --> N1[GET /api/v1/campsites]
+    M1 --> N2[GET /api/v1/campsites/:id]
+    M1 --> O1[POST /api/v1/campsites_auth]
+    M1 --> P1[PUT /api/v1/campsites/:id_auth]
+    M1 --> Q1[DELETE /api/v1/campsites/:id_auth]
+    M1 --> W1[POST /api/v1/auth/register]
+    M1 --> X1[POST /api/v1/auth/login]
+    N1 --> T1[Backend Server]
+    N2 --> T1
+    O1 --> T1
+    P1 --> T1
+    Q1 --> T1
+    W1 --> T1
+    X1 --> T1
 ```
 
 ### Server
@@ -84,19 +86,18 @@ flowchart TD
 flowchart TD
     A[HTTP Requests] --> B[Express Server]
     B --> C[Router Layer]
-    
     C --> D[GET /api/v1/campsites]
     C --> D2[GET /api/v1/campsites/:id]
-    C --> E[POST /api/v1/campsites]
-    C --> F[PUT /api/v1/campsites/:id]
-    C --> G[DELETE /api/v1/campsites/:id]
-    
+    C --> E[POST /api/v1/campsites_auth]
+    C --> F[PUT /api/v1/campsites/:id_auth]
+    C --> G[DELETE /api/v1/campsites/:id_auth]
+    C --> Y[POST /api/v1/auth/register]
+    C --> Z[POST /api/v1/auth/login]
     D --> I[Campsites Controller]
     D2 --> I
     E --> I
     F --> I
     G --> I
-    
     I --> K[Campsites Service]
     K --> L[Campsite Model]
     K --> M[Elevation Service]
@@ -104,11 +105,14 @@ flowchart TD
     M --> N[Open-Elevation API]
     Q --> R[National Weather Service API]
     L --> O[(LMDB Database)]
-    
     B --> P[Database Seeder]
     P --> O
-    
     O --> S[Data Persistence]
+    Y --> AA[User Controller]
+    Z --> AA
+    AA --> AB[User Service]
+    AB --> AC[User Model]
+    AC --> AD[(SQLite Database)]
 ```
 
 ## Running with Docker
@@ -258,6 +262,39 @@ npm run dev
 - **Response:**
   - Status: `204 No Content`
   - Body: N/A
+
+## Authentication & User Accounts
+
+Campsights uses **JWT-based authentication** for all protected API endpoints. User accounts are stored securely in a persistent SQLite database on the backend.
+
+**How it works:**
+- Register a user: `POST /api/v1/auth/register` with `{ "username": "yourusername", "password": "yourpassword" }`
+- Log in: `POST /api/v1/auth/login` with the same body. Both return `{ token: "<JWT>" }`.
+- For any protected route (add, edit, delete campsites), include the JWT in the `Authorization` header:
+
+```http
+Authorization: Bearer <your-jwt-token>
+```
+
+If the token is missing or invalid, the API will return a 401 Unauthorized error.
+
+**Frontend:**
+- The Redux store tracks the current user's JWT and username.
+- The UI only shows edit/delete buttons for campsites if the user is logged in.
+- All requests to protected endpoints automatically include the JWT if present.
+
+**Backend:**
+- User registration and login endpoints (`/auth/register`, `/auth/login`) are implemented with secure password hashing (bcrypt) and JWT issuance.
+- All protected routes (add, edit, delete campsites) require a valid JWT.
+- User data is stored in SQLite (`data/users.sqlite3`), and campsite data is stored in LMDB.
+- The backend auto-creates the SQLite directory if missing.
+
+**OpenAPI & Docs:**
+- The OpenAPI spec documents all authentication flows, request/response schemas, and security schemes for JWT.
+- Example curl commands and usage are provided in the backend README.
+
+**Testing:**
+- Both backend and frontend have updated tests for authentication, user registration, login, and auth-aware UI logic.
 
 ## Elevation Data
 
