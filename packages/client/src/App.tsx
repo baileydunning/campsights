@@ -1,12 +1,20 @@
-import React, { useState, useCallback, Suspense, lazy } from "react";
+import React, { useState, useCallback, Suspense, lazy, useEffect } from "react";
 import "./App.css";
 import Loading from "./components/Loading/Loading";
+import { useDispatch } from "react-redux";
+import { fetchCampsites } from "./store/campsiteSlice";
+import type { AppDispatch } from "./store/store";
 
 const MapView = lazy(() => import("./components/MapView/MapView"));
 const AddCampsiteForm = lazy(() => import("./components/AddCampsiteForm/AddCampsiteForm"));
 
 const App: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(fetchCampsites());
+  }, [dispatch]);
 
   const handleSuccess = useCallback(() => {
     setShowModal(false);

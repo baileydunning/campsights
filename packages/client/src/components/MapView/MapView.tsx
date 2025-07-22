@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import { fetchCampsites, selectCampsites, selectLoading, selectError } from "../../store/campsiteSlice";
-import type { AppDispatch } from "../../store/store";
+import { fetchCampsites, selectCampsites, selectError } from "../../store/campsiteSlice";
 import "./MapView.css";
 import type { Campsite } from '../../types/Campsite';
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
-import Loading from "../Loading/Loading";
 
 const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
 
@@ -29,9 +27,7 @@ const personIcon = new L.DivIcon({
 
 
 const MapView: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const campsites = useSelector(selectCampsites);
-  const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
   const [showMap, setShowMap] = useState(false);
@@ -40,10 +36,6 @@ const MapView: React.FC = () => {
     const timeout = setTimeout(() => setShowMap(true), 0); 
     return () => clearTimeout(timeout);
   }, []);
-
-  useEffect(() => {
-    dispatch(fetchCampsites());
-  }, [dispatch]);
 
   const [geoRequested, setGeoRequested] = useState(false);
   useEffect(() => {
