@@ -9,8 +9,15 @@ const dbMock = {
 const getElevationMock = vi.fn();
 const getWeatherForecastMock = vi.fn();
 
-vi.mock('../../config/db', () => ({ db: dbMock }));
-vi.mock('../elevation/elevationService', () => ({ getElevation: getElevationMock }));
+vi.mock('../../config/campsitesDb', () => ({ db: dbMock }));
+vi.mock('../elevation/elevationService', async () => {
+  const actual = await vi.importActual<any>('../elevation/elevationService');
+  return {
+    ...actual,
+    getElevation: getElevationMock,
+    getElevations: vi.fn(async (locations) => locations.map(() => 100)),
+  };
+});
 vi.mock('../weather/weatherService', () => ({ getWeatherForecast: getWeatherForecastMock }));
 
 let campsitesService: typeof import('./campsitesService');

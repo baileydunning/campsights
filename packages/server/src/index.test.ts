@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, vi, expect } from 'vitest';
+import { describe, it, beforeEach, beforeAll, vi, expect } from 'vitest';
 import type { Mock } from 'vitest';
 import request from 'supertest';
 import * as campsitesService from './services/campsites/campsitesService';
@@ -29,7 +29,16 @@ import app from './index';
 import fs from 'fs';
 import path from 'path';
 
+
 describe('Campsites API', () => {
+  let token: string;
+  beforeAll(async () => {
+    // Register and login a user to get a JWT
+    const user = { username: 'apitestuser', password: 'apitestpass' };
+    await request(app).post('/api/v1/auth/register').send(user);
+    const res = await request(app).post('/api/v1/auth/login').send(user);
+    token = res.body.token;
+  });
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -75,6 +84,7 @@ describe('Campsites API', () => {
     };
     const res = await request(app)
       .put('/api/v1/campsites/test_id')
+      .set('Authorization', `Bearer ${token}`)
       .send(updatedCampsite)
       .set('Content-Type', 'application/json');
     expect(res.status).toBe(200);
@@ -84,6 +94,7 @@ describe('Campsites API', () => {
   it('DELETE /api/v1/campsites/:id deletes a campsite', async () => {
     const res = await request(app)
       .delete('/api/v1/campsites/test_id')
+      .set('Authorization', `Bearer ${token}`)
       .set('Content-Type', 'application/json');
     // 204 should have no content
     expect(res.status).toBe(204);

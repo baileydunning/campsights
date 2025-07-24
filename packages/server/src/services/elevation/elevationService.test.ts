@@ -14,7 +14,7 @@ beforeEach(async () => {
   };
   mockFetchWithRetry = vi.fn();
   vi.resetModules();
-  vi.doMock('../../config/db', () => ({ db: mockDb }));
+  vi.doMock('../../config/campsitesDb', () => ({ db: mockDb }));
   vi.doMock('../../utils/fetchWithRetry', () => ({ fetchWithRetry: mockFetchWithRetry }));
   elevationService = await import('./elevationService');
   elevationCache = elevationService.elevationCache;

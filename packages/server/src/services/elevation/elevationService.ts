@@ -1,6 +1,6 @@
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { Elevation } from '../../models/elevationModel';
-import { db } from '../../config/db';
+import { db } from '../../config/campsitesDb';
 
 export const elevationCache = new Map<string, number | null>();
 

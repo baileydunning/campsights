@@ -94,31 +94,32 @@ export const updateCampsite = async (req: Request, res: Response) => {
     const { name, description, lat, lng, requires_4wd, last_updated } = req.body;
 
     if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'id is required and must be a string' });
+      res.status(400).json({ error: 'id is required and must be a string' });
+      return;
     }
-    
     if (!name || typeof name !== 'string') {
-      return res.status(400).json({ error: 'name is required and must be a string' });
+      res.status(400).json({ error: 'name is required and must be a string' });
+      return;
     }
-    
     if (!description || typeof description !== 'string') {
-      return res.status(400).json({ error: 'description is required and must be a string' });
+      res.status(400).json({ error: 'description is required and must be a string' });
+      return;
     }
-    
     if (typeof lat !== 'number' || isNaN(lat)) {
-      return res.status(400).json({ error: 'lat is required and must be a valid number' });
+      res.status(400).json({ error: 'lat is required and must be a valid number' });
+      return;
     }
-    
     if (typeof lng !== 'number' || isNaN(lng)) {
-      return res.status(400).json({ error: 'lng is required and must be a valid number' });
+      res.status(400).json({ error: 'lng is required and must be a valid number' });
+      return;
     }
-    
     if (typeof requires_4wd !== 'boolean') {
-      return res.status(400).json({ error: 'requires_4wd is required and must be a boolean' });
+      res.status(400).json({ error: 'requires_4wd is required and must be a boolean' });
+      return;
     }
-    
     if (!last_updated || typeof last_updated !== 'string') {
-      return res.status(400).json({ error: 'last_updated is required and must be a string' });
+      res.status(400).json({ error: 'last_updated is required and must be a string' });
+      return;
     }
 
     const campsiteData = {
@@ -132,18 +133,19 @@ export const updateCampsite = async (req: Request, res: Response) => {
     };
 
     const updatedCampsite = await campsitesService.updateCampsite(id, { ...campsiteData });
-    
     if (!updatedCampsite) {
-      return res.status(404).json({ error: 'Campsite not found' });
+      res.status(404).json({ error: 'Campsite not found' });
+      return;
     }
-    
     res.status(200).json(updatedCampsite);
+    return;
   } catch (error) {
     console.error('Error in updateCampsite controller:', error);
     res.status(500).json({ 
       error: 'Unable to update campsite',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
+    return;
   }
 };
 
@@ -151,18 +153,22 @@ export const deleteCampsite = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'id is required and must be a string' });
+      res.status(400).json({ error: 'id is required and must be a string' });
+      return;
     }
     const deleted = await campsitesService.deleteCampsite(id);
     if (!deleted) {
-      return res.status(404).json({ error: 'Campsite not found' });
+      res.status(404).json({ error: 'Campsite not found' });
+      return;
     }
     res.status(204).send();
+    return;
   } catch (error) {
     console.error('Error in deleteCampsite controller:', error);
     res.status(500).json({
       error: 'Unable to delete campsite',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
+    return;
   }
 };
