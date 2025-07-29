@@ -1,10 +1,16 @@
 # Campsights
 
-Campsights is a full-stack web app for discovering campsites. Users can view campsites on a map, see weather forecasts, elevation data, get directions and go to a detail page from the BLM website.
+Campsights is a full-stack web app for discovering dispersed campsites on public land. It features an interactive map where users can explore campsite locations, check real-time weather forecasts and elevation data, get directions, and access official BLM detail pages.
+
+Campsite data is powered by my custom [BLM Spider API](https://github.com/baileydunning/blm-spider), which scrapes the Bureau of Land Management website and filters out sites restricted to day use or that don’t meet certain criteria. Each site is enriched with weather data from the National Weather Service and elevation data from Open-Elevation API, based on its coordinates.
+
+*Disclaimer:* Not all locations shown on the map are confirmed campsites. Some may be trailheads, parking areas, or general points of interest. Elevation and weather data are approximate and may not reflect current or exact conditions. Always verify site details and local regulations before heading out.
 
 **Live project link:** https://campsights.onrender.com/
 
-**API documentation:** [Swagger UI (OpenAPI docs)](https://campsights.onrender.com/docs) — Interactive API explorer and schema
+**Interactive API docs and schema:** https://campsights.onrender.com/docs
+
+**Spider docs:** https://blm-spider.onrender.com/docs
 
 ## Tech Stack
 
@@ -93,14 +99,14 @@ npm run dev
         "lng": number,
         "state": "string",
         "mapLink": "string",
-        "description": "string",
-        "directions": "string",
-        "activities": ["string"],
-        "campgrounds": ["string"],
-        "wildlife": ["string"],
-        "fees": "string",
-        "stayLimit": "string",
-        "images": [
+        "description?": "string",
+        "directions?": "string",
+        "activities?": ["string"],
+        "campgrounds?": ["string"],
+        "wildlife?": ["string"],
+        "fees?": "string",
+        "stayLimit?": "string",
+        "images?": [
           {
             "src": "string",
             "alt": "string",
@@ -127,15 +133,15 @@ npm run dev
       "lng": number,
       "state": "string",
       "mapLink": "string",
-      "elevation": number,
-      "description": "string",
-      "directions": "string",
-      "activities": ["string"],
-      "campgrounds": ["string"],
-      "wildlife": ["string"],
-      "fees": "string",
-      "stayLimit": "string",
-      "images": [
+      "elevation?": number,
+      "description?": "string",
+      "directions?": "string",
+      "activities?": ["string"],
+      "campgrounds?": ["string"],
+      "wildlife?": ["string"],
+      "fees?": "string",
+      "stayLimit?": "string",
+      "images?": [
         {
           "src": "string",
           "alt": "string",
@@ -143,7 +149,7 @@ npm run dev
         }
       ],
       "source": "BLM",
-      "weather": [
+      "weather?": [
         {
               "number": number,
               "name": "string",
