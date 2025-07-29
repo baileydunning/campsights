@@ -24,8 +24,8 @@ export default defineConfig({
         short_name: 'Campsights',
         start_url: '.',
         display: 'standalone',
-        background_color: '#F1EFE9',
-        theme_color: '#F1EFE9',
+        background_color: '#ffffff',
+        theme_color: '#BDDAB1',
         description: 'Discover and share campsites!',
         icons: [
           {
