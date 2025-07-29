@@ -13,7 +13,7 @@ info:
     ## API Behavior
     - GET /campsites: Returns raw BLM campsite data
     - GET /campsites/{id}: Returns enhanced data with elevation and weather
-    
+
 servers:
 - url: https://campsights.onrender.com/api/v1
   description: Production server (Render) - Proxies BLM Spider API with elevation/weather enhancements
@@ -41,7 +41,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BLMCampsite'
+                  $ref: '#/components/schemas/Campsite'
               example:
               - id: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
                 name: "Middle Fork of the Powder River Campground"
