@@ -113,7 +113,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#007bff',
+                  color: '#16563A',
                   cursor: 'pointer',
                   textDecoration: 'underline',
                   fontSize: '0.9em',
