@@ -3,13 +3,28 @@ import { WeatherPeriod } from "./Weather";
 export interface Campsite {
   id: string;
   name: string;
-  description: string;
+  url: string;
   lat: number;
   lng: number;
-  requires_4wd: boolean;
+  state: string;
+  mapLink: string;
   elevation?: number | null;
-  weather: WeatherPeriod[]; 
-  last_updated: string;
+  weather?: WeatherPeriod[];
+  description?: string;
+  directions?: string;
+  activities?: string[];
+  campgrounds?: string[];
+  wildlife?: string[];
+  fees?: string;
+  stayLimit?: string;
+  images?: CampsiteImage[];
+  source: 'BLM';
+}
+
+export interface CampsiteImage {
+  src: string;
+  alt?: string;
+  credit?: string;
 }
 
 export interface CampsitesState {

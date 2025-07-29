@@ -1,26 +1,35 @@
 # Campsights Server
 
 This is the backend for the Campsights app, built with Express and TypeScript.  
-It provides a REST API for managing campsite data, which is stored in an LMDB database.
+It provides a REST API that proxies campsite data from the Bureau of Land Management (BLM) Spider API and enhances it with elevation and weather information.
 
 ## Features
 
-- Serves campsite data to the frontend via REST API
-- Accepts new campsite submissions via POST requests
-- Accepts edit campsite submissions via PUT requests
-- Stores all data in LMDB (Lightning Memory-Mapped Database)
-- CORS enabled for local development
-- Automatic database seeding from JSON data
-- Full TypeScript support with proper error handling
+- **Read-only API**: Serves campsite data from the BLM Spider API
+- **Elevation Enhancement**: Adds elevation data using the Open-Elevation API
+- **Weather Integration**: Provides weather forecasts via the National Weather Service API
+- **Performance Optimized**: Only fetches elevation/weather for individual campsite requests
+- **In-Memory Caching**: Caches elevation and weather data to improve performance
+- **CORS Enabled**: Ready for frontend integration
+- **Full TypeScript**: Complete type safety with proper error handling
+
+## Data Sources
+
+- **Campsites**: [BLM Spider API](https://blm-spider.onrender.com/api/v1/campsites) - Official Bureau of Land Management data
+- **Elevation**: [Open-Elevation API](https://api.open-elevation.com) - SRTM-based elevation data
+- **Weather**: [National Weather Service API](https://www.weather.gov/documentation/services-web-api) - Official weather forecasts
 
 ## Architecture Overview
 
-The backend is organized into controllers, services, and models for clarity and maintainability:
+The backend acts as a proxy and enhancement layer:
 
-- **Controllers**: Handle HTTP requests and responses. Each route (e.g., `/api/v1/campsites`) has a controller that validates input, calls the appropriate service, and formats the response.
-- **Services**: Contain business logic and data operations. For example, the Campsites Service manages CRUD operations and attaches elevation and weather data to each campsite, while the Elevation Service handles communication with the Open-Elevation API and caching, and the Weather Service fetches forecasts from the NWS API.
-- **Models**: Define TypeScript interfaces for data structures (e.g., `Campsite`, `Elevation`, `Weather`).
-- **Database**: Uses LMDB for fast, persistent key-value storage. Data is seeded from JSON on startup.
+- **Controllers**: Handle HTTP requests and responses
+- **Services**: Fetch data from external APIs and manage caching
+  - **Campsites Service**: Proxies BLM Spider API
+  - **Elevation Service**: Fetches elevation data with in-memory caching
+  - **Weather Service**: Fetches weather forecasts with caching
+- **Models**: TypeScript interfaces for data structures
+- **No Database**: All data is fetched from external APIs or cached in memory
 
 ## Getting Started
 
@@ -34,100 +43,125 @@ The backend is organized into controllers, services, and models for clarity and 
    npm run dev
    ```
 
-3. Or start the production server:
-   ```sh
-   npm start
-   ```
-
-4. The API will be available at [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
+3. The API will be available at [http://localhost:3000/api/v1/campsites](http://localhost:3000/api/v1/campsites)
 
 ## API Endpoints
 
-- `GET /api/v1/campsites` — List all campsites
-- `GET /api/v1/campsites/:id` - Get a campsite by id
-- `POST /api/v1/campsites` — Add a new campsite
-- `PUT /api/v1/campsites/:id` — Update an existing campsite
-- `DELETE /api/v1/campsites/:id` — Delete a campsite
+### Read-Only Endpoints
 
-### POST Request Format
+- `GET /api/v1/campsites` — List all campsites (raw BLM data, fast)
+- `GET /api/v1/campsites/:id` — Get detailed campsite with elevation and weather (slower)
+- `GET /health` — Health check endpoint
+- `GET /docs` — Swagger API documentation
 
+### Response Examples
+
+**GET /api/v1/campsites** - Fast list view:
 ```json
-{
-  "id": "unique-string-id",
-  "name": "Campsite Name",
-  "description": "Description of the campsite",
-  "lat": 39.7392,
-  "lng": -104.9903,
-  "requires_4wd": false,
-  "last_updated": "2025-06-19T12:00:00.000Z"
-}
+[
+  {
+    "id": "28430a4f-ce40-478d-a7b1-0c23d9c49dbb",
+    "name": "Middle Fork of the Powder River Campground",
+    "url": "https://www.blm.gov/visit/middle-fork-powder-river-campground-0",
+    "lat": 43.579304,
+    "lng": -107.140476,
+    "state": "Wyoming",
+    "mapLink": "https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476",
+    "description": "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water. Use of the area is free with a 14-day limit on camping.",
+    "directions": "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails. From there turn left on the graveled Dry Farm Road and drive about 13 miles to the Hazelton Road.",
+    "activities": ["CAMPING"],
+    "fees": "No fees",
+    "stayLimit": "14 days",
+    "images": [
+      {
+        "src": "https://cdn.recreation.gov/public/2023/06/20/22/39/ed4c589b-d3e4-49fb-a0fd-f8bb7a0c4e3d.jpeg",
+        "alt": "Campground view with river",
+        "credit": "Bureau of Land Management"
+      }
+    ],
+    "wildlife": ["Trout", "Eagles"],
+    "source": "BLM"
+  }
+]
 ```
 
-### PUT Request Format
-
-Send a request to `/api/v1/campsites/{id}` (replace `{id}` with the campsite's id). The body must include all fields except `id` (which is taken from the URL):
-
+**GET /api/v1/campsites/:id** - Detailed view with elevation and weather:
 ```json
 {
-  "name": "Updated Campsite Name",
-  "description": "Updated description of the campsite",
-  "lat": 39.7392,
-  "lng": -104.9903,
-  "requires_4wd": true,
-  "last_updated": "2025-06-28T15:30:00Z"
+  "id": "28430a4f-ce40-478d-a7b1-0c23d9c49dbb",
+  "name": "Middle Fork of the Powder River Campground",
+  "url": "https://www.blm.gov/visit/middle-fork-powder-river-campground-0",
+  "lat": 43.579304,
+  "lng": -107.140476,
+  "state": "Wyoming",
+  "mapLink": "https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476",
+  "description": "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water. Use of the area is free with a 14-day limit on camping.",
+  "directions": "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails. From there turn left on the graveled Dry Farm Road and drive about 13 miles to the Hazelton Road.",
+  "activities": ["CAMPING"],
+  "fees": "No fees",
+  "stayLimit": "14 days",
+  "images": [
+    {
+      "src": "https://cdn.recreation.gov/public/2023/06/20/22/39/ed4c589b-d3e4-49fb-a0fd-f8bb7a0c4e3d.jpeg",
+      "alt": "Campground view with river",
+      "credit": "Bureau of Land Management"
+    }
+  ],
+  "wildlife": ["Trout", "Eagles"],
+  "source": "BLM",
+  "elevation": 2134,
+  "weather": [
+    {
+      "name": "Tonight",
+      "startTime": "2025-07-28T18:00:00-06:00",
+      "endTime": "2025-07-29T06:00:00-06:00",
+      "temperature": 45,
+      "temperatureUnit": "F",
+      "windSpeed": "5 mph",
+      "windDirection": "NW",
+      "shortForecast": "Clear",
+      "detailedForecast": "Clear skies tonight with light winds from the northwest at 5 mph."
+    },
+    {
+      "name": "Tomorrow",
+      "startTime": "2025-07-29T06:00:00-06:00",
+      "endTime": "2025-07-29T18:00:00-06:00",
+      "temperature": 72,
+      "temperatureUnit": "F",
+      "windSpeed": "10 mph",
+      "windDirection": "SW",
+      "shortForecast": "Sunny",
+      "detailedForecast": "Sunny skies with temperatures reaching 72 degrees. Southwest winds at 10 mph."
+    }
+  ]
 }
 ```
-
-### DELETE
-
-- `DELETE /api/v1/campsites/:id` — Delete a campsite by its unique `id`.
 
 ## Scripts
 
 - `npm run dev` — Start development server with hot reload
-- `npm start` — Start server with ts-node
+- `npm start` — Start server with ts-node  
 - `npm run build` — Compile TypeScript to JavaScript
-- `npm run start:prod` — Start production server (requires build first)
 - `npm test` — Run tests
 
-## Database
+## Performance & Caching
 
-- **Type**: LMDB (Lightning Memory-Mapped Database)
-- **Location**: `data.lmdb/` directory
-- **Seeding**: Automatically seeds from `data/campsites.json` on startup
-- **Benefits**: High performance, ACID transactions, no separate server process needed
+### Two-Tier Data Loading
 
+- **List View** (`GET /campsites`): Returns raw BLM data quickly without elevation/weather
+- **Detail View** (`GET /campsites/:id`): Adds elevation and weather data for specific campsites
 
-## Elevation & Weather Data
+### Caching Strategy
 
-- When a campsite is **created** or its coordinates are **updated**, the backend fetches the elevation for the provided coordinates using the [Open-Elevation API](https://github.com/Jorl17/open-elevation/blob/master/docs/api.md). The elevation (in meters) is stored with each campsite record in the database and included in all API responses. Elevation is only fetched once per campsite (on creation or coordinate change); all reads use the stored value. If the elevation cannot be fetched, it is set to `null`.
-- When a campsite is **requested** (GET), the backend fetches the weather forecast for the campsite's coordinates from the [National Weather Service API](https://www.weather.gov/documentation/services-web-api) and includes it in the API response. The weather is always fetched live (not stored in the DB), and if the NWS API is unavailable, weather data is omitted for that campsite.
+- **Elevation**: Cached in memory by coordinates to avoid redundant API calls
+- **Weather**: Cached in memory with 10-minute TTL for recent forecasts
+- **No Persistent Storage**: All data is fetched fresh from authoritative sources
 
-### Elevation Caching & Batching
+### Error Handling
 
-- **In-Memory Cache:** Elevation lookups are cached in memory, keyed by coordinate, to avoid redundant API calls for the same location. This cache is used for both single and batch elevation requests.
-- **Database Cache:** Once elevation is fetched for a campsite, it is stored in the LMDB database and reused for all future reads, unless the coordinates change.
-- **Batching:** When multiple campsites need elevation (e.g., on initial load), the backend batches requests to the Open-Elevation API using the `/lookup` endpoint, which allows multiple coordinates in a single call. This reduces network overhead and speeds up the `/api/v1/campsites` endpoint.
-- **Assignment:** Batched elevations are assigned to the correct campsites by index, and any failures are logged. If elevation cannot be fetched, the value is set to `null` for that site.
-
-### Weather Fetching (Detail Only)
-
-- **Weather is only fetched for the detail endpoint** (`GET /api/v1/campsites/:id`). The list endpoint (`GET /api/v1/campsites`) does **not** include weather data for performance reasons.
-- **Caching:** Weather responses are cached in memory for a short TTL (default 10 minutes) to reduce load on the NWS API and improve responsiveness for repeated requests.
-- **On-Demand:** Weather is fetched on demand when a user requests a specific campsite's details, ensuring up-to-date forecasts without slowing down the list endpoint.
-- **Error Handling:** If the weather API fails or rate limits, the response omits weather data for that campsite, but the rest of the data is still returned.
-
-## Retry Logic
-
-Both the Elevation and Weather services implement robust retry logic to handle transient errors and improve reliability when communicating with external APIs:
-
-- **Exponential Backoff:** If a request to the Open-Elevation or National Weather Service API fails (due to network issues, 5xx errors, or timeouts), the service will automatically retry the request after a short delay. The delay increases exponentially with each retry attempt (e.g., 200ms, 400ms, 800ms, etc.), up to a configurable maximum.
-- **Retry Limits:** The number of retry attempts is configurable (default: 3 for elevation, 2 for weather). If all retries fail, the service logs the error and returns a fallback value (`null` for elevation, omits weather for weather failures).
-- **429 Handling:** If a 429 (Too Many Requests) response is received, the retry logic will not continue retrying, and the error is logged immediately to avoid further rate limiting.
-- **Error Logging:** All failed attempts and final errors are logged with details for debugging and monitoring.
-- **No Duplicate Requests:** The in-memory cache ensures that repeated requests for the same coordinate or campsite do not trigger redundant retries.
-
-This approach ensures that temporary network issues or API hiccups do not cause user-facing errors, while also respecting external API rate limits and providing clear diagnostics for persistent failures.
+- **Graceful Degradation**: If elevation or weather APIs fail, core campsite data is still returned
+- **Retry Logic**: Automatic retries with exponential backoff for transient failures
+- **Rate Limiting**: Respects external API limits to maintain service availability
 
 
 

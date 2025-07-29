@@ -30,7 +30,16 @@ describe('campsitesController', () => {
 
     describe('getCampsites', () => {
         it('should return campsites with status 200', async () => {
-            const fakeCampsites = [{ id: '1', name: 'Test', description: '', lat: 0, lng: 0, requires_4wd: false, last_updated: '2024-01-01' }];
+            const fakeCampsites = [{ 
+                id: '1', 
+                name: 'Test Campsite', 
+                url: 'https://example.com',
+                lat: 10, 
+                lng: 20, 
+                state: 'Test State',
+                mapLink: 'https://example.com/map',
+                source: 'BLM' as const
+            }];
             vi.spyOn(campsitesService, 'getCampsites').mockResolvedValue(fakeCampsites);
 
             await getCampsites(req as Request, res as Response);
@@ -55,7 +64,18 @@ describe('campsitesController', () => {
     describe('getCampsiteById', () => {
         it('should return campsite with status 200', async () => {
             req.params = { id: '123' };
-            const fakeCampsite = { id: '123', name: 'Test Campsite By ID' };
+            const fakeCampsite = { 
+                id: '123', 
+                name: 'Test Campsite By ID',
+                url: 'https://example.com',
+                lat: 10,
+                lng: 20,
+                state: 'Test State',
+                mapLink: 'https://example.com/map',
+                source: 'BLM' as const,
+                elevation: 100,
+                weather: []
+            };
             vi.spyOn(campsitesService, 'getCampsiteById').mockResolvedValue(fakeCampsite);
 
             await getCampsiteById(req as Request, res as Response);

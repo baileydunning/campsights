@@ -6,19 +6,13 @@ import { fetchCampsites } from "./store/campsiteSlice";
 import type { AppDispatch } from "./store/store";
 
 const MapView = lazy(() => import("./components/MapView/MapView"));
-const AddCampsiteForm = lazy(() => import("./components/AddCampsiteForm/AddCampsiteForm"));
 
 const App: React.FC = () => {
-  const [showModal, setShowModal] = useState<boolean>(false);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     dispatch(fetchCampsites());
   }, [dispatch]);
-
-  const handleSuccess = useCallback(() => {
-    setShowModal(false);
-  }, []);
 
   return (
     <div className="app">
@@ -30,32 +24,6 @@ const App: React.FC = () => {
           <Suspense fallback={<Loading />}>
             <MapView />
           </Suspense>
-          <button
-            className="plus-button"
-            onClick={() => setShowModal(true)}
-            aria-label="Add Campsite"
-          >
-            +
-          </button>
-          {showModal && (
-            <div className="modal-overlay" onClick={() => setShowModal(false)}>
-              <div
-                className="modal-content"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className="close-modal"
-                  onClick={() => setShowModal(false)}
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-                <Suspense fallback={null}>
-                  <AddCampsiteForm onSuccess={handleSuccess}/>
-                </Suspense>
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>

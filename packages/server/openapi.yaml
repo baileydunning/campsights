@@ -1,13 +1,24 @@
 openapi: 3.0.3
 info:
   title: Campsights API
-  version: 1.0.0
-  description: API for Campsights app (campsites, elevation, weather)
+  version: 2.0.0
+  description: |
+    API for Campsights app - provides campsite data from the Bureau of Land Management (BLM) Spider API with enhanced elevation and weather information.
+
+    ## Data Sources
+    - **Campsites**: Bureau of Land Management Spider API (https://blm-spider.onrender.com/api/v1/campsites)
+    - **Elevation**: Open Elevation API (https://api.open-elevation.com)
+    - **Weather**: National Weather Service API
+
+    ## API Behavior
+    - GET /campsites: Returns raw BLM campsite data
+    - GET /campsites/{id}: Returns enhanced data with elevation and weather
+    
 servers:
 - url: https://campsights.onrender.com/api/v1
-  description: Production server (Render)
+  description: Production server (Render) - Proxies BLM Spider API with elevation/weather enhancements
 - url: http://localhost:3000/api/v1
-  description: Development server (Local)
+  description: Development server (Local) - Proxies BLM Spider API with elevation/weather enhancements
 tags:
 - name: Campsites
   description: Operations related to campsite resources
@@ -20,77 +31,31 @@ paths:
       tags:
       - Campsites
       operationId: listCampsites
-      summary: Get all campsites
+      summary: Get all campsites from BLM Spider API
+      description: Retrieves campsite data from the Bureau of Land Management Spider API. Elevation and weather data are not included in the list view for performance reasons.
       responses:
         '200':
-          description: List of campsites with elevation
+          description: List of campsites (without elevation/weather data)
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Campsite'
+                  $ref: '#/components/schemas/BLMCampsite'
               example:
-              - id: camp_001
-                name: "Switzerland Trail"
-                description: "Situated amidst towering pines near Sugarloaf Mountain, this campsite provides a peaceful retreat with easy access to hiking trails and scenic overlooks. Ideal for families and adventurers looking for a relaxing getaway."
-                lat: 39.905347
-                lng: -105.57529
-                requires_4wd: false
-                elevation: 2650
-                last_updated: "2025-06-13T21:50:37.842404Z"
-              - id: camp_002
-                name: "Hidden Valley"
-                description: "Secluded spot by the creek."
-                lat: 39.7392
-                lng: -104.9903
-                requires_4wd: false
-                elevation: 1800
-                last_updated: "2025-06-19T12:00:00.000Z"
-              - id: camp_003
-                name: "Alpine Ridge"
-                description: "High elevation site with panoramic views."
-                lat: 40.015
-                lng: -105.2705
-                requires_4wd: true
-                elevation: 3000
-                last_updated: "2025-07-01T09:30:00.000Z"
+              - id: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
+                name: "Middle Fork of the Powder River Campground"
+                url: "https://www.blm.gov/visit/middle-fork-powder-river-campground-0"
+                description: "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water."
+                lat: 43.579304
+                lng: -107.140476
+                state: "Wyoming"
+                mapLink: "https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476"
+                directions: "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails."
+                activities: [ "CAMPING" ]
+                source: "BLM"
         '400':
           $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    post:
-      tags:
-      - Campsites
-      operationId: createCampsite
-      summary: Add a new campsite
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampsiteInput'
-            example:
-              name: "Hidden Valley"
-              description: "Secluded spot by the creek."
-              lat: 39.7392
-              lng: -104.9903
-              requires_4wd: false
-      responses:
-        '201':
-          description: Created campsite
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Campsite'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -102,6 +67,7 @@ paths:
       - Campsites
       operationId: getCampsiteById
       summary: Get a campsite by ID (with elevation and weather)
+      description: Retrieves detailed campsite information including elevation and weather data. This endpoint fetches additional data not included in the list view.
       parameters:
       - $ref: '#/components/parameters/campsiteId'
       responses:
@@ -111,58 +77,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CampsiteWithWeather'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    put:
-      tags:
-      - Campsites
-      operationId: updateCampsite
-      summary: Update a campsite
-      parameters:
-      - $ref: '#/components/parameters/campsiteId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampsiteInput'
-            example:
-              name: "Hidden Valley"
-              description: "Secluded spot by the creek."
-              lat: 39.7392
-              lng: -104.9903
-              requires_4wd: true
-      responses:
-        '200':
-          description: Updated campsite
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Campsite'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    delete:
-      tags:
-      - Campsites
-      operationId: deleteCampsite
-      summary: Delete a campsite
-      parameters:
-      - $ref: '#/components/parameters/campsiteId'
-      responses:
-        '204':
-          description: Deleted successfully
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -195,11 +109,11 @@ components:
     campsiteId:
       name: id
       in: path
-      description: Unique identifier for a campsite
+      description: Unique identifier for a campsite from BLM Spider API
       required: true
       schema:
         type: string
-      example: camp_001
+      example: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
 
   schemas:
     Error:
@@ -210,70 +124,92 @@ components:
         error:
           type: string
 
+    CampsiteImage:
+      type: object
+      properties:
+        src:
+          type: string
+          format: uri
+          example: "https://cdn.recreation.gov/public/2023/06/20/22/39/ed4c589b-d3e4-49fb-a0fd-f8bb7a0c4e3d.jpeg"
+        alt:
+          type: string
+          example: "John Day River from Muleshoe Campground"
+        credit:
+          type: string
+          example: "Bureau of Land Management"
+
     Campsite:
       type: object
       required:
       - id
       - name
+      - url
       - lat
       - lng
-      - requires_4wd
-      - elevation
+      - state
+      - mapLink
+      - source
       properties:
         id:
           type: string
-          example: camp_002
+          example: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
         name:
           type: string
-          example: Switzerland Trail
+          example: "Middle Fork of the Powder River Campground"
+        url:
+          type: string
+          format: uri
+          example: "https://www.blm.gov/visit/middle-fork-powder-river-campground-0"
         description:
           type: string
-          example: Situated amidst towering pines near Sugarloaf Mountain, this campsite provides a peaceful retreat with easy access to hiking trails and scenic overlooks. Ideal for families and adventurers looking for a relaxing getaway.
+          example: "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water."
         lat:
           type: number
           format: float
-          example: 39.905347
+          example: 43.579304
         lng:
           type: number
           format: float
-          example: -105.57529
-        requires_4wd:
-          type: boolean
-          example: false
-        elevation:
-          type: number
-          nullable: true
-          example: null
-        last_updated:
+          example: -107.140476
+        state:
           type: string
-          format: date-time
-          example: "2025-06-13T21:50:37.842404Z"
-
-    CampsiteInput:
-      type: object
-      required:
-      - name
-      - lat
-      - lng
-      - requires_4wd
-      properties:
-        name:
+          example: "Wyoming"
+        mapLink:
           type: string
-          example: "Hidden Valley"
-        description:
+          format: uri
+          example: "https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476"
+        directions:
           type: string
-          example: "Secluded spot by the creek."
-        lat:
-          type: number
-          format: float
-          example: 39.7392
-        lng:
-          type: number
-          format: float
-          example: -104.9903
-        requires_4wd:
-          type: boolean
-          example: false
+          example: "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails."
+        activities:
+          type: array
+          items:
+            type: string
+          example: [ "CAMPING", "FISHING", "HIKING" ]
+        campgrounds:
+          type: array
+          items:
+            type: string
+          example: [ "RV", "TENT" ]
+        wildlife:
+          type: array
+          items:
+            type: string
+          example: [ "Deer", "Eagles" ]
+        fees:
+          type: string
+          example: "$5 per night per campsite"
+        stayLimit:
+          type: string
+          example: "14 days"
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampsiteImage'
+        source:
+          type: string
+          enum: [ "BLM" ]
+          example: "BLM"
 
     WeatherPeriod:
       type: object
@@ -323,10 +259,16 @@ components:
       - $ref: '#/components/schemas/Campsite'
       - type: object
         properties:
+          elevation:
+            type: number
+            nullable: true
+            description: "Elevation in meters above sea level (fetched from Open Elevation API)"
+            example: 2650
           weather:
             type: array
             items:
               $ref: '#/components/schemas/WeatherPeriod'
+            description: "Weather forecast data from National Weather Service"
 
   responses:
     BadRequest:
