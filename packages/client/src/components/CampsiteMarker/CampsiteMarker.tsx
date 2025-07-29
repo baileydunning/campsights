@@ -45,9 +45,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
   const displaySite = enrichedSite || site;
 
   const description = displaySite.description || "";
-  const shouldTruncate = description.length > 500;
+  const shouldTruncate = description.length > 300;
   const displayDescription = shouldTruncate && !showFullDescription 
-    ? description.substring(0, 500) + "..."
+    ? description.substring(0, 300) + "..."
     : description;
 
   const formatActivity = (activity: string) => {
