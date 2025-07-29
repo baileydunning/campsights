@@ -1,6 +1,6 @@
 # Campsights
 
-Campsights is a full-stack web app for discovering and sharing campsites. Users can view campsites on a map, see weather forecasts, elevation data, get directions and go to a detail page from the BLM website.
+Campsights is a full-stack web app for discovering campsites. Users can view campsites on a map, see weather forecasts, elevation data, get directions and go to a detail page from the BLM website.
 
 **Live project link:** https://campsights.onrender.com/
 
