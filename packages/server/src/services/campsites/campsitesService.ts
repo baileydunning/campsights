@@ -12,11 +12,48 @@ const weatherCache = new Map<string, WeatherCacheEntry>();
 const elevationCache = new Map<string, { elevation: number | null; timestamp: number }>();
 const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
 
-const WEATHER_CACHE_TTL = 10 * 60 * 1000; 
-const ELEVATION_CACHE_TTL = 60 * 60 * 1000;
-const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
-const API_TIMEOUT = 3000;
+const WEATHER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const ELEVATION_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const CAMPSITE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const API_TIMEOUT = 1500; // 1.5 seconds - much more aggressive
 const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
+
+// Pre-warm cache to avoid cold starts
+const preWarmCache = new Set<string>();
+
+// Circuit breaker for external APIs
+const circuitBreaker = {
+  weatherFailures: 0,
+  elevationFailures: 0,
+  maxFailures: 3,
+  resetTime: 60000, // 1 minute
+  lastWeatherReset: 0,
+  lastElevationReset: 0,
+  
+  isWeatherOpen(): boolean {
+    if (Date.now() - this.lastWeatherReset > this.resetTime) {
+      this.weatherFailures = 0;
+      this.lastWeatherReset = Date.now();
+    }
+    return this.weatherFailures >= this.maxFailures;
+  },
+  
+  isElevationOpen(): boolean {
+    if (Date.now() - this.lastElevationReset > this.resetTime) {
+      this.elevationFailures = 0;
+      this.lastElevationReset = Date.now();
+    }
+    return this.elevationFailures >= this.maxFailures;
+  },
+  
+  recordWeatherFailure(): void {
+    this.weatherFailures++;
+  },
+  
+  recordElevationFailure(): void {
+    this.elevationFailures++;
+  }
+};
 
 // Helper function to create cache key from coordinates
 function getWeatherCacheKey(lat: number, lng: number): string {
@@ -96,7 +133,18 @@ async function attachWeather(
     return { weather: cached.weather };
   }
 
+  // Circuit breaker - fail fast if service is down
+  if (circuitBreaker.isWeatherOpen()) {
+    return { weather: [] };
+  }
+
+  // Return empty weather immediately if we've already tried this location recently
+  if (preWarmCache.has(`weather_${cacheKey}`)) {
+    return { weather: [] };
+  }
+
   try {
+    // Much more aggressive timeout with no retries
     const forecast = await Promise.race([
       getWeatherForecast(campsite),
       new Promise<WeatherPeriod[]>((_, reject) => 
@@ -108,6 +156,10 @@ async function attachWeather(
     return { weather: forecast };
   } catch (err) {
     console.error(`Error fetching weather for ${campsite.id}:`, err);
+    circuitBreaker.recordWeatherFailure();
+    // Mark as attempted to avoid future slow calls
+    preWarmCache.add(`weather_${cacheKey}`);
+    setTimeout(() => preWarmCache.delete(`weather_${cacheKey}`), 30000); // Reset after 30s
     return { weather: [] };
   }
 }
@@ -122,7 +174,18 @@ async function getElevationCached(lat: number, lng: number): Promise<number | nu
     return cached.elevation;
   }
 
+  // Circuit breaker - fail fast if service is down
+  if (circuitBreaker.isElevationOpen()) {
+    return null;
+  }
+
+  // Return null immediately if we've already tried this location recently
+  if (preWarmCache.has(`elevation_${cacheKey}`)) {
+    return null;
+  }
+
   try {
+    // Much more aggressive timeout
     const elevation = await Promise.race([
       getElevation(lat, lng),
       new Promise<number | null>((_, reject) => 
@@ -134,6 +197,10 @@ async function getElevationCached(lat: number, lng: number): Promise<number | nu
     return elevation;
   } catch (err) {
     console.error(`Error fetching elevation for ${lat},${lng}:`, err);
+    circuitBreaker.recordElevationFailure();
+    // Mark as attempted to avoid future slow calls
+    preWarmCache.add(`elevation_${cacheKey}`);
+    setTimeout(() => preWarmCache.delete(`elevation_${cacheKey}`), 30000); // Reset after 30s
     return null;
   }
 }
@@ -163,6 +230,21 @@ export const getCampsites = async (): Promise<Campsite[]> => {
 export const getCampsiteById = async (
   id: string
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> => {
+  // Wrap entire operation in timeout for guaranteed response time
+  return Promise.race([
+    getCampsiteByIdInternal(id),
+    new Promise<null>((resolve) => 
+      setTimeout(() => {
+        console.warn(`Campsite ${id} request timed out, returning null`);
+        resolve(null);
+      }, 4000) // 4 second max for entire operation
+    )
+  ]);
+};
+
+async function getCampsiteByIdInternal(
+  id: string
+): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> {
   try {
     const validIdPattern = /^[a-zA-Z0-9_-]+$/; 
     if (!validIdPattern.test(id)) {
@@ -187,14 +269,24 @@ export const getCampsiteById = async (
       campsiteCache.set(id, { campsite: raw, timestamp: now });
     }
     
-    // Fetch weather and elevation in parallel for better performance
+    // Fetch weather and elevation in parallel with aggressive timeout
     const [weatherResult, elevationResult] = await Promise.allSettled([
-      attachWeather(raw),
-      raw.elevation != null 
-        ? Promise.resolve(raw.elevation)
-        : (raw.lat != null && raw.lng != null 
-            ? getElevationCached(raw.lat, raw.lng)
-            : Promise.resolve(null))
+      Promise.race([
+        attachWeather(raw),
+        new Promise<{ weather: WeatherPeriod[] }>((resolve) => 
+          setTimeout(() => resolve({ weather: [] }), 2000) // 2s max for weather
+        )
+      ]),
+      Promise.race([
+        raw.elevation != null 
+          ? Promise.resolve(raw.elevation)
+          : (raw.lat != null && raw.lng != null 
+              ? getElevationCached(raw.lat, raw.lng)
+              : Promise.resolve(null)),
+        new Promise<number | null>((resolve) => 
+          setTimeout(() => resolve(null), 2000) // 2s max for elevation
+        )
+      ])
     ]);
 
     const weather = weatherResult.status === 'fulfilled' ? weatherResult.value.weather : [];
@@ -203,6 +295,6 @@ export const getCampsiteById = async (
     return { ...raw, elevation, weather };
   } catch (err) {
     console.error('Error fetching campsite %s:', id, err);
-    throw err;
+    return null; // Return null instead of throwing to maintain API contract
   }
 };

@@ -135,10 +135,11 @@ describe('Campsites Service', () => {
       expect(result).toBeNull();
     });
 
-    it('should throw on fetch error', async () => {
+    it('should return null on fetch error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('API failure'));
       
-      await expect(campsitesService.getCampsiteById('123')).rejects.toThrow('API failure');
+      const result = await campsitesService.getCampsiteById('123');
+      expect(result).toBeNull();
     });
   });
 });
