@@ -8,9 +8,10 @@ import "./CampsiteMarker.css";
 
 export interface CampsiteMarkerProps {
   site: Campsite;
+  map?: any;
 }
 
-const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
+const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
   if (!site) return null;
 
   const popupRef = useRef<any>(null);
@@ -41,10 +42,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
     }
   };
 
-  // Use enriched site data if available, otherwise fall back to basic site data
   const displaySite = enrichedSite || site;
 
-  // Handle description truncation
   const description = displaySite.description || "";
   const shouldTruncate = description.length > 500;
   const displayDescription = shouldTruncate && !showFullDescription 
@@ -85,8 +84,16 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
       ref={markerRef}
       eventHandlers={{
         click: () => {
-          // Fetch enriched data when marker is clicked (which opens popup)
           fetchEnrichedSite();
+        },
+        popupopen: (e) => {
+          if (map && markerRef.current) {
+            const markerLatLng = markerRef.current.getLatLng();
+            map.panTo(markerLatLng, { animate: true });
+            setTimeout(() => {
+              map.panBy([0, -100], { animate: true });
+            }, 300);
+          }
         }
       }}
     >
@@ -97,7 +104,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
         closeOnClick={true}
       >
         <div>
-          <strong>{displaySite.name || "Unnamed Site"}</strong>
+          <strong>{displaySite.name || "Unnamed Site"}</strong> <i>{displaySite.state}</i>
           <div>
             {displayDescription}
             {shouldTruncate && (

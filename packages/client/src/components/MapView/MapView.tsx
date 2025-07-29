@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSelector } from 'react-redux';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
-import { fetchCampsites, selectCampsites, selectError } from "../../store/campsiteSlice";
+import { selectCampsites, selectError } from "../../store/campsiteSlice";
 import "./MapView.css";
 import type { Campsite } from '../../types/Campsite';
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
