@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
-import { useSelector } from 'react-redux';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import { selectCampsites, selectError } from "../../store/campsiteSlice";
 import "./MapView.css";
 import type { Campsite } from '../../types/Campsite';
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
 
-const defaultPosition: [number, number] = [39.2508, -106.2925]; // Leadville
+const defaultPosition: [number, number] = [39.2508, -106.2925];
 
 const personIcon = new L.DivIcon({
   html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 48px; width: 32px;">
@@ -25,10 +23,11 @@ const personIcon = new L.DivIcon({
   iconAnchor: [16, 48],
 });
 
+interface MapViewProps {
+  campsites: Campsite[];
+}
 
-const MapView: React.FC = () => {
-  const campsites = useSelector(selectCampsites);
-  const error = useSelector(selectError);
+const MapView: React.FC<MapViewProps> = ({ campsites }) => {
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
   const [showMap, setShowMap] = useState(false);
 
@@ -57,16 +56,6 @@ const MapView: React.FC = () => {
     () => campsites.map(renderCampsiteMarker),
     [campsites, renderCampsiteMarker]
   );
-
-  if (error) {
-    return (
-      <div className="MapView">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          Error: {error}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="MapView">
