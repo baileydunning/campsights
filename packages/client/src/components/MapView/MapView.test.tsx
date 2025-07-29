@@ -1,11 +1,7 @@
-import React from 'react';
-import { render, screen, waitFor, within, act } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import MapView from "./MapView";
-import campsiteSlice from "../../store/campsiteSlice";
 
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: any) => <div role="region">{children}</div>,
@@ -21,9 +17,42 @@ vi.mock("../CampsiteMarker/CampsiteMarker", async () => {
     default: ({ site }: any) => (
       <div data-testid="marker">
         <div data-testid="popup">
-          <div>{site.name ? site.name : "Unnamed Site"}</div>
+          <div>
+            <strong>{site.name ? site.name : "Unnamed Site"}</strong> <i>{site.state}</i>
+          </div>
           <div>{site.description}</div>
-          <div>Requires 4WD: {site.requires_4wd ? "Yes" : "No"}</div>
+          <div>
+            <strong>Activities:</strong>{" "}
+            {site.activities && site.activities.length > 0
+              ? site.activities.join(', ')
+              : "No activities listed"}
+          </div>
+          <div>
+            <strong>Elevation:</strong>{" "}
+            {site.elevation != null && !isNaN(Number(site.elevation))
+              ? `${site.elevation} m (${(site.elevation * 3.28084).toFixed(0)} ft)`
+              : "Unknown"}
+          </div>
+          <div>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="popup-button"
+              role="button"
+            >
+              Get Directions
+            </a>
+            <a
+              href={site.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="popup-button"
+              role="button"
+            >
+              Get Details
+            </a>
+          </div>
         </div>
       </div>
     ),
@@ -38,6 +67,10 @@ const mockCampsites = [
     lat: 40,
     lng: -105,
     requires_4wd: true,
+    url: "https://example.com/1",
+    state: "CO",
+    mapLink: "https://maps.example.com/1",
+    source: "BLM" as const,
   },
   {
     id: "2", 
@@ -46,52 +79,21 @@ const mockCampsites = [
     lat: 41,
     lng: -106,
     requires_4wd: false,
+    url: "https://example.com/2",
+    state: "WY",
+    mapLink: "https://maps.example.com/2",
+    source: "BLM" as const,
   },
 ];
-
-const createTestStore = (preloadedState = {}) => {
-  return configureStore({
-    reducer: {
-      campsites: campsiteSlice,
-    },
-    preloadedState: {
-      campsites: {
-        campsites: [],
-        loading: false,
-        error: null,
-        ...preloadedState,
-      },
-    },
-  });
-};
-
-const renderWithProvider = (component: React.ReactElement, store = createTestStore()) => {
-  return render(
-    <Provider store={store}>
-      {component}
-    </Provider>
-  );
-};
 
 describe("MapView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("shows error state when there's an error in Redux", async () => {
-    const store = createTestStore({ error: "API Error" });
+  it("displays campsite markers from prop", async () => {
     await act(async () => {
-      renderWithProvider(<MapView />, store);
-    });
-    await waitFor(() => {
-      expect(screen.getByText(/Error:/)).toBeInTheDocument();
-    });
-  });
-
-  it("displays campsite markers from Redux store", async () => {
-    const store = createTestStore({ campsites: mockCampsites });
-    await act(async () => {
-      renderWithProvider(<MapView />, store);
+      render(<MapView campsites={mockCampsites} />);
     });
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
@@ -101,22 +103,15 @@ describe("MapView", () => {
     });
   });
 
-
-
-
-
   it("handles empty campsites array", async () => {
-    const store = createTestStore({ campsites: [] });
     await act(async () => {
-      renderWithProvider(<MapView />, store);
+      render(<MapView campsites={[]} />);
     });
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
     });
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
-
-
 
   it("renders the current location marker and shows tooltip on hover", async () => {
     const mockGeolocation = {
@@ -126,7 +121,7 @@ describe("MapView", () => {
     global.navigator.geolocation = mockGeolocation;
 
     await act(async () => {
-      renderWithProvider(<MapView />);
+      render(<MapView campsites={mockCampsites} />);
     });
 
     const showLocationBtn = await screen.findByRole('button', { name: /show my location/i });

@@ -1,0 +1,11 @@
+.search-bar {
+  padding: 1rem 2rem;
+  font-size: 1.35rem;
+  border: 2px solid #bbb;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 700px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+}

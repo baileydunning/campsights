@@ -22,7 +22,7 @@ Campsite data is powered by my custom [BLM Spider API](https://github.com/bailey
 
 ## Features
 
-- View campsites scraped from the BLM website on an interactive Leaflet map
+- Search and view campsites scraped from the BLM website on an interactive Leaflet map
 - See multi-day weather forecasts and elevation data for each campsite
 - Get directions to any campsite via Google Maps
 - Comprehensive unit and integration tests using Vitest
