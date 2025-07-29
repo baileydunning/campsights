@@ -86,7 +86,6 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
       ref={markerRef}
       eventHandlers={{
         click: () => {
-          // Fetch enriched data when marker is clicked (which opens popup)
           fetchEnrichedSite();
         },
         popupopen: (e) => {
@@ -103,7 +102,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
         closeOnClick={true}
       >
         <div>
-          <strong>{displaySite.name || "Unnamed Site"}</strong>
+          <strong>{displaySite.name || "Unnamed Site"}</strong> <i>{displaySite.state}</i>
           <div>
             {displayDescription}
             {shouldTruncate && (

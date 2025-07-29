@@ -77,8 +77,8 @@ const MapView: React.FC = () => {
             center={currentPosition || defaultPosition}
             zoom={8}
             style={{ height: "100%", width: "100%" }}
-            whenReady={({ target }) => setMapInstance(target)}
           >
+            <SetMapInstance setMapInstance={setMapInstance} />
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -110,5 +110,13 @@ const MapView: React.FC = () => {
     </div>
   );
 };
+
+function SetMapInstance({ setMapInstance }: { setMapInstance: (map: any) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    setMapInstance(map);
+  }, [map, setMapInstance]);
+  return null;
+}
 
 export default React.memo(MapView);
