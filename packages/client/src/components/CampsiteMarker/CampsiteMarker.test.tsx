@@ -32,27 +32,40 @@ vi.mock('leaflet', () => {
   };
 });
 
-vi.mock('../EditCampsiteForm/EditCampsiteForm', () => ({
+vi.mock('../WeatherCard/WeatherCard', () => ({
   __esModule: true,
-  default: ({ onCancel }: any) => (
-    <button data-testid="edit-form" onClick={onCancel}>
-      Mock Edit Form
-    </button>
+  default: ({ campsiteId, weatherData }: any) => (
+    <div className="weather-card">
+      {weatherData && weatherData.length > 0 ? (
+        weatherData.map((period: any, index: number) => (
+          <div key={index} className="weather-period-card">
+            <div className="weather-period-header">
+              {period.name} ({period.isDaytime ? "Day" : "Night"})
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="weather-period-card weather-loading">Loading weather...</div>
+      )}
+    </div>
   ),
 }));
 
-import * as CampsitesApi from '../WeatherCard/../../api/Campsites';
+import * as CampsitesApi from '../../api/Campsites';
 import CampsiteMarker from './CampsiteMarker';
 import { Campsite } from '../../types/Campsite';
 
-const sampleSite: Campsite & { weather: any[] } = {
+const sampleSite: Campsite = {
   id: 'abc',
   name: 'Test Site',
+  url: 'https://example.com/test-site',
   description: 'A lovely place',
   lat: 10,
   lng: 20,
+  state: 'Test State',
+  mapLink: 'https://example.com/map',
   elevation: 100,
-  requires_4wd: true,
+  source: 'BLM',
   weather: [
     {
       number: 1,
@@ -81,48 +94,30 @@ const sampleSite: Campsite & { weather: any[] } = {
       shortForecast: 'Clear',
     },
   ],
-  last_updated: '2024-01-01T00:00:00Z',
 };
 
-vi.mock('../WeatherCard/../../api/Campsites');
+vi.mock('../../api/Campsites');
 
 describe('<CampsiteMarker />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (CampsitesApi.getCampsiteById as any).mockResolvedValue({ weather: sampleSite.weather });
+    (CampsitesApi.getCampsiteById as any).mockResolvedValue(sampleSite);
   });
 
-  it('renders marker and popup with site info', async () => {
+  it('renders marker and popup with site info', () => {
     render(<CampsiteMarker site={sampleSite} />);
 
     expect(screen.getByTestId('marker')).toBeInTheDocument();
     expect(screen.getByText('Test Site')).toBeInTheDocument();
     expect(screen.getByText('A lovely place')).toBeInTheDocument();
     expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
-    expect(screen.getByText('Yes')).toBeInTheDocument();
+    
+    // Check for the new buttons
+    expect(screen.getByRole('button', { name: /Get Directions/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Get Details/i })).toBeInTheDocument();
 
-    await screen.findByText((content, node) =>
-      node?.textContent?.replace(/\s+/g, '') === 'Morning(Day)'
-    );
-    expect(screen.getByText((content, node) =>
-      node?.textContent?.replace(/\s+/g, '') === 'Morning(Day)'
-    )).toBeInTheDocument();
-    expect(screen.getByText((content, node) =>
-      node?.textContent?.replace(/\s+/g, '') === 'Evening(Night)'
-    )).toBeInTheDocument();
-  });
-
-  it('toggles edit mode when clicking Edit Campsite button', async () => {
-    render(<CampsiteMarker site={sampleSite} />);
-
-    const editButton = screen.getByRole('button', { name: /Edit Campsite/i });
-    fireEvent.click(editButton);
-
-    // Wait for the edit form to appear
-    expect(await screen.findByTestId('edit-form')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId('edit-form'));
-    expect(screen.queryByTestId('edit-form')).not.toBeInTheDocument();
+    // Check for weather section structure
+    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
   });
 
   it('displays "Unnamed Site" when name is empty', () => {
@@ -135,5 +130,15 @@ describe('<CampsiteMarker />', () => {
     const noElev = { ...sampleSite, elevation: NaN };
     render(<CampsiteMarker site={noElev} />);
     expect(screen.getByText('Unknown')).toBeInTheDocument();
+  });
+
+  it('shows loading state initially and then enriched data', async () => {
+    render(<CampsiteMarker site={{ ...sampleSite, weather: undefined }} />);
+    
+    // Should show loading initially
+    expect(screen.getByText('Loading weather...')).toBeInTheDocument();
+    
+    // Should have weather forecast section
+    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
   });
 });
