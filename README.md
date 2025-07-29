@@ -23,7 +23,6 @@ Campsights is a full-stack web app for discovering and sharing campsites. Users 
 - Installable as a **Progressive Web App (PWA)** for offline use:
   - Add to your home screen or desktop for a native app experience
   - Works offline: previously loaded data and the app shell are available without a network connection
-  - Offline status indicator with clear messaging
   - Caches static assets and API responses for fast repeat visits
 
 ## Monorepo & Lerna

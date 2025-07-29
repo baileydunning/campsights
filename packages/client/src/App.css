@@ -27,7 +27,7 @@ body,
   align-items: center;
   justify-content: center;
   align-items: center;
-  padding: rem;
+  padding: 1rem;
   background: #F1EFE9;
   position: relative;
   z-index: 10;
@@ -55,6 +55,7 @@ body,
   font-weight: 400;
   letter-spacing: 0.5px;
   margin-top: 0.5rem;
+  text-align: center;
 }
 
 .main-content {
@@ -120,15 +121,7 @@ body,
   }
   
   .app-header h1 {
-    font-size: 2rem;
-  }
-
-  .plus-button {
-    width: 44px;
-    height: 44px;
-    font-size: 1.5rem;
-    bottom: 1rem;
-    right: 1rem;
+    font-size: 3rem;
   }
 
   .modal-content {
