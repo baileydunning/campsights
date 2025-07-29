@@ -18,6 +18,7 @@ const App: React.FC = () => {
     <div className="app">
       <header className="app-header">
         <h1>Campsights</h1>
+        <h3>Discover BLM and Public Land Campsites Across America</h3>
       </header>
       <div className="app-container">
         <main className="main-content">
