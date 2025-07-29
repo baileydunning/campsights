@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSelector } from 'react-redux';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
-import { fetchCampsites, selectCampsites, selectError } from "../../store/campsiteSlice";
+import { selectCampsites, selectError } from "../../store/campsiteSlice";
 import "./MapView.css";
 import type { Campsite } from '../../types/Campsite';
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
@@ -31,6 +31,7 @@ const MapView: React.FC = () => {
   const error = useSelector(selectError);
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [mapInstance, setMapInstance] = useState<any>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowMap(true), 0); 
@@ -49,8 +50,8 @@ const MapView: React.FC = () => {
   }, [geoRequested]);
 
   const renderCampsiteMarker = useCallback(
-    (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
-    []
+    (site: Campsite) => <CampsiteMarker key={site.id} site={site} map={mapInstance} />, 
+    [mapInstance]
   );
 
   const campsiteMarkers = useMemo(
@@ -76,6 +77,7 @@ const MapView: React.FC = () => {
             center={currentPosition || defaultPosition}
             zoom={8}
             style={{ height: "100%", width: "100%" }}
+            whenReady={({ target }) => setMapInstance(target)}
           >
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"

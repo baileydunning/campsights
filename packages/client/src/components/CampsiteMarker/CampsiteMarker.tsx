@@ -8,9 +8,10 @@ import "./CampsiteMarker.css";
 
 export interface CampsiteMarkerProps {
   site: Campsite;
+  map?: any;
 }
 
-const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
+const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
   if (!site) return null;
 
   const popupRef = useRef<any>(null);
@@ -87,6 +88,11 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
         click: () => {
           // Fetch enriched data when marker is clicked (which opens popup)
           fetchEnrichedSite();
+        },
+        popupopen: (e) => {
+          if (map && markerRef.current) {
+            map.panTo(markerRef.current.getLatLng(), { animate: true });
+          }
         }
       }}
     >
