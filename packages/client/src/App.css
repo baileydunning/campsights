@@ -27,6 +27,9 @@ body,
   align-items: center;
   padding: 2rem;
   background: #F1EFE9;
+  position: relative;
+  z-index: 10;
+  min-height: 80px;
 }
 
 .app-header h1 {
@@ -38,6 +41,9 @@ body,
   padding: 0;
   font-weight: 400;
   text-transform: uppercase;
+  white-space: nowrap;
+  display: block;
+  visibility: visible;
 }
 
 .main-content {
@@ -125,7 +131,10 @@ body,
 @media (max-width: 600px) {
   .app-header {
     padding: 1rem 0.5rem;
-    font-size: 1.2rem;
+  }
+  
+  .app-header h1 {
+    font-size: 2rem;
   }
 
   .plus-button {

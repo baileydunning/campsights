@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Suspense, lazy, useEffect } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import "./App.css";
 import Loading from "./components/Loading/Loading";
 import { useDispatch } from "react-redux";
