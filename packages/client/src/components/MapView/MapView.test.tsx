@@ -91,14 +91,6 @@ describe("MapView", () => {
     vi.clearAllMocks();
   });
 
-  it("shows error state when there's an error prop", async () => {
-    // Simulate error by rendering error UI directly (MapView no longer uses Redux error)
-    // You may want to add an error prop to MapView if you want to test this
-    // For now, just check that MapView renders without error prop
-    render(<MapView campsites={mockCampsites} />);
-    expect(screen.getByRole("region")).toBeInTheDocument();
-  });
-
   it("displays campsite markers from prop", async () => {
     await act(async () => {
       render(<MapView campsites={mockCampsites} />);

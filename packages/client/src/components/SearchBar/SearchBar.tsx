@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 import type { Campsite } from "../../types/Campsite";
 
 interface SearchBarProps {
@@ -21,6 +21,10 @@ const flattenObject = (obj: Record<string, any>): string => {
 const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults }) => {
   const [query, setQuery] = useState("");
 
+  useEffect(() => {
+    onSearchResults(campsites);
+  }, [campsites, onSearchResults]);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     setQuery(input);
@@ -41,15 +45,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults }) => 
       value={query}
       onChange={handleChange}
       placeholder="Search by name, state, activities..."
-      style={{
-        padding: "0.5rem 1rem",
-        fontSize: "1rem",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
-        width: "100%",
-        maxWidth: "400px",
-        outline: "none",
-      }}
+      className="search-bar"
+      style={{ width: "50vw", height: "25px", outline: 'none' }}
     />
   );
 };
