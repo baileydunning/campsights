@@ -45,9 +45,9 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
   const displaySite = enrichedSite || site;
 
   const description = displaySite.description || "";
-  const shouldTruncate = description.length > 500;
+  const shouldTruncate = description.length > 250;
   const displayDescription = shouldTruncate && !showFullDescription 
-    ? description.substring(0, 500) + "..."
+    ? description.substring(0, 250) + "..."
     : description;
 
   const formatActivity = (activity: string) => {
@@ -113,7 +113,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#007bff',
+                  color: '#16563A',
                   cursor: 'pointer',
                   textDecoration: 'underline',
                   fontSize: '0.9em',
@@ -127,11 +127,15 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
           </div>
           
           <div>
-            <strong>Activities:</strong>{" "}
-            {displaySite.activities && displaySite.activities.length > 0 
-              ? displaySite.activities.map(formatActivity).join(', ')
-              : "No activities listed"
-            }
+            {displaySite.activities && (
+              <>
+                <strong>Activities:</strong>{" "}
+                {displaySite.activities && displaySite.activities.length > 0
+                  ? displaySite.activities.map(formatActivity).join(', ')
+                  : "None listed"
+                }
+              </>
+            )}
           </div>
           
           <div>
