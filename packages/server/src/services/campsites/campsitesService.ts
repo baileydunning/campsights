@@ -15,7 +15,7 @@ const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>
 const WEATHER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 const ELEVATION_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const API_TIMEOUT = 800; 
+const API_TIMEOUT = process.env.NODE_ENV === 'production' ? 5000 : 2000; 
 const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
 
 // Pre-warm cache to avoid cold starts
@@ -33,8 +33,8 @@ const performanceMetrics = {
 const circuitBreaker = {
   weatherFailures: 0,
   elevationFailures: 0,
-  maxFailures: 2, 
-  resetTime: 30000, 
+  maxFailures: process.env.NODE_ENV === 'production' ? 5 : 2, 
+  resetTime: process.env.NODE_ENV === 'production' ? 60000 : 30000, 
   lastWeatherReset: 0,
   lastElevationReset: 0,
   
@@ -177,11 +177,11 @@ async function attachWeather(
   }
 
   try {
-    // Much more aggressive timeout with no retries
+    // More reasonable timeout for production - still aggressive but not too much
     const forecast = await Promise.race([
       getWeatherForecast(campsite),
       new Promise<WeatherPeriod[]>((_, reject) => 
-        setTimeout(() => reject(new Error('Weather timeout')), API_TIMEOUT)
+        setTimeout(() => reject(new Error('Weather timeout')), API_TIMEOUT * 1.5) // 1.5x API timeout
       )
     ]);
     
@@ -192,7 +192,7 @@ async function attachWeather(
     circuitBreaker.recordWeatherFailure();
     // Mark as attempted to avoid future slow calls
     preWarmCache.add(`weather_${cacheKey}`);
-    setTimeout(() => preWarmCache.delete(`weather_${cacheKey}`), 30000); // Reset after 30s
+    setTimeout(() => preWarmCache.delete(`weather_${cacheKey}`), 60000); // Reset after 60s in prod
     return { weather: [] };
   }
 }
@@ -218,11 +218,10 @@ async function getElevationCached(lat: number, lng: number): Promise<number | nu
   }
 
   try {
-    // Much more aggressive timeout
     const elevation = await Promise.race([
       getElevation(lat, lng),
       new Promise<number | null>((_, reject) => 
-        setTimeout(() => reject(new Error('Elevation timeout')), API_TIMEOUT)
+        setTimeout(() => reject(new Error('Elevation timeout')), API_TIMEOUT * 1.5) 
       )
     ]);
     
@@ -233,7 +232,7 @@ async function getElevationCached(lat: number, lng: number): Promise<number | nu
     circuitBreaker.recordElevationFailure();
     // Mark as attempted to avoid future slow calls
     preWarmCache.add(`elevation_${cacheKey}`);
-    setTimeout(() => preWarmCache.delete(`elevation_${cacheKey}`), 30000); // Reset after 30s
+    setTimeout(() => preWarmCache.delete(`elevation_${cacheKey}`), 60000); 
     return null;
   }
 }
@@ -272,7 +271,7 @@ export const getCampsiteById = async (
       setTimeout(() => {
         console.warn(`Campsite ${id} request timed out, returning null`);
         resolve(null);
-      }, 2500) // 2.5 second max for entire operation
+      }, process.env.NODE_ENV === 'production' ? 15000 : 4000) 
     )
   ]);
   
@@ -318,12 +317,12 @@ async function getCampsiteByIdInternal(
       campsiteCache.set(id, { campsite: raw, timestamp: now });
     }
     
-    // Fetch weather and elevation in parallel with aggressive timeout
+    // Fetch weather and elevation in parallel 
     const [weatherResult, elevationResult] = await Promise.allSettled([
       Promise.race([
         attachWeather(raw),
         new Promise<{ weather: WeatherPeriod[] }>((resolve) => 
-          setTimeout(() => resolve({ weather: [] }), 1200) // 1.2s max for weather
+          setTimeout(() => resolve({ weather: [] }), API_TIMEOUT * 2) 
         )
       ]),
       Promise.race([
@@ -333,7 +332,7 @@ async function getCampsiteByIdInternal(
               ? getElevationCached(raw.lat, raw.lng)
               : Promise.resolve(null)),
         new Promise<number | null>((resolve) => 
-          setTimeout(() => resolve(null), 1200) // 1.2s max for elevation
+          setTimeout(() => resolve(null), API_TIMEOUT * 2) 
         )
       ])
     ]);

@@ -51,6 +51,14 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
     ? description.substring(0, 500) + "..."
     : description;
 
+  const formatActivity = (activity: string) => {
+    return activity
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   const tentIcon = new L.DivIcon({
     html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 50px; width: 50px;">
       <svg xmlns="http://www.w3.org/2000/svg"
@@ -111,11 +119,13 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
             )}
           </div>
           
-          {error && (
-            <div style={{ color: '#d63384', fontSize: '0.9em' }}>
-              {error}
-            </div>
-          )}
+          <div>
+            <strong>Activities:</strong>{" "}
+            {displaySite.activities && displaySite.activities.length > 0 
+              ? displaySite.activities.map(formatActivity).join(', ')
+              : "No activities listed"
+            }
+          </div>
           
           <div>
             <strong>Elevation:</strong>{" "}
