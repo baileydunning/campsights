@@ -15,18 +15,26 @@ const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>
 const WEATHER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 const ELEVATION_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const API_TIMEOUT = 1500; // 1.5 seconds - much more aggressive
+const API_TIMEOUT = 800; 
 const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
 
 // Pre-warm cache to avoid cold starts
 const preWarmCache = new Set<string>();
 
+// Track performance metrics
+const performanceMetrics = {
+  weatherTimeouts: 0,
+  elevationTimeouts: 0,
+  totalRequests: 0,
+  avgResponseTime: 0
+};
+
 // Circuit breaker for external APIs
 const circuitBreaker = {
   weatherFailures: 0,
   elevationFailures: 0,
-  maxFailures: 3,
-  resetTime: 60000, // 1 minute
+  maxFailures: 2, 
+  resetTime: 30000, 
   lastWeatherReset: 0,
   lastElevationReset: 0,
   
@@ -48,10 +56,12 @@ const circuitBreaker = {
   
   recordWeatherFailure(): void {
     this.weatherFailures++;
+    performanceMetrics.weatherTimeouts++;
   },
   
   recordElevationFailure(): void {
     this.elevationFailures++;
+    performanceMetrics.elevationTimeouts++;
   }
 };
 
@@ -95,6 +105,29 @@ function cleanupCaches(): void {
 // Run cleanup every 5 minutes (only in production)
 if (process.env.NODE_ENV !== 'test') {
   setInterval(cleanupCaches, 5 * 60 * 1000);
+  
+  // Background cache preloader - run every 10 minutes
+  setInterval(async () => {
+    try {
+      console.log('Background cache preloader started...');
+      const campsites = await getCampsites();
+      const popular = campsites.slice(0, 10); // Preload first 10 campsites
+      
+      for (const site of popular) {
+        if (!weatherCache.has(getWeatherCacheKey(site.lat, site.lng))) {
+          // Preload weather data in background (fire and forget)
+          attachWeather(site).catch(() => {}); // Ignore failures
+        }
+        if (!elevationCache.has(getElevationCacheKey(site.lat, site.lng))) {
+          // Preload elevation data in background (fire and forget)
+          getElevationCached(site.lat, site.lng).catch(() => {}); // Ignore failures
+        }
+      }
+      console.log('Background cache preloader completed');
+    } catch (err) {
+      console.error('Background preloader error:', err);
+    }
+  }, 10 * 60 * 1000); // Every 10 minutes
 }
 
 // Helper function to fetch with timeout and connection reuse
@@ -230,16 +263,32 @@ export const getCampsites = async (): Promise<Campsite[]> => {
 export const getCampsiteById = async (
   id: string
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> => {
+  const startTime = Date.now();
+  
   // Wrap entire operation in timeout for guaranteed response time
-  return Promise.race([
+  const result = await Promise.race([
     getCampsiteByIdInternal(id),
     new Promise<null>((resolve) => 
       setTimeout(() => {
         console.warn(`Campsite ${id} request timed out, returning null`);
         resolve(null);
-      }, 4000) // 4 second max for entire operation
+      }, 2500) // 2.5 second max for entire operation
     )
   ]);
+  
+  // Track performance metrics
+  const duration = Date.now() - startTime;
+  performanceMetrics.totalRequests++;
+  performanceMetrics.avgResponseTime = 
+    (performanceMetrics.avgResponseTime * (performanceMetrics.totalRequests - 1) + duration) / 
+    performanceMetrics.totalRequests;
+  
+  // Log performance every 100 requests
+  if (performanceMetrics.totalRequests % 100 === 0) {
+    console.log(`Performance metrics: Avg: ${performanceMetrics.avgResponseTime.toFixed(0)}ms, Weather timeouts: ${performanceMetrics.weatherTimeouts}, Elevation timeouts: ${performanceMetrics.elevationTimeouts}`);
+  }
+  
+  return result;
 };
 
 async function getCampsiteByIdInternal(
@@ -274,7 +323,7 @@ async function getCampsiteByIdInternal(
       Promise.race([
         attachWeather(raw),
         new Promise<{ weather: WeatherPeriod[] }>((resolve) => 
-          setTimeout(() => resolve({ weather: [] }), 2000) // 2s max for weather
+          setTimeout(() => resolve({ weather: [] }), 1200) // 1.2s max for weather
         )
       ]),
       Promise.race([
@@ -284,7 +333,7 @@ async function getCampsiteByIdInternal(
               ? getElevationCached(raw.lat, raw.lng)
               : Promise.resolve(null)),
         new Promise<number | null>((resolve) => 
-          setTimeout(() => resolve(null), 2000) // 2s max for elevation
+          setTimeout(() => resolve(null), 1200) // 1.2s max for elevation
         )
       ])
     ]);
