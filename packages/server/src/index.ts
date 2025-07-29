@@ -3,7 +3,6 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
-import { db, seedDB } from './config/db';
 import campsitesRouter from './routes/campsites/campsitesRoutes';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
@@ -50,27 +49,13 @@ const setupStaticFileServing = async (): Promise<void> => {
   }
 };
 
-// Initialize the app, including DB seeding and starting the server
-const initializeApp = async (forceSeed = false): Promise<void> => {
+// Initialize the app and start the server
+const initializeApp = async (): Promise<void> => {
   try {
-    if (process.env.NODE_ENV !== 'test') {
-      let shouldSeed = forceSeed;
-      if (!forceSeed) {
-        const keysIterable = await db.getKeys({ limit: 1 });
-        const keys = Array.from(keysIterable);
-        shouldSeed = keys.length === 0;
-      }
-      if (shouldSeed) {
-        await seedDB();
-        console.log("Database seeded successfully.");
-      } else {
-        console.log("Database already seeded, skipping.");
-      }
-    }
-
     // Start the Express server
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`Using BLM Spider API at: https://blm-spider.onrender.com/api/v1/campsites`);
     }).on('error', (err) => {
       console.error("Failed to start server:", err);
       if (process.env.NODE_ENV === 'test') {
@@ -82,12 +67,12 @@ const initializeApp = async (forceSeed = false): Promise<void> => {
     });
 
   } catch (err) {
-    console.error("Error during initialization:", err);
-    process.exit(1); // Exit if there's an error during DB seeding or server setup
+    console.error("Error during server startup:", err);
+    process.exit(1); // Exit if there's an error during server setup
   }
 };
 
-// API routes for handling campsites and elevation data
+// API routes for handling campsites (proxied from BLM Spider API) and elevation data
 app.use('/api/v1/campsites', campsitesRouter);
 
 // Serve API documentation using Swagger UI
@@ -111,12 +96,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Check for --force-seed flag
-const forceSeed = process.argv.includes('--force-seed');
-
 // Initialize static file serving and then initialize the app
 setupStaticFileServing()
-  .then(() => initializeApp(forceSeed))
+  .then(() => initializeApp())
   .catch((err) => {
     console.error("Error during app setup:", err);
     process.exit(1);

@@ -1,6 +1,5 @@
 import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { Elevation } from '../../models/elevationModel';
-import { db } from '../../config/db';
 
 export const elevationCache = new Map<string, number | null>();
 
@@ -8,50 +7,22 @@ export const getElevations = async (
   locations: { latitude: number; longitude: number }[]
 ): Promise<(number | null)[]> => {
   const keys = locations.map(({ latitude, longitude }) => `${latitude},${longitude}`);
-  const results: Array<number | null | undefined> = [];
+  const results: Array<number | null> = [];
   const uncached: { latitude: number; longitude: number }[] = [];
   const uncachedIndexes: number[] = [];
 
-  // First, check in-memory cache
-  const dbKeysToFetch: string[] = [];
-  const dbIndexesToFetch: number[] = [];
+  // Check in-memory cache
   for (const [index, key] of keys.entries()) {
     if (elevationCache.has(key)) {
       results[index] = elevationCache.get(key)!;
-      continue;
-    }
-    dbKeysToFetch.push(`elevation:${key}`);
-    dbIndexesToFetch.push(index);
-  }
-
-  // Batch DB get for all uncached keys
-  let dbResults: (number | null | undefined)[] = [];
-  if (dbKeysToFetch.length > 0 && typeof db.getMany === 'function') {
-    try {
-      dbResults = await db.getMany(dbKeysToFetch);
-    } catch {
-      dbResults = [];
-    }
-  } else if (dbKeysToFetch.length > 0) {
-    dbResults = await Promise.all(dbKeysToFetch.map(async (k) => {
-      try { return await db.get(k); } catch { return undefined; }
-    }));
-  }
-
-  // Fill results from DB batch
-  for (let i = 0; i < dbResults.length; i++) {
-    const dbElevation = dbResults[i];
-    const index = dbIndexesToFetch[i];
-    const key = keys[index];
-    if (typeof dbElevation === 'number' || dbElevation === null) {
-      elevationCache.set(key, dbElevation);
-      results[index] = dbElevation;
     } else {
+      results[index] = null; // placeholder
       uncached.push(locations[index]);
       uncachedIndexes.push(index);
     }
   }
 
+  // Fetch uncached elevations from API
   if (uncached.length > 0) {
     let payload: { results: Elevation[] } | null = null;
     try {
@@ -65,32 +36,23 @@ export const getElevations = async (
       if (!Array.isArray(payload.results) || payload.results.length !== uncached.length) {
         throw new Error('Elevation data missing or mismatched for requested coordinates.');
       }
-    } catch (err: any) {
+
+      // Cache and store results
       uncached.forEach((loc, i) => {
         const key = `${loc.latitude},${loc.longitude}`;
-        if (elevationCache.has(key)) {
-          results[uncachedIndexes[i]] = elevationCache.get(key)!;
-        } else {
-          results[uncachedIndexes[i]] = null;
-        }
+        const elevation = payload!.results[i].elevation;
+        elevationCache.set(key, elevation);
+        results[uncachedIndexes[i]] = elevation;
       });
-      return results as (number | null)[];
+    } catch (err: any) {
+      // If API fails, return null for uncached locations
+      uncachedIndexes.forEach((index) => {
+        results[index] = null;
+      });
     }
-
-    uncached.forEach((loc, i) => {
-      const key = `${loc.latitude},${loc.longitude}`;
-      const elevation = payload!.results[i].elevation;
-      elevationCache.set(key, elevation);
-      const dbKey = `elevation:${key}`;
-      db.put(dbKey, elevation).then(() => {
-        // saved to DB cache
-      }).catch(() => {
-        // failed to save to DB cache
-      });
-      results[uncachedIndexes[i]] = elevation;
-    });
   }
-  return results as (number | null)[];
+
+  return results;
 };
 
 export const getElevation = async (
