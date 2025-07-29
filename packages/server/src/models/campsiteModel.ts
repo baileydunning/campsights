@@ -1,10 +1,25 @@
 export interface Campsite {
   id: string;
   name: string;
-  description: string;
+  url: string;
   lat: number;
   lng: number;
-  requires_4wd: boolean;
-  last_updated: string;
+  state: string;
+  mapLink: string;
   elevation?: number | null;
+  description?: string;
+  directions?: string;
+  activities?: string[];
+  campgrounds?: string[];
+  wildlife?: string[];
+  fees?: string;
+  stayLimit?: string;
+  images?: CampsiteImage[];
+  source: 'BLM';
+}
+
+export interface CampsiteImage {
+  src: string;
+  alt?: string;
+  credit?: string;
 }
