@@ -31,7 +31,6 @@ const MapView: React.FC = () => {
   const error = useSelector(selectError);
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
   const [showMap, setShowMap] = useState(false);
-  const [mapInstance, setMapInstance] = useState<any>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowMap(true), 0); 
@@ -50,8 +49,8 @@ const MapView: React.FC = () => {
   }, [geoRequested]);
 
   const renderCampsiteMarker = useCallback(
-    (site: Campsite) => <CampsiteMarker key={site.id} site={site} map={mapInstance} />, 
-    [mapInstance]
+    (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
+    []
   );
 
   const campsiteMarkers = useMemo(
@@ -78,7 +77,6 @@ const MapView: React.FC = () => {
             zoom={8}
             style={{ height: "100%", width: "100%" }}
           >
-            <SetMapInstance setMapInstance={setMapInstance} />
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -110,13 +108,5 @@ const MapView: React.FC = () => {
     </div>
   );
 };
-
-function SetMapInstance({ setMapInstance }: { setMapInstance: (map: any) => void }) {
-  const map = useMap();
-  useEffect(() => {
-    setMapInstance(map);
-  }, [map, setMapInstance]);
-  return null;
-}
 
 export default React.memo(MapView);

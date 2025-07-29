@@ -42,10 +42,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
     }
   };
 
-  // Use enriched site data if available, otherwise fall back to basic site data
   const displaySite = enrichedSite || site;
 
-  // Handle description truncation
   const description = displaySite.description || "";
   const shouldTruncate = description.length > 500;
   const displayDescription = shouldTruncate && !showFullDescription 
@@ -90,7 +88,11 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
         },
         popupopen: (e) => {
           if (map && markerRef.current) {
-            map.panTo(markerRef.current.getLatLng(), { animate: true });
+            const markerLatLng = markerRef.current.getLatLng();
+            map.panTo(markerLatLng, { animate: true });
+            setTimeout(() => {
+              map.panBy([0, -100], { animate: true });
+            }, 300);
           }
         }
       }}
