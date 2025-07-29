@@ -37,7 +37,13 @@ describe('Campsites Service', () => {
       const result = await campsitesService.getCampsites();
 
       expect(mockFetch).toHaveBeenCalledWith('https://blm-spider.onrender.com/api/v1/campsites', expect.objectContaining({
-        signal: expect.any(AbortSignal)
+        signal: expect.any(AbortSignal),
+        keepalive: true,
+        headers: expect.objectContaining({
+          'Connection': 'keep-alive',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'User-Agent': 'Campsights-API/1.0'
+        })
       }));
       expect(result).toEqual([
         { id: '1', lat: 10, lng: 20, name: 'Test Campsite 1' },
@@ -80,7 +86,13 @@ describe('Campsites Service', () => {
       const result = await campsitesService.getCampsiteById('123');
 
       expect(mockFetch).toHaveBeenCalledWith('https://blm-spider.onrender.com/api/v1/campsites/123', expect.objectContaining({
-        signal: expect.any(AbortSignal)
+        signal: expect.any(AbortSignal),
+        keepalive: true,
+        headers: expect.objectContaining({
+          'Connection': 'keep-alive',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'User-Agent': 'Campsights-API/1.0'
+        })
       }));
       expect(getElevationMock).toHaveBeenCalledWith(10, 20);
       expect(getWeatherForecastMock).toHaveBeenCalledWith(mockCampsite);
