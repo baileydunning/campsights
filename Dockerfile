@@ -1,4 +1,4 @@
-FROM node:22 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -9,26 +9,27 @@ COPY packages/server/package*.json ./packages/server/
 RUN npm install
 
 COPY packages/client ./packages/client
+COPY packages/server ./packages/server
+
 WORKDIR /app/packages/client
 RUN npm run build
 
-WORKDIR /app
-COPY packages/server ./packages/server
 WORKDIR /app/packages/server
 RUN npm run build
 
-RUN mkdir -p /app/packages/server/client/dist
-RUN cp -r /app/packages/client/dist /app/packages/server/client/
+RUN mkdir -p ./client/dist && cp -r /app/packages/client/dist ./client/
 
-FROM node:22
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY packages/server/package*.json ./packages/server/
+RUN npm install --omit=dev
+
+COPY --from=builder /app/packages/server ./packages/server
 
 WORKDIR /app/packages/server
-
-COPY packages/server/package*.json ./
-
-RUN npm install --production
-
-COPY --from=builder /app/packages/server ./
 
 EXPOSE 4000
 

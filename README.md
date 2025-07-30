@@ -235,6 +235,11 @@ Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov
 
 Campsights is designed for speed, efficiency, and resilience:
 
+- **Cluster Architecture:**
+  - Node.js cluster mode is used to fully utilize all CPU cores by running multiple worker processes in parallel.
+  - Each worker handles its own set of requests, increasing throughput and reducing response times under heavy load.
+  - The master process automatically restarts any worker that crashes or becomes unresponsive, ensuring high availability and fault tolerance.
+  - In-memory caches are per worker, so cache hits are local to each process, but this tradeoff is outweighed by the scalability and resilience benefits of clustering.
 - **Two-Tier Data Loading:**
   - The list endpoint (`GET /api/v1/campsites`) returns raw BLM data instantly, without elevation or weather, for maximum speed and minimal API usage.
   - The detail endpoint (`GET /api/v1/campsites/:id`) fetches and caches elevation and weather only when a specific campsite is requested, keeping the list view fast and the detail view rich.
