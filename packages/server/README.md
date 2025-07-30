@@ -11,7 +11,6 @@ It provides a REST API that proxies campsite data from the Bureau of Land Manage
 - **Performance Optimized**: Only fetches elevation/weather for individual campsite requests
 - **In-Memory Caching**: Caches elevation and weather data to improve performance
 - **CORS Enabled**: Ready for frontend integration
-- **Full TypeScript**: Complete type safety with proper error handling
 
 ## Data Sources
 
@@ -144,24 +143,32 @@ The backend acts as a proxy and enhancement layer:
 - `npm run build` — Compile TypeScript to JavaScript
 - `npm test` — Run tests
 
-## Performance & Caching
+## Performance, Optimization & Caching
 
 ### Two-Tier Data Loading
 
-- **List View** (`GET /campsites`): Returns raw BLM data quickly without elevation/weather
-- **Detail View** (`GET /campsites/:id`): Adds elevation and weather data for specific campsites
+- **List View** (`GET /campsites`): Returns raw BLM data instantly, without elevation or weather, for maximum speed and minimal API usage.
+- **Detail View** (`GET /campsites/:id`): On-demand enhancement—fetches and caches elevation and weather only when a specific campsite is requested, keeping the list view fast and the detail view rich.
 
-### Caching Strategy
+### In-Memory Caching & Expiry
 
-- **Elevation**: Cached in memory by coordinates to avoid redundant API calls
-- **Weather**: Cached in memory with 10-minute TTL for recent forecasts
-- **No Persistent Storage**: All data is fetched fresh from authoritative sources
+- **Elevation**: Cached in memory by coordinates indefinitely, so repeated requests for the same location never hit the external API twice.
+- **Weather**: Cached in memory by campsite with a 10-minute TTL, ensuring forecasts are fresh but not repeatedly fetched.
+- **No Persistent Storage**: All caching is in-memory for ultra-fast access; no database or disk I/O is involved.
 
-### Error Handling
+### Rate Limiting, Retries & Resilience
 
-- **Graceful Degradation**: If elevation or weather APIs fail, core campsite data is still returned
-- **Retry Logic**: Automatic retries with exponential backoff for transient failures
-- **Rate Limiting**: Respects external API limits to maintain service availability
+- **Rate Limiting**: All external API calls respect published rate limits to avoid service disruption.
+- **Retry Logic**: Automatic retries with exponential backoff for transient failures, reducing the chance of user-facing errors.
+- **Graceful Degradation**: If elevation or weather APIs fail, the server still returns core campsite data, so the app remains usable.
+- **Type Safety & Error Handling**: All endpoints are fully type-checked with TypeScript, and errors are handled with clear messages and fallback logic.
+
+### Summary of Optimizations
+
+- **Minimized Latency**: Only fetches slow/expensive data when needed, and caches it for future requests.
+- **Reduced API Usage**: Caching and lazy enhancement minimize calls to external services.
+- **Robustness**: Handles API failures gracefully and automatically retries transient errors.
+- **No Data Loss**: Core campsite data is always returned, even if enhancements fail.
 
 
 

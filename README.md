@@ -230,3 +230,22 @@ Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov
       }
     }
     ```
+
+## Performance, Optimization & Caching
+
+Campsights is designed for speed, efficiency, and resilience:
+
+- **Two-Tier Data Loading:**
+  - The list endpoint (`GET /api/v1/campsites`) returns raw BLM data instantly, without elevation or weather, for maximum speed and minimal API usage.
+  - The detail endpoint (`GET /api/v1/campsites/:id`) fetches and caches elevation and weather only when a specific campsite is requested, keeping the list view fast and the detail view rich.
+- **In-Memory Caching:**
+  - Elevation data is cached by coordinates indefinitely, so repeated requests for the same location never hit the external API twice.
+  - Weather data is cached by campsite with a 10-minute TTL, ensuring forecasts are fresh but not repeatedly fetched.
+  - All caching is in-memory for ultra-fast access; no database or disk I/O is involved.
+- **Rate Limiting & Retries:**
+  - All external API calls respect published rate limits to avoid service disruption.
+  - Automatic retries with exponential backoff for transient failures, reducing the chance of user-facing errors.
+- **Graceful Degradation:**
+  - If elevation or weather APIs fail, the server still returns core campsite data, so the app remains usable.
+- **Type Safety & Error Handling:**
+  - All endpoints are fully type-checked with TypeScript, and errors are handled with clear messages and fallback logic.

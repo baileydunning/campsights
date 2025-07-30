@@ -29,49 +29,6 @@ app.use(cors());
 app.use(express.json());
 app.use(globalLimiter);
 
-// Serve static frontend if built
-const staticPath = path.join(__dirname, "../client/dist");
-const indexHtmlPath = path.join(staticPath, "index.html");
-
-const setupStaticFileServing = async (): Promise<void> => {
-  try {
-    await fs.access(indexHtmlPath); // Check if the index.html exists
-    app.use(express.static(staticPath)); // Serve static files
-
-    // Fallback to index.html for all routes that aren't API calls
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(staticPath, 'index.html'));
-    });
-
-    console.log("Static file serving set up successfully.");
-  } catch (err) {
-    console.warn("client/dist/index.html not found, skipping static route handling.");
-  }
-};
-
-// Initialize the app and start the server
-const initializeApp = async (): Promise<void> => {
-  try {
-    // Start the Express server
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-      console.log(`Using BLM Spider API at: https://blm-spider.onrender.com/api/v1/campsites`);
-    }).on('error', (err) => {
-      console.error("Failed to start server:", err);
-      if (process.env.NODE_ENV === 'test') {
-        // Don't exit the process during tests
-        throw err;
-      } else {
-        process.exit(1); // Exit if the server fails to start in production
-      }
-    });
-
-  } catch (err) {
-    console.error("Error during server startup:", err);
-    process.exit(1); // Exit if there's an error during server setup
-  }
-};
-
 // API routes for handling campsites (proxied from BLM Spider API) and elevation data
 app.use('/api/v1/campsites', campsitesRouter);
 
@@ -95,6 +52,45 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     error: err.message || "Internal Server Error"
   });
 });
+
+const staticPath = path.join(__dirname, "../client/dist");
+const indexHtmlPath = path.join(staticPath, "index.html");
+
+const setupStaticFileServing = async (): Promise<void> => {
+  try {
+    await fs.access(indexHtmlPath); // Check if the index.html exists
+    app.use(express.static(staticPath)); // Serve static files
+
+    // Fallback to index.html for all routes that aren't API calls or docs
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(staticPath, 'index.html'));
+    });
+
+    console.log("Static file serving set up successfully.");
+  } catch (err) {
+    console.warn("client/dist/index.html not found, skipping static route handling.");
+  }
+};
+
+const initializeApp = async (): Promise<void> => {
+  try {
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    }).on('error', (err) => {
+      console.error("Failed to start server:", err);
+      if (process.env.NODE_ENV === 'test') {
+        // Don't exit the process during tests
+        throw err;
+      } else {
+        process.exit(1);
+      }
+    });
+
+  } catch (err) {
+    console.error("Error during server startup:", err);
+    process.exit(1); 
+  }
+};
 
 // Initialize static file serving and then initialize the app
 setupStaticFileServing()

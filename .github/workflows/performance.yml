@@ -63,13 +63,9 @@ jobs:
       id: extract-artillery
       run: |
         mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
-        min_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].min // empty' artillery-report.json)
-        max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
         p95_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p95 // empty' artillery-report.json)
         p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
         echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
-        echo "min_latency=$min_latency" >> $GITHUB_OUTPUT
-        echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
         echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
         echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
 
@@ -77,8 +73,6 @@ jobs:
       id: backend-status
       run: |
         mean=${{ steps.extract-artillery.outputs.mean_latency }}
-        min=${{ steps.extract-artillery.outputs.min_latency }}
-        max=${{ steps.extract-artillery.outputs.max_latency }}
         p95=${{ steps.extract-artillery.outputs.p95_latency }}
         p99=${{ steps.extract-artillery.outputs.p99_latency }}
         # Mean
@@ -87,17 +81,6 @@ jobs:
         elif (( $(echo "$mean < 2" | bc -l) )); then mean_status="Good";
         elif (( $(echo "$mean < 5" | bc -l) )); then mean_status="Fair";
         else mean_status="Needs Major Improvement"; fi
-        # Min
-        if (( $(echo "$min == 0" | bc -l) )); then min_status="Perfect";
-        elif (( $(echo "$min < 1" | bc -l) )); then min_status="Great";
-        elif (( $(echo "$min < 2" | bc -l) )); then min_status="Good";
-        else min_status="Check Minimum"; fi
-        # Max
-        if (( $(echo "$max < 2" | bc -l) )); then max_status="Outstanding";
-        elif (( $(echo "$max < 5" | bc -l) )); then max_status="Excellent";
-        elif (( $(echo "$max < 10" | bc -l) )); then max_status="Good";
-        elif (( $(echo "$max < 20" | bc -l) )); then max_status="Fair";
-        else max_status="Needs Attention"; fi
         # p95
         if (( $(echo "$p95 < 1" | bc -l) )); then p95_status="Outstanding";
         elif (( $(echo "$p95 < 2" | bc -l) )); then p95_status="Good";
@@ -109,8 +92,6 @@ jobs:
         elif (( $(echo "$p99 < 6" | bc -l) )); then p99_status="Fair";
         else p99_status="Needs Improvement"; fi
         echo "mean_status=$mean_status" >> $GITHUB_OUTPUT
-        echo "min_status=$min_status" >> $GITHUB_OUTPUT
-        echo "max_status=$max_status" >> $GITHUB_OUTPUT
         echo "p95_status=$p95_status" >> $GITHUB_OUTPUT
         echo "p99_status=$p99_status" >> $GITHUB_OUTPUT
 
@@ -124,8 +105,6 @@ jobs:
           | Metric | Value (ms) | Status |
           |--------|------------|--------|
           | **Mean** | ${{ steps.extract-artillery.outputs.mean_latency }} | ${{ steps.backend-status.outputs.mean_status }} |
-          | **Min**  | ${{ steps.extract-artillery.outputs.min_latency }} | ${{ steps.backend-status.outputs.min_status }} |
-          | **Max**  | ${{ steps.extract-artillery.outputs.max_latency }} | ${{ steps.backend-status.outputs.max_status }} |
           | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
           | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
 
