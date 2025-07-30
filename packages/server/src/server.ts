@@ -13,6 +13,7 @@ const swaggerDocument = YAML.load(__dirname + '/../openapi.yaml');
 
 export function server() {
   const app = express();
+  app.set('trust proxy', 1); 
 
   app.use(cors());
   app.use(express.json());
