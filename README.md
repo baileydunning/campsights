@@ -233,24 +233,28 @@ Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov
 
 ## Performance, Optimization & Caching
 
-Campsights is designed for speed, efficiency, and resilience:
+**Clustered Architecture**
++ Runs in Node.js cluster mode to fully utilize all CPU cores.
++ Each worker handles its own requests, improving performance under load.
++ The master process restarts workers on failure to ensure high availability.
++ In-memory caches are per-worker for simplicity and speed.
 
-- **Cluster Architecture:**
-  - Node.js cluster mode is used to fully utilize all CPU cores by running multiple worker processes in parallel.
-  - Each worker handles its own set of requests, increasing throughput and reducing response times under heavy load.
-  - The master process automatically restarts any worker that crashes or becomes unresponsive, ensuring high availability and fault tolerance.
-  - In-memory caches are per worker, so cache hits are local to each process, but this tradeoff is outweighed by the scalability and resilience benefits of clustering.
-- **Two-Tier Data Loading:**
-  - The list endpoint (`GET /api/v1/campsites`) returns raw BLM data instantly, without elevation or weather, for maximum speed and minimal API usage.
-  - The detail endpoint (`GET /api/v1/campsites/:id`) fetches and caches elevation and weather only when a specific campsite is requested, keeping the list view fast and the detail view rich.
-- **In-Memory Caching:**
-  - Elevation data is cached by coordinates indefinitely, so repeated requests for the same location never hit the external API twice.
-  - Weather data is cached by campsite with a 10-minute TTL, ensuring forecasts are fresh but not repeatedly fetched.
-  - All caching is in-memory for ultra-fast access; no database or disk I/O is involved.
-- **Rate Limiting & Retries:**
-  - All external API calls respect published rate limits to avoid service disruption.
-  - Automatic retries with exponential backoff for transient failures, reducing the chance of user-facing errors.
-- **Graceful Degradation:**
-  - If elevation or weather APIs fail, the server still returns core campsite data, so the app remains usable.
-- **Type Safety & Error Handling:**
-  - All endpoints are fully type-checked with TypeScript, and errors are handled with clear messages and fallback logic.
+**Two-Tier Data Loading**
++ GET /api/v1/campsites returns raw BLM data instantly—no elevation or weather—for fast list rendering.
++ GET /api/v1/campsites/:id fetches and caches elevation and weather on demand for detailed views.
+
+**In-Memory Caching**
++ Elevation is cached by coordinates with no expiration.
++ Weather is cached per campsite with a 10-minute TTL.
++ All caching is in-memory for fast access with no database or disk usage.
+
+**Rate Limiting and Retries**
++ External APIs are called within documented rate limits.
++ Transient errors are retried automatically with exponential backoff.
+
+**Graceful Degradation**
++ If enrichment APIs fail, core campsite data is still returned.
+
+**Type Safety and Error Handling**
++ Fully typed with TypeScript.
++ Clear error messages and fallback logic ensure reliability.
