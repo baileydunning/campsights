@@ -1,7 +1,6 @@
 import { describe, it, beforeEach, vi, expect } from 'vitest';
-import type { Mock } from 'vitest';
 import request from 'supertest';
-import * as campsitesService from './services/campsites/campsitesService';
+import { server } from './server';
 
 vi.mock('express-rate-limit', () => ({
   __esModule: true,
@@ -13,7 +12,7 @@ vi.mock('./services/campsites/campsitesService', () => ({
   getCampsiteById: vi.fn((id) => Promise.resolve({ id, name: 'Test Campsite', elevation: 100, weather: [] })),
 }));
 
-import app from './index';
+const app = server();
 
 describe('Campsites API', () => {
   beforeEach(() => {

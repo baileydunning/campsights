@@ -11,7 +11,6 @@ interface WeatherCacheEntry {
 const weatherCache = new Map<string, WeatherCacheEntry>();
 const elevationCache = new Map<string, { elevation: number | null; timestamp: number }>();
 const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
-
 const WEATHER_CACHE_TTL = 10 * 60 * 1000;
 const ELEVATION_CACHE_TTL = 60 * 60 * 1000;
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;

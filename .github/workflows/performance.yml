@@ -18,8 +18,6 @@ jobs:
         working-directory: packages/server
     outputs:
       mean_latency: ${{ steps.extract-artillery.outputs.mean_latency }}
-      min_latency: ${{ steps.extract-artillery.outputs.min_latency }}
-      max_latency: ${{ steps.extract-artillery.outputs.max_latency }}
       p95_latency: ${{ steps.extract-artillery.outputs.p95_latency }}
       p99_latency: ${{ steps.extract-artillery.outputs.p99_latency }}
     steps:
@@ -76,20 +74,20 @@ jobs:
         p95=${{ steps.extract-artillery.outputs.p95_latency }}
         p99=${{ steps.extract-artillery.outputs.p99_latency }}
         # Mean
-        if (( $(echo "$mean < 0.5" | bc -l) )); then mean_status="Outstanding";
-        elif (( $(echo "$mean < 1" | bc -l) )); then mean_status="Excellent";
-        elif (( $(echo "$mean < 2" | bc -l) )); then mean_status="Good";
-        elif (( $(echo "$mean < 5" | bc -l) )); then mean_status="Fair";
+        if (( $(echo "$mean < 50" | bc -l) )); then mean_status="Outstanding";
+        elif (( $(echo "$mean < 150" | bc -l) )); then mean_status="Excellent";
+        elif (( $(echo "$mean < 400" | bc -l) )); then mean_status="Good";
+        elif (( $(echo "$mean < 1000" | bc -l) )); then mean_status="Fair";
         else mean_status="Needs Major Improvement"; fi
         # p95
-        if (( $(echo "$p95 < 1" | bc -l) )); then p95_status="Outstanding";
-        elif (( $(echo "$p95 < 2" | bc -l) )); then p95_status="Good";
-        elif (( $(echo "$p95 < 5" | bc -l) )); then p95_status="Fair";
+        if (( $(echo "$p95 < 100" | bc -l) )); then p95_status="Outstanding";
+        elif (( $(echo "$p95 < 300" | bc -l) )); then p95_status="Good";
+        elif (( $(echo "$p95 < 1000" | bc -l) )); then p95_status="Fair";
         else p95_status="Needs Improvement"; fi
         # p99
-        if (( $(echo "$p99 < 1.5" | bc -l) )); then p99_status="Outstanding";
-        elif (( $(echo "$p99 < 3" | bc -l) )); then p99_status="Good";
-        elif (( $(echo "$p99 < 6" | bc -l) )); then p99_status="Fair";
+        if (( $(echo "$p99 < 200" | bc -l) )); then p99_status="Outstanding";
+        elif (( $(echo "$p99 < 500" | bc -l) )); then p99_status="Good";
+        elif (( $(echo "$p99 < 1000" | bc -l) )); then p99_status="Fair";
         else p99_status="Needs Improvement"; fi
         echo "mean_status=$mean_status" >> $GITHUB_OUTPUT
         echo "p95_status=$p95_status" >> $GITHUB_OUTPUT
@@ -107,7 +105,7 @@ jobs:
           | **Mean** | ${{ steps.extract-artillery.outputs.mean_latency }} | ${{ steps.backend-status.outputs.mean_status }} |
           | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
           | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
-
+  
   client:
     needs: server
     runs-on: ubuntu-latest

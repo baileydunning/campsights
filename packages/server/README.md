@@ -1,16 +1,17 @@
 # Campsights Server
 
-This is the backend for the Campsights app, built with Express and TypeScript.  
-It provides a REST API that proxies campsite data from the Bureau of Land Management (BLM) Spider API and enhances it with elevation and weather information.
+This is the backend for the Campsights app, built with Express and TypeScript. It provides a REST API that proxies campsite data from the Bureau of Land Management (BLM) Spider API and enhances it with elevation and weather information.
 
 ## Features
 
-- **Read-only API**: Serves campsite data from the BLM Spider API
-- **Elevation Enhancement**: Adds elevation data using the Open-Elevation API
-- **Weather Integration**: Provides weather forecasts via the National Weather Service API
-- **Performance Optimized**: Only fetches elevation/weather for individual campsite requests
-- **In-Memory Caching**: Caches elevation and weather data to improve performance
-- **CORS Enabled**: Ready for frontend integration
++ **Read-only REST API:** Proxies structured BLM data from the BLM Spider API
++ Elevation Integration: Fetches elevation from the Open-Elevation API
++ **Weather Forecasts:** Uses the National Weather Service API to return detailed forecasts
++ **Two-Tier Loading:** Fast list view, rich detail view
++ **In-Memory Caching:** Reduces latency and API usage
++ **Node.js Clustering:** Multi-core scalability and automatic fault recovery
++ **Swagger Docs:** API docs available at /docs
++ **CORS-Ready:** Built for frontend integration
 
 ## Data Sources
 
