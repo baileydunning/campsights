@@ -45,10 +45,11 @@ export function server() {
   const staticPath = path.join(__dirname, "../client/dist");
   const indexHtmlPath = path.join(staticPath, "index.html");
 
+
   fs.access(indexHtmlPath)
     .then(() => {
       app.use(express.static(staticPath));
-      app.get('*', (req, res) => {
+      app.get('*', globalLimiter, (req, res) => {
         res.sendFile(path.join(staticPath, 'index.html'));
       });
       console.log("Static file serving set up successfully.");
