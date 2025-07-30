@@ -11,7 +11,6 @@ It provides a REST API that proxies campsite data from the Bureau of Land Manage
 - **Performance Optimized**: Only fetches elevation/weather for individual campsite requests
 - **In-Memory Caching**: Caches elevation and weather data to improve performance
 - **CORS Enabled**: Ready for frontend integration
-- **Full TypeScript**: Complete type safety with proper error handling
 
 ## Data Sources
 
