@@ -41,7 +41,7 @@ jobs:
     - name: Wait for backend health endpoint
       run: |
         for i in {1..30}; do
-          if curl -sSf http://localhost:8080/health; then
+          if curl -sSf http://localhost:3000/health; then
             echo "Backend is up!"; exit 0
           fi
           sleep 2
@@ -54,7 +54,7 @@ jobs:
     - name: Run Artillery load test
       id: artillery-run
       run: |
-        printf 'config:\n  target: "http://localhost:8080"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
+        printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
         artillery run --output artillery-report.json artillery.yml
 
     - name: Extract latency metrics from Artillery report
