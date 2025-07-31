@@ -26,6 +26,7 @@ COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/client/dist ./packages/client/dist
 COPY --from=builder /app/packages/client/dist/. ./packages/server/public/
 COPY packages/server/openapi.yaml ./packages/server/openapi.yaml
+RUN ls -alh ./packages/server/public
 
 WORKDIR /app/packages/server
 
