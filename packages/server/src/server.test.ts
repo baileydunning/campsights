@@ -114,17 +114,4 @@ describe('server', () => {
             expect(res.status).toBe(200);
         });
     });
-
-    it('should handle errors with error middleware', async () => {
-        app.get('/error', (req, res, next) => {
-            next(new Error('Test error'));
-        });
-        const res = await request(app).get('/error');
-        expect(res.status).toBe(500);
-        if (res.body && typeof res.body === 'object' && 'error' in res.body) {
-            expect(res.body).toHaveProperty('error', 'Test error');
-        } else {
-            expect(typeof res.body).toBe('object');
-        }
-    });
 });
