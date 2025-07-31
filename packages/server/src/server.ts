@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import fs from 'fs/promises';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
@@ -13,7 +12,7 @@ const swaggerDocument = YAML.load(__dirname + '/../openapi.yaml');
 
 export function server() {
   const app = express();
-  app.set('trust proxy', 1); 
+  app.set('trust proxy', 1);
 
   const allowedOrigins = [
     'https://campsights.onrender.com',
@@ -68,8 +67,17 @@ export function server() {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  app.use('/api', (req, res) => {
+  app.all('/api/*', (req, res) => {
     res.status(404).json({ error: "Not Found" });
+  });
+
+  const staticPath = path.resolve(__dirname, "../../../packages/client/dist");
+  const indexHtmlPath = path.join(staticPath, "index.html");
+
+  app.use(express.static(staticPath));
+  console.log(`Serving static files from ${indexHtmlPath}`);
+  app.get('*', globalLimiter, (req, res) => {
+    res.sendFile(indexHtmlPath);
   });
 
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -77,21 +85,6 @@ export function server() {
     const status = err.status || err.statusCode || 500;
     res.status(status).json({ error: err.message || "Internal Server Error" });
   });
-
-  const staticPath = path.join(__dirname, "../client/dist");
-  const indexHtmlPath = path.join(staticPath, "index.html");
-
-  fs.access(indexHtmlPath)
-    .then(() => {
-      app.use(express.static(staticPath));
-      app.get('*', globalLimiter, (req, res) => {
-        res.sendFile(path.join(staticPath, 'index.html'));
-      });
-      console.log("Static file serving set up successfully.");
-    })
-    .catch(() => {
-      console.warn("client/dist/index.html not found, skipping static file setup.");
-    });
 
   return app;
 }
