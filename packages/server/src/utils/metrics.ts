@@ -1,6 +1,7 @@
 export const performanceMetrics = {
   weatherTimeouts: 0,
   elevationTimeouts: 0,
+  campsiteTimeouts: 0,
   totalRequests: 0,
   avgResponseTime: 0,
 
@@ -10,6 +11,10 @@ export const performanceMetrics = {
 
   recordElevationTimeout() {
     this.elevationTimeouts++;
+  },
+
+  recordCampsiteTimeout() {
+    this.campsiteTimeouts++;
   },
 
   recordResponseTime(duration: number) {

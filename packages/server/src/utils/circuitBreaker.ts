@@ -11,38 +11,59 @@ export const circuitBreaker = {
   lastCampsiteReset: 0,
 
   isWeatherOpen() {
-    if (Date.now() - this.lastWeatherReset > RESET_TIME) {
-      this.weatherFailures = 0;
-      this.lastWeatherReset = Date.now();
+    if (this.weatherFailures >= MAX_FAILURES) {
+      if (Date.now() - this.lastWeatherReset > RESET_TIME) {
+        this.weatherFailures = 0;
+        this.lastWeatherReset = Date.now();
+        return false;
+      }
+      return true;
     }
-    return this.weatherFailures >= MAX_FAILURES;
+    return false;
   },
 
   isElevationOpen() {
-    if (Date.now() - this.lastElevationReset > RESET_TIME) {
-      this.elevationFailures = 0;
-      this.lastElevationReset = Date.now();
+    if (this.elevationFailures >= MAX_FAILURES) {
+      if (Date.now() - this.lastElevationReset > RESET_TIME) {
+        this.elevationFailures = 0;
+        this.lastElevationReset = Date.now();
+        return false;
+      }
+      return true;
     }
-    return this.elevationFailures >= MAX_FAILURES;
+    return false;
   },
 
   isCampsiteOpen() {
-    if (Date.now() - this.lastCampsiteReset > RESET_TIME) {
-      this.campsiteFailures = 0;
-      this.lastCampsiteReset = Date.now();
+    if (this.campsiteFailures >= MAX_FAILURES) {
+      if (Date.now() - this.lastCampsiteReset > RESET_TIME) {
+        this.campsiteFailures = 0;
+        this.lastCampsiteReset = Date.now();
+        return false;
+      }
+      return true;
     }
-    return this.campsiteFailures >= MAX_FAILURES;
+    return false;
   },
 
   recordWeatherFailure() {
     this.weatherFailures++;
+    if (this.weatherFailures === MAX_FAILURES) {
+      this.lastWeatherReset = Date.now();
+    }
   },
 
   recordElevationFailure() {
     this.elevationFailures++;
+    if (this.elevationFailures === MAX_FAILURES) {
+      this.lastElevationReset = Date.now();
+    }
   },
 
   recordCampsiteFailure() {
     this.campsiteFailures++;
+    if (this.campsiteFailures === MAX_FAILURES) {
+      this.lastCampsiteReset = Date.now();
+    }
   }
 };

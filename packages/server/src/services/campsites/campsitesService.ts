@@ -53,10 +53,16 @@ export const getCampsiteById = async (
   id: string
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> => {
   const startTime = Date.now();
+  let didTimeout = false;
+  const timeoutMs = process.env.NODE_ENV === 'production' ? 15000 : 4000;
   const result = await Promise.race([
     getCampsiteByIdInternal(id),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), process.env.NODE_ENV === 'production' ? 15000 : 4000))
+    new Promise<null>((resolve) => setTimeout(() => {
+      didTimeout = true;
+      resolve(null);
+    }, timeoutMs))
   ]);
+  if (didTimeout) performanceMetrics.recordCampsiteTimeout();
   performanceMetrics.recordResponseTime(Date.now() - startTime);
   return result;
 };
