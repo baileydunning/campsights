@@ -12,7 +12,6 @@ dotenv.config();
 const swaggerDocument = YAML.load(__dirname + '/../openapi.yaml');
 
 export function server() {
-
   const app = express();
   app.set('trust proxy', 1); 
 
@@ -62,7 +61,7 @@ export function server() {
   });
 
   app.use(globalLimiter);
-  app.use('/api/v1/campsites', campsitesRouter);
+
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   app.get('/health', (req, res) => {
@@ -81,7 +80,6 @@ export function server() {
 
   const staticPath = path.join(__dirname, "../client/dist");
   const indexHtmlPath = path.join(staticPath, "index.html");
-
 
   fs.access(indexHtmlPath)
     .then(() => {
