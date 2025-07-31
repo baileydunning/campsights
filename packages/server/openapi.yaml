@@ -2,8 +2,11 @@ openapi: 3.0.3
 info:
   title: Campsights API
   version: 2.0.0
+
   description: |
     API for Campsights app - provides campsite data from the Bureau of Land Management (BLM) Spider API with enhanced elevation and weather information.
+
+    **CORS access is restricted:** Only requests from the official production and development frontend origins are allowed (https://campsights.onrender.com, http://localhost:5173 and http://localhost:4000).
 
     ## Data Sources
     - **Campsites**: Bureau of Land Management Spider API (https://blm-spider.onrender.com/api/v1/campsites)
@@ -56,6 +59,8 @@ paths:
                 source: "BLM"
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -79,6 +84,8 @@ paths:
                 $ref: '#/components/schemas/CampsiteWithWeather'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
@@ -279,6 +286,12 @@ components:
             $ref: '#/components/schemas/Error'
     NotFound:
       description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden - Invalid Origin or not allowed
       content:
         application/json:
           schema:
