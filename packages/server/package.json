@@ -8,9 +8,8 @@
     "build": "tsc",
     "dev": "nodemon src/index.ts",
     "start": "ts-node src/index.ts",
-    "start:prod": "node dist/index.js",
-    "test": "vitest run",
-    "start:fresh": "ts-node src/index.ts --force-seed"
+    "start:prod": "node --max-old-space-size=512 dist/index.js",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
