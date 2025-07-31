@@ -86,7 +86,9 @@ jobs:
               echo "API attempt $attempt failed, retrying in 10 seconds..."
               sleep 10
             fi
-          done    - name: Test frontend is being served
+          done
+
+    - name: Test frontend is being served
       run: |
         curl -f http://localhost:4000
 
