@@ -2,7 +2,6 @@ openapi: 3.0.3
 info:
   title: Campsights API
   version: 2.0.0
-
   description: |
     API for Campsights app - provides campsite data from the Bureau of Land Management (BLM) Spider API with enhanced elevation and weather information.
 
