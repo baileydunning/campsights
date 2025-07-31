@@ -9,7 +9,6 @@ This is the backend for the Campsights app, built with Express and TypeScript. I
 + **Weather Forecasts:** Uses the National Weather Service API to return detailed forecasts
 + **Two-Tier Loading:** Fast list view, rich detail view
 + **In-Memory Caching:** Reduces latency and API usage
-+ **Node.js Clustering:** Multi-core scalability and automatic fault recovery
 + **Swagger Docs:** API docs available at /docs
 + **CORS-Ready:** Built for frontend integration
 
