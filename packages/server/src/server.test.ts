@@ -82,6 +82,14 @@ describe('server', () => {
         expect([200, 404]).toContain(res.status);
     });
 
+    it('should reject API requests with an invalid Origin header', async () => {
+        const res = await request(app)
+            .get('/api/v1/campsites')
+            .set('Origin', 'https://malicious-site.com');
+        expect(res.status).toBe(403);
+        expect(res.body).toHaveProperty('error', 'API access denied: invalid origin');
+    });
+
     describe('static file serving', () => {
         beforeEach(async () => {
             const { default: fsMock } = await import('fs/promises');
