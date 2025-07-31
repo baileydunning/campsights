@@ -1,114 +1,89 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-let mockFetchWithRetry: any;
+const mockFetchWithRetry = vi.fn();
+const mockIsElevationOpen = vi.fn();
+const mockRecordElevationFailure = vi.fn();
+const mockRecordElevationTimeout = vi.fn();
+
+vi.mock('../../utils/fetchWithRetry', () => ({
+  fetchWithRetry: mockFetchWithRetry,
+}));
+
+vi.mock('../../utils/circuitBreaker', () => ({
+  circuitBreaker: {
+    isElevationOpen: mockIsElevationOpen,
+    recordElevationFailure: mockRecordElevationFailure,
+  },
+}));
+
+vi.mock('../../utils/metrics', () => ({
+  performanceMetrics: {
+    recordElevationTimeout: mockRecordElevationTimeout,
+  },
+}));
+
 let elevationService: typeof import('./elevationService');
-let elevationCache: Map<string, number | null>;
-let __clearElevationCache: () => void;
 
-beforeEach(async () => {
-  mockFetchWithRetry = vi.fn();
-  vi.resetModules();
-  vi.doMock('../../utils/fetchWithRetry', () => ({ fetchWithRetry: mockFetchWithRetry }));
-  elevationService = await import('./elevationService');
-  elevationCache = elevationService.elevationCache;
-  __clearElevationCache = elevationService.__clearElevationCache;
-});
+describe('getElevation', () => {
+    const lat = 40.123456;
+    const lng = -105.123456;
+    const cacheKey = '40.123,-105.123';
 
-const sampleLocations = [
-    { latitude: 10, longitude: 20 },
-    { latitude: 30, longitude: 40 },
-];
-
-const sampleElevations = [
-    { elevation: 100, latitude: 10, longitude: 20 },
-    { elevation: 200, latitude: 30, longitude: 40 },
-];
-
-describe('elevationService', () => {
-    beforeEach(() => {
-        __clearElevationCache();
+    beforeEach(async () => {
+        elevationService = await import('./elevationService');
+        (elevationService as any).elevationCache.clear();
+        (elevationService as any).preWarmCache.clear();
         vi.clearAllMocks();
+        mockIsElevationOpen.mockReturnValue(false);
     });
 
-    it('returns elevations from in-memory cache', async () => {
-        // Manually set cache for test
-        elevationCache.set('10,20', 123);
-        const result = await elevationService.getElevations([{ latitude: 10, longitude: 20 }]);
-        expect(result).toEqual([123]);
+    it('returns cached elevation if present and not expired', async () => {
+        const now = Date.now();
+        (elevationService as any).elevationCache.set(cacheKey, { elevation: 1234, timestamp: now });
+        const result = await elevationService.getElevation(lat, lng);
+        expect(result).toBe(1234);
         expect(mockFetchWithRetry).not.toHaveBeenCalled();
     });
 
-    it('fetches from API when not in cache', async () => {
-        mockFetchWithRetry.mockResolvedValueOnce({
-            json: async () => ({ results: sampleElevations }),
-        });
-
-        const result = await elevationService.getElevations(sampleLocations);
-        expect(result).toEqual([100, 200]);
-        expect(mockFetchWithRetry).toHaveBeenCalledWith(
-            'https://api.open-elevation.com/api/v1/lookup',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locations: sampleLocations }),
-            }
-        );
-        
-        // Should now be cached
-        expect(elevationCache.get('10,20')).toBe(100);
-        expect(elevationCache.get('30,40')).toBe(200);
+    it('returns null if circuit breaker is open', async () => {
+        mockIsElevationOpen.mockReturnValue(true);
+        const result = await elevationService.getElevation(lat, lng);
+        expect(result).toBeNull();
+        expect(mockFetchWithRetry).not.toHaveBeenCalled();
     });
 
-    it('returns null if API fails', async () => {
-        mockFetchWithRetry.mockRejectedValueOnce(new Error('API error'));
-        const result = await elevationService.getElevations([{ latitude: 10, longitude: 20 }]);
-        expect(result).toEqual([null]);
-        
-        // Should not cache failed results to allow retries
-        expect(elevationCache.has('10,20')).toBe(false);
+    it('returns null if preWarmCache has the key', async () => {
+        (elevationService as any).preWarmCache.add(cacheKey);
+        const result = await elevationService.getElevation(lat, lng);
+        expect(result).toBeNull();
+        expect(mockFetchWithRetry).not.toHaveBeenCalled();
     });
 
-    it('getElevation returns single elevation', async () => {
-        elevationCache.set('10,20', 789);
-        const result = await elevationService.getElevation(10, 20);
-        expect(result).toBe(789);
+    it('fetches elevation and caches it if not cached', async () => {
+        const mockJson = vi.fn().mockResolvedValue({ results: [{ elevation: 5678 }] });
+        mockFetchWithRetry.mockResolvedValue({ json: mockJson });
+        const result = await elevationService.getElevation(lat, lng);
+        expect(result).toBe(5678);
+        expect(mockFetchWithRetry).toHaveBeenCalled();
+        const cached = (elevationService as any).elevationCache.get(cacheKey);
+        expect(cached.elevation).toBe(5678);
     });
 
-    it('caches API results in memory', async () => {
-        mockFetchWithRetry.mockResolvedValueOnce({
-            json: async () => ({ results: [sampleElevations[0]] }),
-        });
-
-        const result1 = await elevationService.getElevations([{ latitude: 10, longitude: 20 }]);
-        expect(result1).toEqual([100]);
-        
-        // Should now be in in-memory cache
-        const result2 = await elevationService.getElevations([{ latitude: 10, longitude: 20 }]);
-        expect(result2).toEqual([100]);
-        expect(mockFetchWithRetry).toHaveBeenCalledTimes(1); // Only called once due to caching
+    it('returns null and handles error if fetch fails', async () => {
+        mockFetchWithRetry.mockRejectedValue(new Error('Network error'));
+        const result = await elevationService.getElevation(lat, lng);
+        expect(result).toBeNull();
+        expect(mockRecordElevationFailure).toHaveBeenCalled();
+        expect(mockRecordElevationTimeout).toHaveBeenCalled();
+        expect((elevationService as any).preWarmCache.has(cacheKey)).toBe(true);
     });
 
-    it('handles mixed cached and uncached locations', async () => {
-        // Pre-populate cache with one location
-        elevationCache.set('10,20', 500);
-        
-        mockFetchWithRetry.mockResolvedValueOnce({
-            json: async () => ({ results: [sampleElevations[1]] }), // Only returns elevation for 30,40
-        });
-
-        const result = await elevationService.getElevations([
-            { latitude: 10, longitude: 20 }, // cached
-            { latitude: 30, longitude: 40 }, // will be fetched
-        ]);
-        
-        expect(result).toEqual([500, 200]);
-        expect(mockFetchWithRetry).toHaveBeenCalledWith(
-            'https://api.open-elevation.com/api/v1/lookup',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locations: [{ latitude: 30, longitude: 40 }] }),
-            }
-        );
+    it('returns null if API returns no results', async () => {
+        const mockJson = vi.fn().mockResolvedValue({ results: [] });
+        mockFetchWithRetry.mockResolvedValue({ json: mockJson });
+        const result = await elevationService.getElevation(lat, lng);
+        expect(result).toBeNull();
+        const cached = (elevationService as any).elevationCache.get(cacheKey);
+        expect(cached.elevation).toBeNull();
     });
 });

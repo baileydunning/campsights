@@ -1,145 +1,146 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// Mock global fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
-const getElevationMock = vi.fn();
-const getWeatherForecastMock = vi.fn();
-
-vi.mock('../elevation/elevationService', () => ({ getElevation: getElevationMock }));
-vi.mock('../weather/weatherService', () => ({ getWeatherForecast: getWeatherForecastMock }));
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { Campsite } from '../../models/campsiteModel';
+import { WeatherPeriod } from '../../models/weatherModel';
 
 let campsitesService: typeof import('./campsitesService');
 
-beforeEach(async () => {
-  vi.resetModules();
-  mockFetch.mockReset();
-  getElevationMock.mockReset();
-  getWeatherForecastMock.mockReset();
-  campsitesService = await import('./campsitesService');
-});
+vi.mock('../elevation/elevationService', () => ({
+  getElevation: vi.fn().mockResolvedValue(1234),
+}));
 
-describe('Campsites Service', () => {
+vi.mock('../weather/weatherService', () => ({
+  getWeather: vi.fn().mockResolvedValue([{ name: 'sunny' }]),
+}));
+
+vi.mock('../../utils/metrics', () => ({
+  performanceMetrics: { recordResponseTime: vi.fn() },
+}));
+
+vi.mock('../../utils/cacheUtils', () => ({
+  cacheUtils: () => vi.fn(),
+}));
+
+const mockCampsite: Campsite = {
+  id: 'abc123',
+  name: 'Test Site',
+  lat: 40,
+  lng: -105,
+  elevation: null,
+} as Campsite;
+
+const mockWeather: WeatherPeriod[] = [{ name: 'sunny' } as WeatherPeriod];
+
+describe('campsitesService', () => {
+  let originalEnv: NodeJS.ProcessEnv;
+
+  beforeEach(async () => {
+    originalEnv = { ...process.env };
+    vi.resetModules();
+    campsitesService = await import('./campsitesService');
+    campsitesService.__clearCampsiteCache();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    vi.restoreAllMocks();
+  });
+
   describe('getCampsites', () => {
-    it('should return filtered campsites from BLM API', async () => {
-      const mockCampsites = [
-        { id: '1', lat: 10, lng: 20, name: 'Test Campsite 1' },
-        { id: '2', lat: 30, lng: 40, name: 'Test Campsite 2' },
-        { id: '3', lat: null, lng: 50, name: 'Invalid Campsite' }, // Should be filtered out
-      ];
-      
-      mockFetch.mockResolvedValueOnce({
+    it('fetches and filters valid campsites', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockCampsites)
-      });
+        json: vi.fn().mockResolvedValue([
+          { ...mockCampsite, lat: 40, lng: -105 },
+          { ...mockCampsite, lat: 'bad', lng: -105 },
+        ]),
+      } as any);
 
       const result = await campsitesService.getCampsites();
-
-      expect(mockFetch).toHaveBeenCalledWith('https://blm-spider.onrender.com/api/v1/campsites', expect.objectContaining({
-        signal: expect.any(AbortSignal),
-        keepalive: true,
-        headers: expect.objectContaining({
-          'Connection': 'keep-alive',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'User-Agent': 'Campsights-API/1.0'
-        })
-      }));
-      expect(result).toEqual([
-        { id: '1', lat: 10, lng: 20, name: 'Test Campsite 1' },
-        { id: '2', lat: 30, lng: 40, name: 'Test Campsite 2' }
-      ]);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('abc123');
     });
 
-    it('should throw error if BLM API fails', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('API failure'));
-      
-      await expect(campsitesService.getCampsites()).rejects.toThrow('API failure');
+    it('throws on fetch error', async () => {
+      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 } as any);
+      await expect(campsitesService.getCampsites()).rejects.toThrow('BLM API error: 500');
     });
   });
 
   describe('getCampsiteById', () => {
-    it('should return campsite with elevation and weather', async () => {
-      const mockCampsite = { id: '123', lat: 10, lng: 20, name: 'Test Campsite', elevation: null };
-      
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockCampsite)
-      });
-      
-      getElevationMock.mockResolvedValue(100);
-      const fakeWeather = [{ 
-        number: 1, 
-        name: 'Test', 
-        startTime: '', 
-        endTime: '', 
-        isDaytime: true, 
-        temperature: 70, 
-        temperatureUnit: 'F', 
-        windSpeed: '5 mph', 
-        windDirection: 'N', 
-        shortForecast: 'Sunny', 
-        detailedForecast: 'Clear skies' 
-      }];
-      getWeatherForecastMock.mockResolvedValue(fakeWeather);
-
-      const result = await campsitesService.getCampsiteById('123');
-
-      expect(mockFetch).toHaveBeenCalledWith('https://blm-spider.onrender.com/api/v1/campsites/123', expect.objectContaining({
-        signal: expect.any(AbortSignal),
-        keepalive: true,
-        headers: expect.objectContaining({
-          'Connection': 'keep-alive',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'User-Agent': 'Campsights-API/1.0'
-        })
-      }));
-      expect(getElevationMock).toHaveBeenCalledWith(10, 20);
-      expect(getWeatherForecastMock).toHaveBeenCalledWith(mockCampsite);
-      expect(result).toEqual({ 
-        ...mockCampsite, 
-        elevation: 100, 
-        weather: fakeWeather 
-      });
-    });
-
-    it('should use existing elevation if available', async () => {
-      const mockCampsite = { id: '123', lat: 10, lng: 20, name: 'Test Campsite', elevation: 50 };
-      
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockCampsite)
-      });
-      
-      const fakeWeather = [];
-      getWeatherForecastMock.mockResolvedValue(fakeWeather);
-
-      const result = await campsitesService.getCampsiteById('123');
-
-      expect(getElevationMock).not.toHaveBeenCalled(); // Should not fetch elevation if already exists
-      expect(result).toEqual({ 
-        ...mockCampsite, 
-        elevation: 50, 
-        weather: fakeWeather 
-      });
-    });
-
-    it('should return null if campsite does not exist', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404
-      });
-      
-      const result = await campsitesService.getCampsiteById('nope');
-      
+    it('returns null for invalid id', async () => {
+      const result = await campsitesService.getCampsiteById('bad id!');
       expect(result).toBeNull();
     });
 
-    it('should return null on fetch error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('API failure'));
-      
-      const result = await campsitesService.getCampsiteById('123');
+    it('fetches, caches, and returns campsite with weather and elevation', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ ...mockCampsite }),
+      } as any);
+
+      const result = await campsitesService.getCampsiteById('abc123');
+      expect(result).toMatchObject({
+        id: 'abc123',
+        name: 'Test Site',
+        lat: 40,
+        lng: -105,
+        elevation: 1234,
+        weather: mockWeather,
+      });
+
+      (global.fetch as any).mockClear();
+      await campsitesService.getCampsiteById('abc123');
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('returns null if fetch fails', async () => {
+      global.fetch = vi.fn().mockResolvedValue({ ok: false } as any);
+      const result = await campsitesService.getCampsiteById('abc123');
       expect(result).toBeNull();
+    });
+
+    it('handles weather/elevation failures gracefully', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockCampsite),
+      } as any);
+
+      const weatherService = await import('../weather/weatherService');
+      const elevationService = await import('../elevation/elevationService');
+      vi.mocked(weatherService.getWeather).mockRejectedValueOnce(new Error('fail'));
+      vi.mocked(elevationService.getElevation).mockRejectedValueOnce(new Error('fail'));
+
+      const result = await campsitesService.getCampsiteById('abc123');
+      expect(result?.weather).toEqual([]);
+      expect(result?.elevation).toBeNull();
+    });
+  });
+
+  describe('campsiteCache', () => {
+    it('clears cache with __clearCampsiteCache', () => {
+      campsitesService.campsiteCache.set('foo', { campsite: mockCampsite, timestamp: Date.now() });
+      campsitesService.__clearCampsiteCache();
+      expect(campsitesService.campsiteCache.size).toBe(0);
+    });
+  });
+
+  describe('NODE_ENV !== "test" interval', () => {
+    it('does not set interval if NODE_ENV is "test"', async () => {
+      process.env.NODE_ENV = 'test';
+      const setIntervalSpy = vi.spyOn(global, 'setInterval');
+      vi.resetModules();
+      await import('./campsitesService');
+      expect(setIntervalSpy).not.toHaveBeenCalled();
+      setIntervalSpy.mockRestore();
+    });
+
+    it('sets interval if NODE_ENV is not "test"', async () => {
+      process.env.NODE_ENV = 'production';
+      const setIntervalSpy = vi.spyOn(global, 'setInterval');
+      vi.resetModules();
+      await import('./campsitesService');
+      expect(setIntervalSpy).toHaveBeenCalled();
+      setIntervalSpy.mockRestore();
     });
   });
 });
