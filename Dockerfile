@@ -24,7 +24,7 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/client/dist ./packages/client/dist
-COPY --from=builder /app/packages/client/dist ./packages/server/public
+COPY --from=builder /app/packages/client/dist/. ./packages/server/public/
 
 WORKDIR /app/packages/server
 
