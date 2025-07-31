@@ -2,10 +2,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY lerna.json ./
-COPY packages/client/package*.json ./packages/client/
-COPY packages/server/package*.json ./packages/server/
+COPY package.json package-lock.json lerna.json ./
+COPY packages/client/package.json packages/client/package-lock.json ./packages/client/
+COPY packages/server/package.json packages/server/package-lock.json ./packages/server/
 
 RUN npm ci
 
@@ -14,14 +13,13 @@ COPY packages/server ./packages/server
 
 RUN npx lerna run build --concurrency 2
 
-RUN mkdir -p ./client/dist && cp -r /app/packages/client/dist ./client/
-
 FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY packages/server/package*.json ./packages/server/
+COPY package.json package-lock.json ./
+COPY packages/server/package.json packages/server/package-lock.json ./packages/server/
+
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
