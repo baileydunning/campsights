@@ -3,15 +3,20 @@ import { Campsite } from '../../models/campsiteModel';
 import { WeatherPeriod } from '../../models/weatherModel';
 import { circuitBreaker } from '../../utils/circuitBreaker';
 import { performanceMetrics } from '../../utils/metrics';
+import { cacheUtils } from '../../utils/cacheUtils';
 
 const WEATHER_CACHE_TTL = 10 * 60 * 1000;
 const weatherCache = new Map<string, { weather: WeatherPeriod[]; timestamp: number }>();
 const preWarmCache = new Set<string>();
+const cleanupWeatherCache = cacheUtils(weatherCache, WEATHER_CACHE_TTL);
 
 function getCacheKey(lat: number, lng: number): string {
   return `${Math.round(lat * 100) / 100},${Math.round(lng * 100) / 100}`;
 }
 
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(cleanupWeatherCache, 10 * 60 * 1000);
+}
 
 export async function getWeather(lat: number, lng: number, id?: string): Promise<WeatherPeriod[]> {
   const cacheKey = getCacheKey(lat, lng);

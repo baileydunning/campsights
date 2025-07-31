@@ -1,6 +1,4 @@
 import { Campsite } from '../../models/campsiteModel';
-import { getElevation } from '../elevation/elevationService';
-import { getWeather } from '../weather/weatherService';
 import { WeatherPeriod } from '../../models/weatherModel';
 import { performanceMetrics } from '../../utils/metrics';
 import { cacheUtils } from '../../utils/cacheUtils';
@@ -9,8 +7,12 @@ const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
 const API_TIMEOUT = process.env.NODE_ENV === 'production' ? 5000 : 2000;
 const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
 
-const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
+export const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
 const cleanupCampsiteCache = cacheUtils(campsiteCache, CAMPSITE_CACHE_TTL);
+
+export function __clearCampsiteCache() {
+  campsiteCache.clear();
+}
 
 if (process.env.NODE_ENV !== 'test') {
   setInterval(cleanupCampsiteCache, 5 * 60 * 1000);
@@ -76,12 +78,15 @@ async function getCampsiteByIdInternal(
     campsiteCache.set(id, { campsite: raw, timestamp: now });
   }
 
+  const weatherService = await import('../weather/weatherService');
+  const elevationService = await import('../elevation/elevationService');
+
   const [weatherResult, elevationResult] = await Promise.allSettled([
-    getWeather(raw.lat, raw.lng, raw.id),
+    weatherService.getWeather(raw.lat, raw.lng, raw.id),
     raw.elevation != null
       ? Promise.resolve(raw.elevation)
       : (raw.lat != null && raw.lng != null
-          ? getElevation(raw.lat, raw.lng)
+          ? elevationService.getElevation(raw.lat, raw.lng)
           : Promise.resolve(null)),
   ]);
 

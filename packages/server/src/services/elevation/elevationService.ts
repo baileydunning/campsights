@@ -2,10 +2,21 @@ import { fetchWithRetry } from '../../utils/fetchWithRetry';
 import { Elevation } from '../../models/elevationModel';
 import { circuitBreaker } from '../../utils/circuitBreaker';
 import { performanceMetrics } from '../../utils/metrics';
+import { cacheUtils } from '../../utils/cacheUtils';
 
 const ELEVATION_CACHE_TTL = 60 * 60 * 1000;
-const elevationCache = new Map<string, { elevation: number | null; timestamp: number }>();
-const preWarmCache = new Set<string>();
+export const elevationCache = new Map<string, { elevation: number | null; timestamp: number }>();
+export const preWarmCache = new Set<string>();
+const cleanupElevationCache = cacheUtils(elevationCache, ELEVATION_CACHE_TTL);
+
+export function __clearElevationCache() {
+  elevationCache.clear();
+  preWarmCache.clear();
+}
+
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(cleanupElevationCache, 10 * 60 * 1000); 
+}
 
 function getCacheKey(lat: number, lng: number): string {
   return `${Math.round(lat * 1000) / 1000},${Math.round(lng * 1000) / 1000}`;
