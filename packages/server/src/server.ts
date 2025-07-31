@@ -78,7 +78,7 @@ export function server() {
     res.status(status).json({ error: err.message || "Internal Server Error" });
   });
 
-  const staticPath = path.join(__dirname, "../client/dist");
+  const staticPath = path.join(__dirname, "../public");
   const indexHtmlPath = path.join(staticPath, "index.html");
 
   fs.access(indexHtmlPath)
@@ -90,7 +90,7 @@ export function server() {
       console.log("Static file serving set up successfully.");
     })
     .catch(() => {
-      console.warn("client/dist/index.html not found, skipping static file setup.");
+      console.warn("public/index.html not found, skipping static file setup.");
     });
 
   return app;
