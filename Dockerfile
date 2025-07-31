@@ -25,7 +25,7 @@ COPY packages/server/package*.json ./packages/server/
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
-COPY --from=builder /app/packages/server/client ./packages/server/client
+COPY --from=builder /app/packages/client/dist ./packages/client/dist
 
 WORKDIR /app/packages/server
 
