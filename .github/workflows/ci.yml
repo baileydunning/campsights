@@ -36,8 +36,8 @@ jobs:
     - name: Start app using docker-compose
       run: docker-compose up --build -d --remove-orphans
 
-      - name: Wait for server and test API
-        run: |
+    - name: Wait for server and test API
+      run: |
           echo "Waiting for server to start..."
           for i in {1..30}; do
             if curl -f http://localhost:4000/health 2>/dev/null; then
