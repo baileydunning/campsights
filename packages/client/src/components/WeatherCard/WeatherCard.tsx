@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Campsite } from "../../types/Campsite";
 import { WeatherPeriod } from "../../types/Weather";
 import { getCampsiteById } from "../../api/Campsites";
 import "./WeatherCard.css";
 
 interface WeatherCardProps {
   campsiteId: string;
-  weatherData?: WeatherPeriod[]; 
+  weatherData?: WeatherPeriod[];
 }
 
 const WeatherCard: React.FC<WeatherCardProps> = ({ campsiteId, weatherData }) => {
@@ -46,7 +45,13 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ campsiteId, weatherData }) =>
     };
   }, [campsiteId, weatherData]);
 
-  if (loading) return <div className="weather-period-card weather-loading">Loading weather...</div>;
+  if (loading) {
+    return (
+      <div className="weather-period-card weather-loading">
+        <div className="spinner" />
+      </div>
+    );
+  }
   if (error) return <div className="weather-period-card error">{error}</div>;
   if (!weather || weather.length === 0) {
     return <div className="weather-period-card">No weather data available</div>;
