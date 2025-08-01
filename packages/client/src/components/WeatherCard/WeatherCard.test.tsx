@@ -33,10 +33,10 @@ describe("WeatherCard", () => {
         vi.clearAllMocks();
     });
 
-    it("renders loading state initially", () => {
-        (CampsitesApi.getCampsiteById as any).mockReturnValue(new Promise(() => {}));
+    it("renders loading spinner initially", () => {
+        (CampsitesApi.getCampsiteById as any).mockReturnValue(new Promise(() => { }));
         render(<WeatherCard campsiteId="123" />);
-        expect(screen.getByText(/loading weather/i)).toBeInTheDocument();
+        expect(document.querySelector(".spinner")).toBeInTheDocument();
     });
 
     it("renders weather data when fetched", async () => {
