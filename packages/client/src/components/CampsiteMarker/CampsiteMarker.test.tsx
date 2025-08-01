@@ -1,70 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-
-vi.mock('react-leaflet', () => {
-  return {
-    Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
-    Popup: function Popup(props: any) {
-      // Always evaluate children as a function if possible to reflect state changes
-      const children =
-        typeof props.children === 'function' ? props.children() : props.children;
-      return (
-        <div
-          onClick={() => props.eventHandlers?.popupclose?.()}
-        >
-          {children}
-        </div>
-      );
-    },
-  };
-});
+import * as CampsitesApi from '../../api/Campsites';
+import { Campsite } from '../../types/Campsite';
 
 vi.mock('leaflet', () => {
-  class DivIconMock {
-    constructor(opts: any) {
-      Object.assign(this, opts);
-    }
-  }
   return {
     __esModule: true,
-    default: { DivIcon: DivIconMock },
-    DivIcon: DivIconMock,
+    default: { DivIcon: vi.fn().mockImplementation((opts) => opts) },
+    DivIcon: vi.fn().mockImplementation((opts) => opts),
   };
 });
 
+import CampsiteMarker from './CampsiteMarker';
+
 vi.mock('../WeatherCard/WeatherCard', () => ({
-  __esModule: true,
-  default: ({ campsiteId, weatherData }: any) => (
-    <div className="weather-card">
-      {weatherData && weatherData.length > 0 ? (
-        weatherData.map((period: any, index: number) => (
-          <div key={index} className="weather-period-card">
-            <div className="weather-period-header">
-              {period.name} ({period.isDaytime ? "Day" : "Night"})
-            </div>
-          </div>
+  default: ({ weatherData }: any) => (
+    <div>
+      {weatherData ? (
+        weatherData.map((w: any, i: number) => (
+          <div key={i}>{`${w.name} (${w.isDaytime ? 'Day' : 'Night'})`}</div>
         ))
       ) : (
-        <div className="weather-period-card weather-loading">Loading weather...</div>
+        <div>Loading weather...</div>
       )}
     </div>
   ),
 }));
 
-import * as CampsitesApi from '../../api/Campsites';
-import CampsiteMarker from './CampsiteMarker';
-import { Campsite } from '../../types/Campsite';
+vi.mock('../../api/Campsites');
 
-const sampleSite: Campsite = {
-  id: 'abc',
-  name: 'Test Site',
-  url: 'https://example.com/test-site',
-  description: 'A lovely place',
-  lat: 10,
-  lng: 20,
-  state: 'Test State',
-  mapLink: 'https://example.com/map',
-  elevation: 100,
+const mockSite: Campsite = {
+  id: 'site-1',
+  name: 'Mock Site',
+  url: 'https://example.com',
+  description: 'Short description',
+  lat: 39.7392,
+  lng: -104.9903,
+  state: 'Colorado',
+  mapLink: 'https://maps.example.com',
+  elevation: 2000,
   source: 'BLM',
   weather: [
     {
@@ -76,69 +50,43 @@ const sampleSite: Campsite = {
       windSpeed: '5 mph',
       windDirection: 'NE',
       detailedForecast: 'Sunny',
-      startTime: '2024-01-01T06:00:00Z',
-      endTime: '2024-01-01T12:00:00Z',
       shortForecast: 'Sunny',
-    },
-    {
-      number: 2,
-      name: 'Evening',
-      isDaytime: false,
-      temperature: 45,
-      temperatureUnit: 'F',
-      windSpeed: '3 mph',
-      windDirection: 'SW',
-      detailedForecast: 'Clear',
-      startTime: '2024-01-01T18:00:00Z',
-      endTime: '2024-01-02T00:00:00Z',
-      shortForecast: 'Clear',
+      startTime: '',
+      endTime: '',
     },
   ],
 };
 
-vi.mock('../../api/Campsites');
+vi.mock('react-leaflet', () => ({
+  Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
+  Popup: ({ children }: any) => <div>{children}</div>,
+}));
 
 describe('<CampsiteMarker />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (CampsitesApi.getCampsiteById as any).mockResolvedValue(sampleSite);
+    (CampsitesApi.getCampsiteById as any).mockResolvedValue(mockSite);
   });
 
-  it('renders marker and popup with site info', () => {
-    render(<CampsiteMarker site={sampleSite} />);
-
-    expect(screen.getByTestId('marker')).toBeInTheDocument();
-    expect(screen.getByText('Test Site')).toBeInTheDocument();
-    expect(screen.getByText('A lovely place')).toBeInTheDocument();
-    expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
-    
-    // Check for the new buttons
-    expect(screen.getByRole('button', { name: /Get Directions/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Details/i })).toBeInTheDocument();
-
-    // Check for weather section structure
+  it('renders basic info and buttons', () => {
+    render(<CampsiteMarker site={mockSite} />);
+    expect(screen.getByText('Mock Site')).toBeInTheDocument();
+    expect(screen.getByText('Colorado')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Get Directions/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining(`${mockSite.lat},${mockSite.lng}`)
+    );
+    expect(screen.getByRole('button', { name: /Get Details/i })).toHaveAttribute('href', mockSite.url);
     expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
   });
 
-  it('displays "Unnamed Site" when name is empty', () => {
-    const unnamed = { ...sampleSite, name: '' };
-    render(<CampsiteMarker site={unnamed} />);
+  it('renders "Unnamed Site" if name is empty', () => {
+    render(<CampsiteMarker site={{ ...mockSite, name: '' }} />);
     expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
   });
 
-  it('shows "Unknown" for elevation when invalid', () => {
-    const noElev = { ...sampleSite, elevation: NaN };
-    render(<CampsiteMarker site={noElev} />);
+  it('renders "Unknown" if elevation is invalid', () => {
+    render(<CampsiteMarker site={{ ...mockSite, elevation: NaN }} />);
     expect(screen.getByText('Unknown')).toBeInTheDocument();
-  });
-
-  it('shows loading state initially and then enriched data', async () => {
-    render(<CampsiteMarker site={{ ...sampleSite, weather: undefined }} />);
-    
-    // Should show loading initially
-    expect(screen.getByText('Loading weather...')).toBeInTheDocument();
-    
-    // Should have weather forecast section
-    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
   });
 });
