@@ -2,7 +2,8 @@ export async function fetchWithRetry(
   url: string,
   init: RequestInit = {},
   maxRetries = 2,
-  retryDelayMs = 500
+  retryDelayMs = 500,
+  errorMessage?: (status: number) => string
 ): Promise<Response> {
   const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
   let lastError: Error = new Error('fetchWithRetry: All attempts failed');
@@ -11,11 +12,12 @@ export async function fetchWithRetry(
     try {
       const res = await fetch(url, init);
       if (res.ok) return res;
-      if (res.status === 429) {
+      const status = typeof res.status === 'number' ? res.status : 0;
+      if (status === 429) {
         lastError = new Error(`API responded with status 429 (Too Many Requests)`);
         break; // Stop retrying on 429
       }
-      lastError = new Error(`API responded with status ${res.status}`);
+      lastError = new Error(errorMessage ? errorMessage(status) : `API responded with status ${status}`);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
     }

@@ -43,8 +43,16 @@ if (process.env.NODE_ENV !== 'test') {
 
 export const getCampsites = async (): Promise<Campsite[]> => {
   await rateLimit();
-  const response = await fetchWithRetry(`${BLM_API_URL}?limit=all`);
-  if (!response.ok) throw new Error(`BLM API error: ${response.status}`);
+  const response = await fetchWithRetry(
+    `${BLM_API_URL}?limit=all`,
+    {},
+    2,
+    500,
+    (status) => `BLM API error: ${status}`
+  );
+  if (!response.ok) {
+    throw new Error(`BLM API error: ${response.status}`);
+  }
   const raw: Campsite[] = await response.json();
   return raw.filter(site =>
     typeof site.lat === 'number' && typeof site.lng === 'number' &&
@@ -82,7 +90,12 @@ async function getCampsiteByIdInternal(
     raw = cached.campsite;
   } else {
     await rateLimit();
-    const response = await fetchWithRetry(`${BLM_API_URL}/${id}`);
+    let response;
+    try {
+      response = await fetchWithRetry(`${BLM_API_URL}/${id}`);
+    } catch (err) {
+      return null;
+    }
     if (!response.ok) return null;
     raw = await response.json();
     campsiteCache.set(id, { campsite: raw, timestamp: now });

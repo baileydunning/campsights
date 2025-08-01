@@ -11,8 +11,8 @@ interface WeatherCardProps {
 const WeatherCard: React.FC<WeatherCardProps> = ({ campsiteId, weatherData }) => {
   if (weatherData === undefined) {
     return (
-      <div className="weather-period-card weather-loading">
-        <div className="spinner" />
+      <div className="weather-period-card weather-loading" role="status" aria-live="polite">
+        <div className="spinner" data-testid="weather-spinner" />
       </div>
     );
   }
