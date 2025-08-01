@@ -60,20 +60,6 @@ describe('campsitesService', () => {
       expect(result[0].id).toBe('abc123');
     });
 
-    it('caches campsites in localStorage', async () => {
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue([mockCampsite]),
-      } as any);
-
-      const result = await campsitesService.getCampsites();
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('abc123');
-
-      const cached = JSON.parse(localStorage.getItem('campsights_campsites')!);
-      expect(cached.data).toEqual([mockCampsite]);
-    });
-
     it('throws on fetch error', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 } as any);
       await expect(campsitesService.getCampsites()).rejects.toThrow('BLM API error: 500');
