@@ -66,7 +66,6 @@ const mockCampsites = [
     description: "A nice place",
     lat: 40,
     lng: -105,
-    requires_4wd: true,
     url: "https://example.com/1",
     state: "CO",
     mapLink: "https://maps.example.com/1",
@@ -78,7 +77,6 @@ const mockCampsites = [
     description: "",
     lat: 41,
     lng: -106,
-    requires_4wd: false,
     url: "https://example.com/2",
     state: "WY",
     mapLink: "https://maps.example.com/2",
@@ -93,7 +91,7 @@ describe("MapView", () => {
 
   it("displays campsite markers from prop", async () => {
     await act(async () => {
-      render(<MapView campsites={mockCampsites} />);
+      render(<MapView campsites={mockCampsites} defaultPosition={[40, -105]} />);
     });
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
@@ -105,7 +103,7 @@ describe("MapView", () => {
 
   it("handles empty campsites array", async () => {
     await act(async () => {
-      render(<MapView campsites={[]} />);
+      render(<MapView campsites={[]} defaultPosition={[40, -105]} />);
     });
     await waitFor(() => {
       expect(screen.getByRole("region")).toBeInTheDocument();
