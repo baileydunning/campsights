@@ -40,7 +40,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number = API_TIMEOUT): P
 }
 
 export const getCampsites = async (): Promise<Campsite[]> => {
-  const response = await fetchWithTimeout( `${BLM_API_URL}/?limit=all`);
+  const response = await fetchWithTimeout(`${BLM_API_URL}?limit=all`);
   if (!response.ok) throw new Error(`BLM API error: ${response.status}`);
   const raw: Campsite[] = await response.json();
   return raw.filter(site =>
