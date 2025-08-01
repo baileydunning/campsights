@@ -9,8 +9,19 @@ export const fetchCampsites = createAsyncThunk(
     if (state.campsites.campsites.length > 0) {
       return state.campsites.campsites;
     }
+
+    const CACHE_KEY = 'campsights_campsites';
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
     try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          return data;
+        }
+      }
       const campsites = await getCampsites();
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data: campsites, timestamp: Date.now() }));
       return campsites;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch campsites');
