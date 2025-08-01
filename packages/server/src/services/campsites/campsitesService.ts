@@ -31,6 +31,13 @@ const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
 const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
 
 export const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
+
+interface CampsitesCache {
+  data: Campsite[];
+  timestamp: number;
+}
+
+let campsitesCache: CampsitesCache | null = null;
 const cleanupCampsiteCache = cacheUtils(campsiteCache, CAMPSITE_CACHE_TTL);
 
 export function __clearCampsiteCache() {
@@ -42,6 +49,11 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export const getCampsites = async (): Promise<Campsite[]> => {
+  const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+  const now = Date.now();
+  if (campsitesCache && now - campsitesCache.timestamp < CACHE_TTL) {
+    return campsitesCache.data;
+  }
   await rateLimit();
   const response = await fetchWithRetry(
     `${BLM_API_URL}?limit=all`,
@@ -54,10 +66,12 @@ export const getCampsites = async (): Promise<Campsite[]> => {
     throw new Error(`BLM API error: ${response.status}`);
   }
   const raw: Campsite[] = await response.json();
-  return raw.filter(site =>
+  const filtered = raw.filter(site =>
     typeof site.lat === 'number' && typeof site.lng === 'number' &&
     !isNaN(site.lat) && !isNaN(site.lng)
   );
+  campsitesCache = { data: filtered, timestamp: now };
+  return filtered;
 };
 
 export const getCampsiteById = async (
