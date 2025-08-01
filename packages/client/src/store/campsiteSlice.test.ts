@@ -42,6 +42,27 @@ describe('campsiteSlice', () => {
     vi.clearAllMocks();
   });
 
+  describe('localStorage caching', () => {
+    it('should cache and use campsites in localStorage via thunk', async () => {
+      localStorage.clear();
+      const mockCampsites = [mockCampsite];
+      const { getCampsites } = await import('../api/Campsites');
+      (getCampsites as any).mockResolvedValueOnce(mockCampsites);
+
+      const dispatch = vi.fn();
+      const getState = () => ({ campsites: initialState });
+      const result = await fetchCampsites()(dispatch, getState, undefined);
+      expect(result.payload).toEqual(mockCampsites);
+
+      const cached = JSON.parse(localStorage.getItem('campsights_campsites')!);
+      expect(cached.data).toEqual(mockCampsites);
+
+      (getCampsites as any).mockClear();
+      const result2 = await fetchCampsites()(dispatch, getState, undefined);
+      expect(result2.payload).toEqual(mockCampsites);
+    });
+  });
+
   describe('reducers', () => {
     it('should handle clearError', () => {
       const state = { ...initialState, error: 'Some error' };
