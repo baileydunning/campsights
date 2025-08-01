@@ -5,7 +5,7 @@ import { cacheUtils } from '../../utils/cacheUtils';
 
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
 const API_TIMEOUT = process.env.NODE_ENV === 'production' ? 5000 : 2000;
-const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
+const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites?limit=all';
 
 export const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
 const cleanupCampsiteCache = cacheUtils(campsiteCache, CAMPSITE_CACHE_TTL);
