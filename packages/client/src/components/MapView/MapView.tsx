@@ -1,11 +1,16 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
-import L from "leaflet";
 import "./MapView.css";
 import type { Campsite } from '../../types/Campsite';
+import L from "leaflet";
+
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
 
-const defaultPosition: [number, number] = [39.2508, -106.2925];
+interface MapViewProps {
+  campsites: Campsite[];
+  currentPosition?: [number, number] | null;
+  defaultPosition: [number, number];
+}
 
 const personIcon = new L.DivIcon({
   html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 48px; width: 32px;">
@@ -23,29 +28,13 @@ const personIcon = new L.DivIcon({
   iconAnchor: [16, 48],
 });
 
-interface MapViewProps {
-  campsites: Campsite[];
-}
-
-const MapView: React.FC<MapViewProps> = ({ campsites }) => {
-  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
+const MapView: React.FC<MapViewProps> = ({ campsites, currentPosition, defaultPosition }) => {
   const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowMap(true), 0); 
     return () => clearTimeout(timeout);
   }, []);
-
-  const [geoRequested, setGeoRequested] = useState(false);
-  useEffect(() => {
-    if (!geoRequested) return;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCurrentPosition([pos.coords.latitude, pos.coords.longitude]),
-        () => setCurrentPosition(null)
-      );
-    }
-  }, [geoRequested]);
 
   const renderCampsiteMarker = useCallback(
     (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
@@ -57,12 +46,14 @@ const MapView: React.FC<MapViewProps> = ({ campsites }) => {
     [campsites, renderCampsiteMarker]
   );
 
+  const initialCenter = useMemo(() => currentPosition || defaultPosition, [currentPosition, defaultPosition]);
+
   return (
     <div className="MapView">
       {showMap ? (
         <Suspense fallback={null}>
           <MapContainer
-            center={currentPosition || defaultPosition}
+            center={initialCenter}
             zoom={8}
             style={{ height: "100%", width: "100%" }}
           >
@@ -80,16 +71,6 @@ const MapView: React.FC<MapViewProps> = ({ campsites }) => {
               </Marker>
             )}
           </MapContainer>
-          {!geoRequested && (
-            <button
-              className="popup-button"
-              style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}
-              onClick={() => setGeoRequested(true)}
-              aria-label="Show My Location"
-            >
-              Show My Location
-            </button>
-          )}
         </Suspense>
       ) : (
         null

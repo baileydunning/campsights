@@ -8,11 +8,24 @@ import type { AppDispatch } from "./store/store";
 import type { Campsite } from "./types/Campsite";
 
 const MapView = lazy(() => import("./components/MapView/MapView"));
+const defaultPosition: [number, number] = [39.2500, -106.2925];
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const allCampsites = useSelector(selectCampsites);
   const [filtered, setFiltered] = useState<Campsite[]>([]);
+  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);  
+  const [geoRequested, setGeoRequested] = useState(false);
+
+  useEffect(() => {
+      if (!geoRequested) return;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setCurrentPosition([pos.coords.latitude, pos.coords.longitude]),
+          () => setCurrentPosition(null)
+        );
+      }
+    }, [geoRequested]);
 
   useEffect(() => {
     dispatch(fetchCampsites());
@@ -26,13 +39,25 @@ const App: React.FC = () => {
     <div className="app">
       <header className="app-header">
         <h1>Campsights</h1>
-        <h3>Explore Dispersed Campsites on Public Lands</h3>
+        <h2>Explore Dispersed Campsites on Public Lands</h2>
         <SearchBar campsites={allCampsites} onSearchResults={setFiltered} />
       </header>
+      <div>
+        {!geoRequested && (
+            <button
+              className="popup-button"
+              style={{ position: 'absolute', top: 190, right: 16, zIndex: 1000 }}
+              onClick={() => setGeoRequested(true)}
+              aria-label="Show My Location"
+            >
+              Show My Location
+            </button>
+          )}
+      </div>
       <div className="app-container">
         <main className="main-content">
           <Suspense fallback={<Loading />}>
-            <MapView campsites={filtered} />
+            <MapView campsites={filtered} currentPosition={currentPosition} defaultPosition={defaultPosition} />
           </Suspense>
         </main>
       </div>
