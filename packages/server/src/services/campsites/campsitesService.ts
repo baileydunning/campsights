@@ -5,7 +5,7 @@ import { cacheUtils } from '../../utils/cacheUtils';
 
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
 const API_TIMEOUT = process.env.NODE_ENV === 'production' ? 5000 : 2000;
-const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites?limit=all';
+const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
 
 export const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
 const cleanupCampsiteCache = cacheUtils(campsiteCache, CAMPSITE_CACHE_TTL);
@@ -40,7 +40,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number = API_TIMEOUT): P
 }
 
 export const getCampsites = async (): Promise<Campsite[]> => {
-  const response = await fetchWithTimeout(BLM_API_URL);
+  const response = await fetchWithTimeout( `${BLM_API_URL}/?limit=all`);
   if (!response.ok) throw new Error(`BLM API error: ${response.status}`);
   const raw: Campsite[] = await response.json();
   return raw.filter(site =>
