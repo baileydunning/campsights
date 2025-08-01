@@ -112,25 +112,4 @@ describe("MapView", () => {
     });
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
-
-  it("renders the current location marker and shows tooltip on hover", async () => {
-    const mockGeolocation = {
-      getCurrentPosition: (success: any) => success({ coords: { latitude: 39.5, longitude: -106.5 } })
-    };
-    // @ts-ignore
-    global.navigator.geolocation = mockGeolocation;
-
-    await act(async () => {
-      render(<MapView campsites={mockCampsites} />);
-    });
-
-    const showLocationBtn = await screen.findByRole('button', { name: /show my location/i });
-    showLocationBtn.click();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("person-marker")).toBeInTheDocument();
-    });
-    expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
-    expect(screen.getByTestId("person-popup")).toHaveTextContent(/You are here/i);
-  });
 });

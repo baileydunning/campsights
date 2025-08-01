@@ -64,10 +64,11 @@ const MapView: React.FC<MapViewProps> = ({ campsites, currentPosition, defaultPo
             {campsiteMarkers}
             {currentPosition && (
               <Marker position={currentPosition} icon={personIcon}>
-                <Popup>You are here</Popup>
-                <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
+                <Popup data-testid="person-popup">You are here</Popup>
+                <Tooltip data-testid="person-tooltip" direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
                   You are here
                 </Tooltip>
+                <div data-testid="person-marker" style={{ display: "none" }} />
               </Marker>
             )}
           </MapContainer>
