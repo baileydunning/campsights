@@ -6,7 +6,7 @@ COPY package.json package-lock.json lerna.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 
-RUN npm install
+RUN npm ci
 
 COPY packages/client ./packages/client
 COPY packages/server ./packages/server
@@ -20,7 +20,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/server/package.json ./packages/server/
 
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/client/dist ./packages/client/dist
