@@ -18,93 +18,168 @@ jobs:
         working-directory: packages/server
     outputs:
       mean_latency: ${{ steps.extract-artillery.outputs.mean_latency }}
+      p50_latency: ${{ steps.extract-artillery.outputs.p50_latency }}
+      p75_latency: ${{ steps.extract-artillery.outputs.p75_latency }}
       p95_latency: ${{ steps.extract-artillery.outputs.p95_latency }}
       p99_latency: ${{ steps.extract-artillery.outputs.p99_latency }}
+      max_latency: ${{ steps.extract-artillery.outputs.max_latency }}
+      response_size: ${{ steps.extract-artillery.outputs.response_size }}
+      total_requests: ${{ steps.extract-artillery.outputs.total_requests }}
+      errors: ${{ steps.extract-artillery.outputs.errors }}
+      error_rate: ${{ steps.extract-artillery.outputs.error_rate }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Use Node.js 22
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
 
-    - name: Install backend dependencies
-      run: npm ci
+      - name: Install backend dependencies
+        run: npm ci
 
-    - name: Build backend
-      run: npm run build
+      - name: Build backend
+        run: npm run build
 
-    - name: Start backend
-      run: NODE_ENV=test npm start &
+      - name: Start backend
+        run: NODE_ENV=test npm start &
 
-    - name: Wait for backend health endpoint
-      run: |
-        for i in {1..30}; do
-          if curl -sSf http://localhost:3000/health; then
-            echo "Backend is up!"; exit 0
+      - name: Wait for backend health endpoint
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://localhost:8080/health; then
+              echo "Backend is up!"; exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not start in time"; exit 1
+
+      - name: Install Artillery
+        run: npm install -g artillery
+
+      - name: Run Artillery load test
+        id: artillery-run
+        run: artillery run --output artillery-report.json artillery.yml
+      
+      - name: Print Artillery report JSON
+        run: cat artillery-report.json
+
+      - name: Extract latency metrics from Artillery report
+        id: extract-artillery
+        run: |
+          mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
+          p50_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p50 // empty' artillery-report.json)
+          p75_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p75 // empty' artillery-report.json)
+          p95_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p95 // empty' artillery-report.json)
+          p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
+          max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
+          downloaded_bytes=$(jq -r '.aggregate.counters["http.downloaded_bytes"] // 0' artillery-report.json)
+          http_requests=$(jq -r '.aggregate.counters["http.requests"] // 1' artillery-report.json)
+          total_requests=$(jq -r '.aggregate["counters"]["http.requests"] // 0' artillery-report.json)
+          errors=$(jq -r '.aggregate["counters"]["http.requests_failed"] // 0' artillery-report.json)
+          if [ "$total_requests" -gt 0 ]; then
+            error_rate=$(echo "scale=2; 100 * $errors / $total_requests" | bc)
+          else
+            error_rate="0"
           fi
-          sleep 2
-        done
-        echo "Backend did not start in time"; exit 1
 
-    - name: Install Artillery
-      run: npm install -g artillery
+          echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
+          echo "p50_latency=$p50_latency" >> $GITHUB_OUTPUT
+          echo "p75_latency=$p75_latency" >> $GITHUB_OUTPUT
+          echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
+          echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
+          echo "max_latency=$max_latency" >> $GITHUB_OUTPUT
+          echo "response_size=$((downloaded_bytes / http_requests))" >> $GITHUB_OUTPUT
+          echo "total_requests=$total_requests" >> $GITHUB_OUTPUT
+          echo "errors=$errors" >> $GITHUB_OUTPUT
+          echo "error_rate=$error_rate" >> $GITHUB_OUTPUT
 
-    - name: Run Artillery load test
-      id: artillery-run
-      run: |
-        printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
-        artillery run --output artillery-report.json artillery.yml
+      - name: Compute backend metric statuses
+        id: backend-status
+        run: |
+          mean=${{ steps.extract-artillery.outputs.mean_latency }}
+          p50=${{ steps.extract-artillery.outputs.p50_latency }}
+          p75=${{ steps.extract-artillery.outputs.p75_latency }}
+          p95=${{ steps.extract-artillery.outputs.p95_latency }}
+          p99=${{ steps.extract-artillery.outputs.p99_latency }}
+          max=${{ steps.extract-artillery.outputs.max_latency }}
+          response_size=${{ steps.extract-artillery.outputs.response_size }}
+          rps=${{ steps.extract-artillery.outputs.requests_per_second }}
+          errors=${{ steps.extract-artillery.outputs.errors }}
+          total=${{ steps.extract-artillery.outputs.total_requests }}
+          error_rate=${{ steps.extract-artillery.outputs.error_rate }}
 
-    - name: Extract latency metrics from Artillery report
-      id: extract-artillery
-      run: |
-        mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
-        p95_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p95 // empty' artillery-report.json)
-        p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
-        echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
-        echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
-        echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
+          latency_status() {
+            local val=$1
+            if (( $(echo "$val < 100" | bc -l) )); then echo "Excellent";
+            elif (( $(echo "$val < 300" | bc -l) )); then echo "Good";
+            elif (( $(echo "$val < 1000" | bc -l) )); then echo "Fair";
+            else echo "Needs Improvement"; fi
+          }
 
-    - name: Compute backend metric statuses
-      id: backend-status
-      run: |
-        mean=${{ steps.extract-artillery.outputs.mean_latency }}
-        p95=${{ steps.extract-artillery.outputs.p95_latency }}
-        p99=${{ steps.extract-artillery.outputs.p99_latency }}
-        # Mean
-        if (( $(echo "$mean < 50" | bc -l) )); then mean_status="Outstanding";
-        elif (( $(echo "$mean < 150" | bc -l) )); then mean_status="Excellent";
-        elif (( $(echo "$mean < 400" | bc -l) )); then mean_status="Good";
-        elif (( $(echo "$mean < 1000" | bc -l) )); then mean_status="Fair";
-        else mean_status="Needs Major Improvement"; fi
-        # p95
-        if (( $(echo "$p95 < 100" | bc -l) )); then p95_status="Outstanding";
-        elif (( $(echo "$p95 < 300" | bc -l) )); then p95_status="Good";
-        elif (( $(echo "$p95 < 1000" | bc -l) )); then p95_status="Fair";
-        else p95_status="Needs Improvement"; fi
-        # p99
-        if (( $(echo "$p99 < 200" | bc -l) )); then p99_status="Outstanding";
-        elif (( $(echo "$p99 < 500" | bc -l) )); then p99_status="Good";
-        elif (( $(echo "$p99 < 1000" | bc -l) )); then p99_status="Fair";
-        else p99_status="Needs Improvement"; fi
-        echo "mean_status=$mean_status" >> $GITHUB_OUTPUT
-        echo "p95_status=$p95_status" >> $GITHUB_OUTPUT
-        echo "p99_status=$p99_status" >> $GITHUB_OUTPUT
+          requests_status() {
+            if (( $total >= 100 )); then echo "Sufficient";
+            elif (( $total >= 20 )); then echo "Low";
+            else echo "Insufficient"; fi
+          }
 
-    - name: Post or update PR comment with backend results
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        header: performance-backend
-        message: |
-          ### Backend Latency Report
+          errors_status() {
+            if (( $errors == 0 )); then echo "None";
+            elif (( $errors < 5 )); then echo "Minor";
+            else echo "High"; fi
+          }
 
-          | Metric | Value (ms) | Status |
-          |--------|------------|--------|
-          | **Mean** | ${{ steps.extract-artillery.outputs.mean_latency }} | ${{ steps.backend-status.outputs.mean_status }} |
-          | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
-          | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
+          response_size_status() {
+            local size=$1
+            if (( $(echo "$size < 20000" | bc -l) )); then
+              echo "Excellent"      # < 20 KB
+            elif (( $(echo "$size < 100000" | bc -l) )); then
+              echo "Acceptable"     # 20–100 KB
+            elif (( $(echo "$size < 500000" | bc -l) )); then
+              echo "Large"          # 100–500 KB
+            else
+              echo "Excessive"      # > 500 KB
+            fi
+          }
+
+          rate_status() {
+            if (( $(echo "$error_rate == 0" | bc -l) )); then echo "None";
+            elif (( $(echo "$error_rate < 5" | bc -l) )); then echo "Low";
+            else echo "High"; fi
+          }
+
+          echo "mean_status=$(latency_status $mean)" >> $GITHUB_OUTPUT
+          echo "p50_status=$(latency_status $p50)" >> $GITHUB_OUTPUT
+          echo "p75_status=$(latency_status $p75)" >> $GITHUB_OUTPUT
+          echo "p95_status=$(latency_status $p95)" >> $GITHUB_OUTPUT
+          echo "p99_status=$(latency_status $p99)" >> $GITHUB_OUTPUT
+          echo "max_status=$(latency_status $max)" >> $GITHUB_OUTPUT
+          echo "response_size_status=$(response_size_status $response_size)" >> $GITHUB_OUTPUT
+          echo "requests_status=$(requests_status)" >> $GITHUB_OUTPUT
+          echo "errors_status=$(errors_status)" >> $GITHUB_OUTPUT
+          echo "error_rate_status=$(rate_status)" >> $GITHUB_OUTPUT
+
+      - name: Post or update PR comment with backend results
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: performance-backend
+          message: |
+            ### Backend Latency Report
+
+            | Metric               | Value                                | Status                          |
+            |----------------------|--------------------------------------|---------------------------------|
+            | Mean Latency         | ${{ steps.extract-artillery.outputs.mean_latency }} ms   | ${{ steps.backend-status.outputs.mean_status }} |
+            | p50 Latency          | ${{ steps.extract-artillery.outputs.p50_latency }} ms    | ${{ steps.backend-status.outputs.p50_status }} |
+            | p75 Latency          | ${{ steps.extract-artillery.outputs.p75_latency }} ms    | ${{ steps.backend-status.outputs.p75_status }} |
+            | p95 Latency          | ${{ steps.extract-artillery.outputs.p95_latency }} ms    | ${{ steps.backend-status.outputs.p95_status }} |
+            | p99 Latency          | ${{ steps.extract-artillery.outputs.p99_latency }} ms    | ${{ steps.backend-status.outputs.p99_status }} |
+            | Max Latency          | ${{ steps.extract-artillery.outputs.max_latency }} ms    | ${{ steps.backend-status.outputs.max_status }} |
+            | Response Size        | ${{ steps.extract-artillery.outputs.response_size }} bytes | ${{ steps.backend-status.outputs.response_size_status }} |
+            | Total Requests       | ${{ steps.extract-artillery.outputs.total_requests }}     | ${{ steps.backend-status.outputs.requests_status }} |
+            | Failures             | ${{ steps.extract-artillery.outputs.errors }}             | ${{ steps.backend-status.outputs.errors_status }} |
+            | Error Rate           | ${{ steps.extract-artillery.outputs.error_rate }}%        | ${{ steps.backend-status.outputs.error_rate_status }} |
+
   
   client:
     needs: server
