@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import "./MapView.css";
 import type { Campsite } from '../../types/Campsite';
@@ -73,7 +73,6 @@ const MapView: React.FC<MapViewProps> = ({ campsites }) => {
             {campsiteMarkers}
             {currentPosition && (
               <Marker position={currentPosition} icon={personIcon}>
-                <Popup>You are here</Popup>
                 <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
                   You are here
                 </Tooltip>
