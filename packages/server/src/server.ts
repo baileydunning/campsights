@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import path from 'path';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
@@ -13,6 +14,8 @@ const swaggerDocument = YAML.load(__dirname + '/../openapi.yaml');
 export function server() {
   const app = express();
   app.set('trust proxy', 1);
+
+  app.use(compression({ level: 9, threshold: 0 }));
 
   const allowedOrigins = [
     'https://campsights.onrender.com',
