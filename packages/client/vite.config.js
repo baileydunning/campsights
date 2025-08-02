@@ -5,10 +5,12 @@ import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { VitePWA } from 'vite-plugin-pwa'
 import viteImagemin from 'vite-plugin-imagemin'
+import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
   plugins: [
     react(),
+    autoprefixer,
     viteCompression({ algorithm: 'gzip' }),
     viteCompression({ algorithm: 'brotliCompress', ext: '.br' }),
     visualizer({
