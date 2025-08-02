@@ -10,3 +10,8 @@ scenarios:
   - flow:
       - get:
           url: "/api/v1/campsites"
+          capture:
+            - json: "$.id"
+              as: "campsiteId"
+      - get:
+          url: "/api/v1/campsites/{{ campsiteId }}"

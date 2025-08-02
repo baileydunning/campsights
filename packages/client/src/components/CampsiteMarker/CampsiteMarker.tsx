@@ -2,7 +2,8 @@ import React, { useRef, useState } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { Campsite } from "../../types/Campsite";
-import { getCampsiteById } from "../../api/Campsites";
+import { fetchCampsiteById } from "../../store/campsiteSlice";
+import { useDispatch } from "react-redux";
 import WeatherCard from "../WeatherCard/WeatherCard";
 import "./CampsiteMarker.css";
 
@@ -13,24 +14,24 @@ export interface CampsiteMarkerProps {
 
 const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
   if (!site) return null;
-
   const popupRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const [enrichedSite, setEnrichedSite] = useState<Campsite | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const dispatch = useDispatch();
 
   const fetchEnrichedSite = async () => {
-    if (isLoading || enrichedSite) return; // Avoid duplicate requests
-    
+    if (isLoading || enrichedSite) return;
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const detailed = await getCampsiteById(site.id);
-      if (detailed) {
-        setEnrichedSite(detailed);
+      const resultAction = await dispatch(fetchCampsiteById(site.id) as any);
+      if (fetchCampsiteById.fulfilled.match(resultAction)) {
+        setEnrichedSite(resultAction.payload);
       } else {
         setError("Campsite details not found");
       }

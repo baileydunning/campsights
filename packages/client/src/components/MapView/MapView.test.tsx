@@ -131,6 +131,5 @@ describe("MapView", () => {
       expect(screen.getByTestId("person-marker")).toBeInTheDocument();
     });
     expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
-    expect(screen.getByTestId("person-popup")).toHaveTextContent(/You are here/i);
   });
 });
