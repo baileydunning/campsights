@@ -10,8 +10,8 @@
     "lint": "lerna run lint",
     "clean": "lerna clean"
   },
+  "dependencies": {},
   "devDependencies": {
-    "lerna": "^8.2.2",
-    "vite-plugin-imagemin": "^0.6.1"
+    "lerna": "^8.2.2"
   }
 }

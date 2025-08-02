@@ -39,6 +39,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "vite": "^6.3.5",
     "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-imagemin": "^0.6.1",
     "vitest": "^3.2.3"
   }
 }
