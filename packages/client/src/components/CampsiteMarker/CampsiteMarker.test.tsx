@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 
 vi.mock('react-leaflet', () => {
   return {
     Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
     Popup: function Popup(props: any) {
-      // Always evaluate children as a function if possible to reflect state changes
       const children =
         typeof props.children === 'function' ? props.children() : props.children;
       return (
@@ -96,49 +97,69 @@ const sampleSite: Campsite = {
   ],
 };
 
-vi.mock('../../api/Campsites');
+import * as CampsiteSlice from '../../store/campsiteSlice';
+
+
+import type { Store } from '@reduxjs/toolkit';
 
 describe('<CampsiteMarker />', () => {
+  let store: Store;
   beforeEach(() => {
     vi.clearAllMocks();
-    (CampsitesApi.getCampsiteById as any).mockResolvedValue(sampleSite);
+    // Mock the thunk to always resolve with sampleSite and correct meta
+    vi.spyOn(CampsiteSlice, 'fetchCampsiteById').mockImplementation(
+      ((id: string) => async () => ({
+        type: 'campsite/fetchCampsiteById/fulfilled',
+        payload: sampleSite,
+        meta: { arg: id, requestId: 'test', requestStatus: 'fulfilled' }
+      })) as unknown as typeof CampsiteSlice.fetchCampsiteById
+    );
+    store = configureStore({ reducer: (state = {}) => state });
   });
 
   it('renders marker and popup with site info', () => {
-    render(<CampsiteMarker site={sampleSite} />);
-
+    render(
+      <Provider store={store}>
+        <CampsiteMarker site={sampleSite} />
+      </Provider>
+    );
     expect(screen.getByTestId('marker')).toBeInTheDocument();
     expect(screen.getByText('Test Site')).toBeInTheDocument();
     expect(screen.getByText('A lovely place')).toBeInTheDocument();
     expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
-    
-    // Check for the new buttons
     expect(screen.getByRole('button', { name: /Get Directions/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Get Details/i })).toBeInTheDocument();
-
-    // Check for weather section structure
     expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
   });
 
   it('displays "Unnamed Site" when name is empty', () => {
     const unnamed = { ...sampleSite, name: '' };
-    render(<CampsiteMarker site={unnamed} />);
+    render(
+      <Provider store={store}>
+        <CampsiteMarker site={unnamed} />
+      </Provider>
+    );
     expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
   });
 
   it('shows "Unknown" for elevation when invalid', () => {
     const noElev = { ...sampleSite, elevation: NaN };
-    render(<CampsiteMarker site={noElev} />);
+    render(
+      <Provider store={store}>
+        <CampsiteMarker site={noElev} />
+      </Provider>
+    );
     expect(screen.getByText('Unknown')).toBeInTheDocument();
   });
 
   it('shows loading state initially and then enriched data', async () => {
-    render(<CampsiteMarker site={{ ...sampleSite, weather: undefined }} />);
-    
-    // Should show loading initially
+    render(
+      <Provider store={store}>
+        <CampsiteMarker site={{ ...sampleSite, weather: undefined }} />
+      </Provider>
+    );
+
     expect(screen.getByText('Loading weather...')).toBeInTheDocument();
-    
-    // Should have weather forecast section
     expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
   });
 });
