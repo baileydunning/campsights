@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { CampsitesState } from '../types/Campsite';
-import { getCampsites } from '../api/Campsites';
+import { getCampsites, getCampsiteById } from '../api/Campsites';
 
 export const fetchCampsites = createAsyncThunk(
   'campsites/fetchCampsites',
@@ -25,6 +25,28 @@ export const fetchCampsites = createAsyncThunk(
       return campsites;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch campsites');
+    }
+  }
+);
+
+export const fetchCampsiteById = createAsyncThunk(
+  'campsites/fetchCampsiteById',
+  async (id: string, { rejectWithValue }) => {
+    const CAMPSITE_CACHE_KEY = `campsights_campsite_${id}`;
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+    try {
+      const cached = localStorage.getItem(CAMPSITE_CACHE_KEY);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          return data;
+        }
+      }
+      const campsite = await getCampsiteById(id);
+      localStorage.setItem(CAMPSITE_CACHE_KEY, JSON.stringify({ data: campsite, timestamp: Date.now() }));
+      return campsite;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch campsite');
     }
   }
 );
@@ -58,6 +80,27 @@ const campsiteSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      .addCase(fetchCampsiteById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCampsiteById.fulfilled, (state, action) => {
+        state.loading = false;
+        const campsite = action.payload;
+        if (campsite) {
+          const existingIndex = state.campsites.findIndex(c => c.id === campsite.id);
+          if (existingIndex >= 0) {
+            state.campsites[existingIndex] = campsite;
+          } else {
+            state.campsites.push(campsite);
+          }
+        }
+        state.error = null;
+      })
+      .addCase(fetchCampsiteById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

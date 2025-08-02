@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import reducer, {
   fetchCampsites,
+  fetchCampsiteById,
   clearError,
   selectCampsites,
   selectLoading,
@@ -104,6 +105,30 @@ describe('campsiteSlice', () => {
 
       it('handles rejected', () => {
         const action = { type: fetchCampsites.rejected.type, payload: 'Error' };
+        const state = reducer({ ...initialState, loading: true }, action);
+        expect(state.loading).toBe(false);
+        expect(state.error).toBe('Error');
+      });
+    });
+
+    describe('fetchCampsiteById', () => {
+      it('handles pending', () => {
+        const action = { type: fetchCampsiteById.pending.type };
+        const state = reducer(initialState, action);
+        expect(state.loading).toBe(true);
+        expect(state.error).toBeNull();
+      });
+
+      it('handles fulfilled', () => {
+        const action = { type: fetchCampsiteById.fulfilled.type, payload: mockCampsite };
+        const state = reducer({ ...initialState, loading: true }, action);
+        expect(state.loading).toBe(false);
+        expect(state.campsites).toContain(mockCampsite);
+        expect(state.error).toBeNull();
+      });
+
+      it('handles rejected', () => {
+        const action = { type: fetchCampsiteById.rejected.type, payload: 'Error' };
         const state = reducer({ ...initialState, loading: true }, action);
         expect(state.loading).toBe(false);
         expect(state.error).toBe('Error');
