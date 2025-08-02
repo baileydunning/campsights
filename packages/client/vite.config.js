@@ -74,6 +74,7 @@ export default defineConfig({
     },
     assetsInlineLimit: 4096,
     rollupOptions: {
+      treeshake: true,
       external: [
         'leaflet/dist/leaflet-src.js'
       ],
