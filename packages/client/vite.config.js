@@ -4,7 +4,6 @@ import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { VitePWA } from 'vite-plugin-pwa'
-import viteImagemin from 'vite-plugin-imagemin'
 import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
@@ -18,10 +17,6 @@ export default defineConfig({
       open: true,
       gzipSize: true,
       brotliSize: true,
-    }),
-    viteImagemin({
-      mozjpeg: { quality: 75 },
-      pngquant: { quality: [0.7, 0.8] },
     }),
     VitePWA({
       registerType: 'autoUpdate',
