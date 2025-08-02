@@ -4,10 +4,12 @@ import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { VitePWA } from 'vite-plugin-pwa'
+import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
   plugins: [
     react(),
+    autoprefixer,
     viteCompression({ algorithm: 'gzip' }),
     viteCompression({ algorithm: 'brotliCompress', ext: '.br' }),
     visualizer({
@@ -74,6 +76,7 @@ export default defineConfig({
     },
     assetsInlineLimit: 4096,
     rollupOptions: {
+      treeshake: true,
       external: [
         'leaflet/dist/leaflet-src.js'
       ],
