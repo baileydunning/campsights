@@ -87,7 +87,7 @@ const campsiteSlice = createSlice({
       .addCase(fetchCampsiteById.fulfilled, (state, action) => {
         state.loading = false;
         const campsite = action.payload;
-        if (campsite) {
+        if (campsite && campsite.id) {
           const existingIndex = state.campsites.findIndex(c => c.id === campsite.id);
           if (existingIndex >= 0) {
             state.campsites[existingIndex] = campsite;

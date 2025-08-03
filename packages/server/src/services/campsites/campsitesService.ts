@@ -95,7 +95,11 @@ export const getCampsiteById = async (
 async function getCampsiteByIdInternal(
   id: string
 ): Promise<Campsite & { elevation: number | null; weather: WeatherPeriod[] } | null> {
-  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return null;
+
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
+    console.error('Invalid campsite id:', id);
+    return null;
+  }
   const now = Date.now();
   const cached = campsiteCache.get(id);
   let raw: Campsite;
@@ -108,10 +112,23 @@ async function getCampsiteByIdInternal(
     try {
       response = await fetchWithRetry(`${BLM_API_URL}/${id}`);
     } catch (err) {
+      console.error('Error fetching campsite:', err);
       return null;
     }
-    if (!response.ok) return null;
-    raw = await response.json();
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+      } catch {}
+      console.error(`Failed to fetch campsite ${id}: status ${response.status}, body:`, errorText);
+      return null;
+    }
+    try {
+      raw = await response.json();
+    } catch (err) {
+      console.error('Failed to parse JSON for campsite', id, err);
+      return null;
+    }
     campsiteCache.set(id, { campsite: raw, timestamp: now });
   }
 
