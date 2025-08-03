@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 services:
   app:
@@ -8,10 +8,10 @@ services:
       target: runner
     container_name: campsights-app
     ports:
-      - "4000:4000"
+      - '4000:4000'
     environment:
       NODE_ENV: development
       PORT: 4000
     volumes:
-      - ./packages:/app/packages:ro 
+      - ./packages:/app/packages:ro
     restart: unless-stopped

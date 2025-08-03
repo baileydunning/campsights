@@ -1,26 +1,26 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
-import "./App.css";
-import Loading from "./components/Loading/Loading";
-import SearchBar from "./components/SearchBar/SearchBar";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCampsites, selectCampsites } from "./store/campsiteSlice";
-import type { AppDispatch } from "./store/store";
-import type { Campsite } from "./types/Campsite";
+import React, { Suspense, lazy, useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import Loading from './components/Loading/Loading'
+import SearchBar from './components/SearchBar/SearchBar'
+import { fetchCampsites, selectCampsites } from './store/campsiteSlice'
+import type { AppDispatch } from './store/store'
+import type { Campsite } from './types/Campsite'
+import './App.css'
 
-const MapView = lazy(() => import("./components/MapView/MapView"));
+const MapView = lazy(() => import('./components/MapView/MapView'))
 
 const App: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const allCampsites = useSelector(selectCampsites);
-  const [filtered, setFiltered] = useState<Campsite[]>([]);
+  const dispatch = useDispatch<AppDispatch>()
+  const allCampsites = useSelector(selectCampsites)
+  const [filtered, setFiltered] = useState<Campsite[]>([])
 
   useEffect(() => {
-    dispatch(fetchCampsites());
-  }, [dispatch]);
+    dispatch(fetchCampsites())
+  }, [dispatch])
 
   useEffect(() => {
-    setFiltered(allCampsites); 
-  }, [allCampsites]);
+    setFiltered(allCampsites)
+  }, [allCampsites])
 
   return (
     <div className="app">
@@ -67,7 +67,7 @@ const App: React.FC = () => {
         </svg>
       </a>
     </div>
-  );
-};
+  )
+}
 
-export default App;
+export default App

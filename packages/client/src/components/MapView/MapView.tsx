@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
-import L from "leaflet";
-import "./MapView.css";
-import type { Campsite } from '../../types/Campsite';
-const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react'
+import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet'
+import L from 'leaflet'
 
-const defaultPosition: [number, number] = [39.2508, -106.2925];
+import './MapView.css'
+import type { Campsite } from '../../types/Campsite'
+const CampsiteMarker = React.lazy(() => import('../CampsiteMarker/CampsiteMarker'))
+
+const defaultPosition: [number, number] = [39.2508, -106.2925]
 
 const personIcon = new L.DivIcon({
   html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 48px; width: 32px;">
@@ -17,45 +18,45 @@ const personIcon = new L.DivIcon({
       <path d='M12 26 L12 46 L16 46 L16 26 Z' fill='#000000'/>
       <path d='M16 26 L16 46 L20 46 L20 26 Z' fill='#000000'/>
     </svg>
-  </div>` ,
+  </div>`,
   className: 'you-are-here-marker',
   iconSize: [32, 48],
   iconAnchor: [16, 48],
-});
+})
 
 interface MapViewProps {
-  campsites: Campsite[];
+  campsites: Campsite[]
 }
 
 const MapView: React.FC<MapViewProps> = ({ campsites }) => {
-  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
-  const [showMap, setShowMap] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null)
+  const [showMap, setShowMap] = useState(false)
 
   useEffect(() => {
-    const timeout = setTimeout(() => setShowMap(true), 0); 
-    return () => clearTimeout(timeout);
-  }, []);
+    const timeout = setTimeout(() => setShowMap(true), 0)
+    return () => clearTimeout(timeout)
+  }, [])
 
-  const [geoRequested, setGeoRequested] = useState(false);
+  const [geoRequested, setGeoRequested] = useState(false)
   useEffect(() => {
-    if (!geoRequested) return;
+    if (!geoRequested) return
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setCurrentPosition([pos.coords.latitude, pos.coords.longitude]),
         () => setCurrentPosition(null)
-      );
+      )
     }
-  }, [geoRequested]);
+  }, [geoRequested])
 
   const renderCampsiteMarker = useCallback(
-    (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
+    (site: Campsite) => <CampsiteMarker key={site.id} site={site} />,
     []
-  );
+  )
 
   const campsiteMarkers = useMemo(
     () => campsites.map(renderCampsiteMarker),
     [campsites, renderCampsiteMarker]
-  );
+  )
 
   return (
     <div className="MapView">
@@ -64,7 +65,7 @@ const MapView: React.FC<MapViewProps> = ({ campsites }) => {
           <MapContainer
             center={currentPosition || defaultPosition}
             zoom={8}
-            style={{ height: "100%", width: "100%" }}
+            style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
@@ -90,11 +91,9 @@ const MapView: React.FC<MapViewProps> = ({ campsites }) => {
             </button>
           )}
         </Suspense>
-      ) : (
-        null
-      )}
+      ) : null}
     </div>
-  );
-};
+  )
+}
 
-export default React.memo(MapView);
+export default React.memo(MapView)

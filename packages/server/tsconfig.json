@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vitest.config.ts"],
   "exclude": ["dist", "node_modules", "**/*.test.ts"]
 }

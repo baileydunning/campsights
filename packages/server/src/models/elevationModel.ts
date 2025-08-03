@@ -1,5 +1,5 @@
 export interface Elevation {
-  latitude: number;
-  longitude: number;
-  elevation: number;
+  latitude: number
+  longitude: number
+  elevation: number
 }

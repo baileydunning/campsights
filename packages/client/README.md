@@ -13,7 +13,6 @@ This is the frontend for the Campsights app, built with React, Vite, and TypeScr
 - **CSS Modules**: Scoped and maintainable component styles.
 - **Axios/Fetch**: For API and weather data requests.
 
-
 ## Features
 
 - View campsites on a Leaflet map with interactive markers
@@ -22,7 +21,6 @@ This is the frontend for the Campsights app, built with React, Vite, and TypeScr
 - Get directions to any campsite via Google Maps (from your current location)
 - See BLM detail page for each campsite
 - Works offline: previously loaded data and app shell are available without a network connection
-
 
 ## PWA Usage
 
@@ -35,11 +33,13 @@ You can install Campsights as a PWA on your device:
 ## Getting Started
 
 1. Install dependencies:
+
    ```sh
    npm install
    ```
 
 2. Start the development server:
+
    ```sh
    npm run dev
    ```
