@@ -4,14 +4,11 @@ import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { VitePWA } from 'vite-plugin-pwa'
-import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
   plugins: [
     react(),
-    autoprefixer,
     viteCompression({ algorithm: 'gzip' }),
-    viteCompression({ algorithm: 'brotliCompress', ext: '.br' }),
     visualizer({
       filename: 'dist/bundle-stats.html',
       open: true,
@@ -44,17 +41,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^\/api\//,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 10,
-              expiration: { maxEntries: 50, maxAgeSeconds: 3600 }
-            }
-          }
-        ],
+        runtimeCaching: [],
         navigateFallback: '/index.html'
       }
     })
