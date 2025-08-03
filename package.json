@@ -1,6 +1,9 @@
 {
   "name": "root",
   "private": true,
+  "version": "1.0.0",
+  "description": "Campsights Monorepo",
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],
@@ -9,7 +12,6 @@
     "test": "lerna run test",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write .",
     "clean": "lerna clean"
   },
   "devDependencies": {
