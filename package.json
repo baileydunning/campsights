@@ -12,6 +12,7 @@
     "test": "lerna run test",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
     "clean": "lerna clean"
   },
   "devDependencies": {

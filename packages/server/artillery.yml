@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:3000"
+  target: 'http://localhost:3000'
   phases:
     - duration: 10
       arrivalRate: 10
@@ -9,9 +9,9 @@ config:
 scenarios:
   - flow:
       - get:
-          url: "/api/v1/campsites"
+          url: '/api/v1/campsites'
           capture:
-            - json: "$.id"
-              as: "campsiteId"
+            - json: '$.id'
+              as: 'campsiteId'
       - get:
-          url: "/api/v1/campsites/{{ campsiteId }}"
+          url: '/api/v1/campsites/{{ campsiteId }}'

@@ -1,43 +1,43 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
-import type { Campsite } from "../../types/Campsite";
+import React, { useState, ChangeEvent, useEffect } from 'react'
+import type { Campsite } from '../../types/Campsite'
 
 interface SearchBarProps {
-  campsites: Campsite[];
-  onSearchResults: (results: Campsite[]) => void;
+  campsites: Campsite[]
+  onSearchResults: (results: Campsite[]) => void
 }
 
 const flattenObject = (obj: Record<string, any>): string => {
   return Object.values(obj)
     .flatMap((value) => {
-      if (typeof value === "object" && value !== null) {
-        return flattenObject(value);
+      if (typeof value === 'object' && value !== null) {
+        return flattenObject(value)
       }
-      return String(value);
+      return String(value)
     })
-    .join(" ")
-    .toLowerCase();
-};
+    .join(' ')
+    .toLowerCase()
+}
 
 const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
-    onSearchResults(campsites);
-  }, [campsites, onSearchResults]);
+    onSearchResults(campsites)
+  }, [campsites, onSearchResults])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    setQuery(input);
+    const input = e.target.value
+    setQuery(input)
 
-    const searchWords = input.toLowerCase().split(/\s+/).filter(Boolean);
+    const searchWords = input.toLowerCase().split(/\s+/).filter(Boolean)
 
     const results = campsites.filter((camp) => {
-      const flattened = flattenObject(camp);
-      return searchWords.every((word) => flattened.includes(word));
-    });
+      const flattened = flattenObject(camp)
+      return searchWords.every((word) => flattened.includes(word))
+    })
 
-    onSearchResults(results);
-  };
+    onSearchResults(results)
+  }
 
   return (
     <input
@@ -46,9 +46,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults }) => 
       onChange={handleChange}
       placeholder="Search by name, state, activities..."
       className="search-bar"
-      style={{ width: "50vw", height: "25px", outline: 'none' }}
+      style={{ width: '50vw', height: '25px', outline: 'none' }}
     />
-  );
-};
+  )
+}
 
-export default SearchBar;
+export default SearchBar

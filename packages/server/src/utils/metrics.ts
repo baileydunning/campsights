@@ -6,20 +6,20 @@ export const performanceMetrics = {
   avgResponseTime: 0,
 
   recordWeatherTimeout() {
-    this.weatherTimeouts++;
+    this.weatherTimeouts++
   },
 
   recordElevationTimeout() {
-    this.elevationTimeouts++;
+    this.elevationTimeouts++
   },
 
   recordCampsiteTimeout() {
-    this.campsiteTimeouts++;
+    this.campsiteTimeouts++
   },
 
   recordResponseTime(duration: number) {
-    this.totalRequests++;
+    this.totalRequests++
     this.avgResponseTime =
-      (this.avgResponseTime * (this.totalRequests - 1) + duration) / this.totalRequests;
+      (this.avgResponseTime * (this.totalRequests - 1) + duration) / this.totalRequests
   },
-};
+}

@@ -1,37 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { Provider } from 'react-redux'
+import { configureStore } from '@reduxjs/toolkit'
 
 vi.mock('react-leaflet', () => {
   return {
     Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
     Popup: function Popup(props: any) {
-      const children =
-        typeof props.children === 'function' ? props.children() : props.children;
-      return (
-        <div
-          onClick={() => props.eventHandlers?.popupclose?.()}
-        >
-          {children}
-        </div>
-      );
+      const children = typeof props.children === 'function' ? props.children() : props.children
+      return <div onClick={() => props.eventHandlers?.popupclose?.()}>{children}</div>
     },
-  };
-});
+  }
+})
 
 vi.mock('leaflet', () => {
   class DivIconMock {
     constructor(opts: any) {
-      Object.assign(this, opts);
+      Object.assign(this, opts)
     }
   }
   return {
     __esModule: true,
     default: { DivIcon: DivIconMock },
     DivIcon: DivIconMock,
-  };
-});
+  }
+})
 
 vi.mock('../WeatherCard/WeatherCard', () => ({
   __esModule: true,
@@ -41,7 +34,7 @@ vi.mock('../WeatherCard/WeatherCard', () => ({
         weatherData.map((period: any, index: number) => (
           <div key={index} className="weather-period-card">
             <div className="weather-period-header">
-              {period.name} ({period.isDaytime ? "Day" : "Night"})
+              {period.name} ({period.isDaytime ? 'Day' : 'Night'})
             </div>
           </div>
         ))
@@ -50,11 +43,11 @@ vi.mock('../WeatherCard/WeatherCard', () => ({
       )}
     </div>
   ),
-}));
+}))
 
-import * as CampsitesApi from '../../api/Campsites';
-import CampsiteMarker from './CampsiteMarker';
-import { Campsite } from '../../types/Campsite';
+import * as CampsitesApi from '../../api/Campsites'
+import CampsiteMarker from './CampsiteMarker'
+import { Campsite } from '../../types/Campsite'
 
 const sampleSite: Campsite = {
   id: 'abc',
@@ -95,71 +88,68 @@ const sampleSite: Campsite = {
       shortForecast: 'Clear',
     },
   ],
-};
+}
 
-import * as CampsiteSlice from '../../store/campsiteSlice';
+import * as CampsiteSlice from '../../store/campsiteSlice'
 
-
-import type { Store } from '@reduxjs/toolkit';
+import type { Store } from '@reduxjs/toolkit'
 
 describe('<CampsiteMarker />', () => {
-  let store: Store;
+  let store: Store
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks()
     // Mock the thunk to always resolve with sampleSite and correct meta
-    vi.spyOn(CampsiteSlice, 'fetchCampsiteById').mockImplementation(
-      ((id: string) => async () => ({
-        type: 'campsite/fetchCampsiteById/fulfilled',
-        payload: sampleSite,
-        meta: { arg: id, requestId: 'test', requestStatus: 'fulfilled' }
-      })) as unknown as typeof CampsiteSlice.fetchCampsiteById
-    );
-    store = configureStore({ reducer: (state = {}) => state });
-  });
+    vi.spyOn(CampsiteSlice, 'fetchCampsiteById').mockImplementation(((id: string) => async () => ({
+      type: 'campsite/fetchCampsiteById/fulfilled',
+      payload: sampleSite,
+      meta: { arg: id, requestId: 'test', requestStatus: 'fulfilled' },
+    })) as unknown as typeof CampsiteSlice.fetchCampsiteById)
+    store = configureStore({ reducer: (state = {}) => state })
+  })
 
   it('renders marker and popup with site info', () => {
     render(
       <Provider store={store}>
         <CampsiteMarker site={sampleSite} />
       </Provider>
-    );
-    expect(screen.getByTestId('marker')).toBeInTheDocument();
-    expect(screen.getByText('Test Site')).toBeInTheDocument();
-    expect(screen.getByText('A lovely place')).toBeInTheDocument();
-    expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Directions/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Details/i })).toBeInTheDocument();
-    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
-  });
+    )
+    expect(screen.getByTestId('marker')).toBeInTheDocument()
+    expect(screen.getByText('Test Site')).toBeInTheDocument()
+    expect(screen.getByText('A lovely place')).toBeInTheDocument()
+    expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Get Directions/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Get Details/i })).toBeInTheDocument()
+    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument()
+  })
 
   it('displays "Unnamed Site" when name is empty', () => {
-    const unnamed = { ...sampleSite, name: '' };
+    const unnamed = { ...sampleSite, name: '' }
     render(
       <Provider store={store}>
         <CampsiteMarker site={unnamed} />
       </Provider>
-    );
-    expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
-  });
+    )
+    expect(screen.getByText('Unnamed Site')).toBeInTheDocument()
+  })
 
   it('shows "Unknown" for elevation when invalid', () => {
-    const noElev = { ...sampleSite, elevation: NaN };
+    const noElev = { ...sampleSite, elevation: NaN }
     render(
       <Provider store={store}>
         <CampsiteMarker site={noElev} />
       </Provider>
-    );
-    expect(screen.getByText('Unknown')).toBeInTheDocument();
-  });
+    )
+    expect(screen.getByText('Unknown')).toBeInTheDocument()
+  })
 
   it('shows loading state initially and then enriched data', async () => {
     render(
       <Provider store={store}>
         <CampsiteMarker site={{ ...sampleSite, weather: undefined }} />
       </Provider>
-    );
+    )
 
-    expect(screen.getByText('Loading weather...')).toBeInTheDocument();
-    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
-  });
-});
+    expect(screen.getByText('Loading weather...')).toBeInTheDocument()
+    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument()
+  })
+})

@@ -17,21 +17,21 @@ info:
     - GET /campsites/{id}: Returns enhanced data with elevation and weather
 
 servers:
-- url: https://campsights.onrender.com/api/v1
-  description: Production server (Render) - Proxies BLM Spider API with elevation/weather enhancements
-- url: http://localhost:3000/api/v1
-  description: Development server (Local) - Proxies BLM Spider API with elevation/weather enhancements
+  - url: https://campsights.onrender.com/api/v1
+    description: Production server (Render) - Proxies BLM Spider API with elevation/weather enhancements
+  - url: http://localhost:3000/api/v1
+    description: Development server (Local) - Proxies BLM Spider API with elevation/weather enhancements
 tags:
-- name: Campsites
-  description: Operations related to campsite resources
-- name: Health
-  description: Health check endpoint
+  - name: Campsites
+    description: Operations related to campsite resources
+  - name: Health
+    description: Health check endpoint
 
 paths:
   /campsites:
     get:
       tags:
-      - Campsites
+        - Campsites
       operationId: listCampsites
       summary: Get all campsites from BLM Spider API
       description: Retrieves campsite data from the Bureau of Land Management Spider API. Elevation and weather data are not included in the list view for performance reasons.
@@ -45,17 +45,17 @@ paths:
                 items:
                   $ref: '#/components/schemas/Campsite'
               example:
-              - id: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
-                name: "Middle Fork of the Powder River Campground"
-                url: "https://www.blm.gov/visit/middle-fork-powder-river-campground-0"
-                description: "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water."
-                lat: 43.579304
-                lng: -107.140476
-                state: "Wyoming"
-                mapLink: "https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476"
-                directions: "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails."
-                activities: [ "CAMPING" ]
-                source: "BLM"
+                - id: '28430a4f-ce40-478d-a7b1-0c23d9c49dbb'
+                  name: 'Middle Fork of the Powder River Campground'
+                  url: 'https://www.blm.gov/visit/middle-fork-powder-river-campground-0'
+                  description: 'Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water.'
+                  lat: 43.579304
+                  lng: -107.140476
+                  state: 'Wyoming'
+                  mapLink: 'https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476'
+                  directions: 'From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails.'
+                  activities: ['CAMPING']
+                  source: 'BLM'
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -68,12 +68,12 @@ paths:
   /campsites/{id}:
     get:
       tags:
-      - Campsites
+        - Campsites
       operationId: getCampsiteById
       summary: Get a campsite by ID (with elevation and weather)
       description: Retrieves detailed campsite information including elevation and weather data. This endpoint fetches additional data not included in the list view.
       parameters:
-      - $ref: '#/components/parameters/campsiteId'
+        - $ref: '#/components/parameters/campsiteId'
       responses:
         '200':
           description: Campsite with elevation and weather
@@ -95,7 +95,7 @@ paths:
   /health:
     get:
       tags:
-      - Health
+        - Health
       operationId: healthCheck
       summary: Health check
       responses:
@@ -119,13 +119,13 @@ components:
       required: true
       schema:
         type: string
-      example: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
+      example: '28430a4f-ce40-478d-a7b1-0c23d9c49dbb'
 
   schemas:
     Error:
       type: object
       required:
-      - error
+        - error
       properties:
         error:
           type: string
@@ -136,39 +136,39 @@ components:
         src:
           type: string
           format: uri
-          example: "https://cdn.recreation.gov/public/2023/06/20/22/39/ed4c589b-d3e4-49fb-a0fd-f8bb7a0c4e3d.jpeg"
+          example: 'https://cdn.recreation.gov/public/2023/06/20/22/39/ed4c589b-d3e4-49fb-a0fd-f8bb7a0c4e3d.jpeg'
         alt:
           type: string
-          example: "John Day River from Muleshoe Campground"
+          example: 'John Day River from Muleshoe Campground'
         credit:
           type: string
-          example: "Bureau of Land Management"
+          example: 'Bureau of Land Management'
 
     Campsite:
       type: object
       required:
-      - id
-      - name
-      - url
-      - lat
-      - lng
-      - state
-      - mapLink
-      - source
+        - id
+        - name
+        - url
+        - lat
+        - lng
+        - state
+        - mapLink
+        - source
       properties:
         id:
           type: string
-          example: "28430a4f-ce40-478d-a7b1-0c23d9c49dbb"
+          example: '28430a4f-ce40-478d-a7b1-0c23d9c49dbb'
         name:
           type: string
-          example: "Middle Fork of the Powder River Campground"
+          example: 'Middle Fork of the Powder River Campground'
         url:
           type: string
           format: uri
-          example: "https://www.blm.gov/visit/middle-fork-powder-river-campground-0"
+          example: 'https://www.blm.gov/visit/middle-fork-powder-river-campground-0'
         description:
           type: string
-          example: "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water."
+          example: 'Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water.'
         lat:
           type: number
           format: float
@@ -179,102 +179,102 @@ components:
           example: -107.140476
         state:
           type: string
-          example: "Wyoming"
+          example: 'Wyoming'
         mapLink:
           type: string
           format: uri
-          example: "https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476"
+          example: 'https://www.openstreetmap.org/export/embed.html?bbox=-107.150476,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476'
         directions:
           type: string
-          example: "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails."
+          example: 'From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails.'
         activities:
           type: array
           items:
             type: string
-          example: [ "CAMPING", "FISHING", "HIKING" ]
+          example: ['CAMPING', 'FISHING', 'HIKING']
         campgrounds:
           type: array
           items:
             type: string
-          example: [ "RV", "TENT" ]
+          example: ['RV', 'TENT']
         wildlife:
           type: array
           items:
             type: string
-          example: [ "Deer", "Eagles" ]
+          example: ['Deer', 'Eagles']
         fees:
           type: string
-          example: "$5 per night per campsite"
+          example: '$5 per night per campsite'
         stayLimit:
           type: string
-          example: "14 days"
+          example: '14 days'
         images:
           type: array
           items:
             $ref: '#/components/schemas/CampsiteImage'
         source:
           type: string
-          enum: [ "BLM" ]
-          example: "BLM"
+          enum: ['BLM']
+          example: 'BLM'
 
     WeatherPeriod:
       type: object
       required:
-      - name
-      - startTime
-      - endTime
-      - temperature
-      - temperatureUnit
-      - windSpeed
-      - windDirection
-      - shortForecast
-      - detailedForecast
+        - name
+        - startTime
+        - endTime
+        - temperature
+        - temperatureUnit
+        - windSpeed
+        - windDirection
+        - shortForecast
+        - detailedForecast
       properties:
         name:
           type: string
-          example: "Tonight"
+          example: 'Tonight'
         startTime:
           type: string
           format: date-time
-          example: "2025-07-03T18:00:00-06:00"
+          example: '2025-07-03T18:00:00-06:00'
         endTime:
           type: string
           format: date-time
-          example: "2025-07-04T06:00:00-06:00"
+          example: '2025-07-04T06:00:00-06:00'
         temperature:
           type: number
           example: 60
         temperatureUnit:
           type: string
-          example: "F"
+          example: 'F'
         windSpeed:
           type: string
-          example: "5 mph"
+          example: '5 mph'
         windDirection:
           type: string
-          example: "NW"
+          example: 'NW'
         shortForecast:
           type: string
-          example: "Clear"
+          example: 'Clear'
         detailedForecast:
           type: string
-          example: "Clear skies tonight with a light breeze."
+          example: 'Clear skies tonight with a light breeze.'
 
     CampsiteWithWeather:
       allOf:
-      - $ref: '#/components/schemas/Campsite'
-      - type: object
-        properties:
-          elevation:
-            type: number
-            nullable: true
-            description: "Elevation in meters above sea level (fetched from Open Elevation API)"
-            example: 2650
-          weather:
-            type: array
-            items:
-              $ref: '#/components/schemas/WeatherPeriod'
-            description: "Weather forecast data from National Weather Service"
+        - $ref: '#/components/schemas/Campsite'
+        - type: object
+          properties:
+            elevation:
+              type: number
+              nullable: true
+              description: 'Elevation in meters above sea level (fetched from Open Elevation API)'
+              example: 2650
+            weather:
+              type: array
+              items:
+                $ref: '#/components/schemas/WeatherPeriod'
+              description: 'Weather forecast data from National Weather Service'
 
   responses:
     BadRequest:

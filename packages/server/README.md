@@ -4,13 +4,13 @@ This is the backend for the Campsights app, built with Express and TypeScript. I
 
 ## Features
 
-+ **Read-only REST API:** Proxies structured BLM data from the BLM Spider API
-+ Elevation Integration: Fetches elevation from the Open-Elevation API
-+ **Weather Forecasts:** Uses the National Weather Service API to return detailed forecasts
-+ **Two-Tier Loading:** Fast list view, rich detail view
-+ **In-Memory Caching:** Reduces latency and API usage
-+ **Swagger Docs:** API docs available at /docs
-+ **CORS-Ready:** Built for frontend integration
+- **Read-only REST API:** Proxies structured BLM data from the BLM Spider API
+- Elevation Integration: Fetches elevation from the Open-Elevation API
+- **Weather Forecasts:** Uses the National Weather Service API to return detailed forecasts
+- **Two-Tier Loading:** Fast list view, rich detail view
+- **In-Memory Caching:** Reduces latency and API usage
+- **Swagger Docs:** API docs available at /docs
+- **CORS-Ready:** Built for frontend integration
 
 ## Data Sources
 
@@ -33,11 +33,13 @@ The backend acts as a proxy and enhancement layer:
 ## Getting Started
 
 1. Install dependencies:
+
    ```sh
    npm install
    ```
 
 2. Start the development server:
+
    ```sh
    npm run dev
    ```
@@ -56,6 +58,7 @@ The backend acts as a proxy and enhancement layer:
 ### Response Examples
 
 **GET /api/v1/campsites** - Fast list view:
+
 ```json
 [
   {
@@ -85,6 +88,7 @@ The backend acts as a proxy and enhancement layer:
 ```
 
 **GET /api/v1/campsites/:id** - Detailed view with elevation and weather:
+
 ```json
 {
   "id": "28430a4f-ce40-478d-a7b1-0c23d9c49dbb",
@@ -139,7 +143,7 @@ The backend acts as a proxy and enhancement layer:
 ## Scripts
 
 - `npm run dev` — Start development server with hot reload
-- `npm start` — Start server with ts-node  
+- `npm start` — Start server with ts-node
 - `npm run build` — Compile TypeScript to JavaScript
 - `npm test` — Run tests
 
@@ -169,6 +173,3 @@ The backend acts as a proxy and enhancement layer:
 - **Reduced API Usage**: Caching and lazy enhancement minimize calls to external services.
 - **Robustness**: Handles API failures gracefully and automatically retries transient errors.
 - **No Data Loss**: Core campsite data is always returned, even if enhancements fail.
-
-
-

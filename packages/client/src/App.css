@@ -11,7 +11,7 @@ body,
   min-width: 0;
   min-height: 0;
   box-sizing: border-box;
-  background: #F2EFE9;
+  background: #f2efe9;
 }
 
 .app-container {
@@ -29,7 +29,7 @@ body,
   justify-content: center;
   align-items: center;
   padding: 1rem;
-  background: #F1EFE9;
+  background: #f1efe9;
   position: relative;
   z-index: 10;
   min-height: 50px;
@@ -70,8 +70,8 @@ body,
   margin: 0;
 }
 
-.main-content>.MapView,
-.main-content>div {
+.main-content > .MapView,
+.main-content > div {
   height: 100%;
   min-width: 0;
   min-height: 0;
@@ -120,7 +120,7 @@ body,
   .app-header {
     padding: 1rem 0.5rem;
   }
-  
+
   .app-header h1 {
     font-size: 3rem;
   }

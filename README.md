@@ -4,7 +4,7 @@ Campsights is a full-stack web app for discovering dispersed campsites on public
 
 Campsite data is powered by my custom [BLM Spider API](https://github.com/baileydunning/blm-spider), which scrapes the Bureau of Land Management website and filters out sites restricted to day use or that don’t meet certain criteria. Each site is enriched with weather data from the National Weather Service and elevation data from Open-Elevation API, based on its coordinates.
 
-*Disclaimer:* Not all locations shown on the map are confirmed campsites. Some may be trailheads, parking areas, or general points of interest. Elevation and weather data are approximate and may not reflect current or exact conditions. Always verify site details and local regulations before heading out.
+_Disclaimer:_ Not all locations shown on the map are confirmed campsites. Some may be trailheads, parking areas, or general points of interest. Elevation and weather data are approximate and may not reflect current or exact conditions. Always verify site details and local regulations before heading out.
 
 **Live project link:** https://campsights.onrender.com/
 
@@ -37,6 +37,7 @@ This project uses a **monorepo** structure managed by [Lerna](https://lerna.js.o
 Lerna helps manage multiple packages (the frontend and backend) in a single repository. Install all the dependencies for both packages by running `npm i` at root.
 
 **Packages:**
+
 - `packages/client` — The React frontend
 - `packages/server` — The Express backend
 
@@ -85,6 +86,7 @@ npm run dev
 ## API
 
 ### `GET /api/v1/campsites`
+
 - **Description:** Returns a list of all campsites from the BLM Spider API.
 - **Response:**
   - Status: `200 OK`
@@ -120,10 +122,12 @@ npm run dev
     ```
 
 ### `GET /api/v1/campsites/:id`
+
 - **Description:** Returns a specific campsite by ID with enriched elevation and weather data.
 - **Response:**
   - Status: `200 OK`
   - Body: Campsite object with weather and elevation data attached
+
 ```json
     {
       "id": "string",
@@ -170,7 +174,7 @@ npm run dev
               "detailedForecast": "string"
           },
           ...
-      ] 
+      ]
     }
 ```
 
@@ -224,7 +228,7 @@ Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov
             "windDirection": "NW",
             "shortForecast": "Sunny",
             "detailedForecast": "Sunny, with a high near 75. Northwest wind 10 mph."
-          },
+          }
           // ...more periods...
         ]
       }
@@ -234,21 +238,26 @@ Campsights uses the [National Weather Service (NWS) API](https://www.weather.gov
 ## Performance, Optimization & Caching
 
 **Two-Tier Data Loading**
-+ GET /api/v1/campsites returns raw BLM data instantly—no elevation or weather—for fast list rendering.
-+ GET /api/v1/campsites/:id fetches and caches elevation and weather on demand for detailed views.
+
+- GET /api/v1/campsites returns raw BLM data instantly—no elevation or weather—for fast list rendering.
+- GET /api/v1/campsites/:id fetches and caches elevation and weather on demand for detailed views.
 
 **In-Memory Caching**
-+ Elevation is cached by coordinates with no expiration.
-+ Weather is cached per campsite with a 10-minute TTL.
-+ All caching is in-memory for fast access with no database or disk usage.
+
+- Elevation is cached by coordinates with no expiration.
+- Weather is cached per campsite with a 10-minute TTL.
+- All caching is in-memory for fast access with no database or disk usage.
 
 **Rate Limiting and Retries**
-+ External APIs are called within documented rate limits.
-+ Transient errors are retried automatically with exponential backoff.
+
+- External APIs are called within documented rate limits.
+- Transient errors are retried automatically with exponential backoff.
 
 **Graceful Degradation**
-+ If enrichment APIs fail, core campsite data is still returned.
+
+- If enrichment APIs fail, core campsite data is still returned.
 
 **Type Safety and Error Handling**
-+ Fully typed with TypeScript.
-+ Clear error messages and fallback logic ensure reliability.
+
+- Fully typed with TypeScript.
+- Clear error messages and fallback logic ensure reliability.
