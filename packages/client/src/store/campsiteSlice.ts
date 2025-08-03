@@ -13,15 +13,33 @@ export const fetchCampsites = createAsyncThunk(
     const CACHE_KEY = 'campsights_campsites';
     const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
+      let cached = null;
+
+      try {
+        cached = localStorage.getItem(CACHE_KEY);
+      } catch (e) {
+        console.warn('localStorage unavailable:', e);
+      }
+
       if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL) {
-          return data;
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL) {
+            return data;
+          }
+        } catch (e) {
+          localStorage.removeItem(CACHE_KEY);
         }
       }
+
       const campsites = await getCampsites();
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ data: campsites, timestamp: Date.now() }));
+
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ data: campsites, timestamp: Date.now() }));
+      } catch (e) {
+        console.warn('localStorage setItem failed:', e);
+      }
+
       return campsites;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch campsites');
@@ -35,15 +53,33 @@ export const fetchCampsiteById = createAsyncThunk(
     const CAMPSITE_CACHE_KEY = `campsights_campsite_${id}`;
     const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
     try {
-      const cached = localStorage.getItem(CAMPSITE_CACHE_KEY);
+      let cached = null;
+
+      try {
+        cached = localStorage.getItem(CAMPSITE_CACHE_KEY);
+      } catch (e) {
+        console.warn('localStorage unavailable:', e);
+      }
+
       if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL) {
-          return data;
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL && data && data.id === id) {
+            return data;
+          }
+        } catch (e) {
+          localStorage.removeItem(CAMPSITE_CACHE_KEY);
         }
       }
+
       const campsite = await getCampsiteById(id);
-      localStorage.setItem(CAMPSITE_CACHE_KEY, JSON.stringify({ data: campsite, timestamp: Date.now() }));
+
+      try {
+        localStorage.setItem(CAMPSITE_CACHE_KEY, JSON.stringify({ data: campsite, timestamp: Date.now() }));
+      } catch (e) {
+        console.warn('localStorage setItem failed:', e);
+      }
+
       return campsite;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch campsite');
