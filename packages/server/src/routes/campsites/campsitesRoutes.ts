@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express'
+
 import { getCampsites, getCampsiteById } from '../../controllers/campsites/campsitesController'
 
 const campsitesRouter = Router()

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest'
+import { Request, Response } from 'express'
+
 import { getCampsites, getCampsiteById } from './campsitesController'
 import * as campsitesService from '../../services/campsites/campsitesService'
-import { Request, Response } from 'express'
 
 describe('campsitesController', () => {
   let req: Partial<Request>

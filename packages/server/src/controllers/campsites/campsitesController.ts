@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+
 import * as campsitesService from '../../services/campsites/campsitesService'
 
 export const getCampsites = async (req: Request, res: Response) => {

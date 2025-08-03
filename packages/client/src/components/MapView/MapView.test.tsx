@@ -1,7 +1,7 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { vi } from 'vitest'
-import '@testing-library/jest-dom'
 import MapView from './MapView'
+import '@testing-library/jest-dom'
 
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }: any) => <div role="region">{children}</div>,

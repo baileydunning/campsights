@@ -1,4 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest'
+
 import { circuitBreaker } from './circuitBreaker'
 
 describe('circuitBreaker', () => {

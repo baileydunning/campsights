@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { vi } from 'vitest'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
+
 import App from './App'
 import campsiteSlice from './store/campsiteSlice'
 

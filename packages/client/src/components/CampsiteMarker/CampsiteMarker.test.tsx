@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 
@@ -28,7 +28,7 @@ vi.mock('leaflet', () => {
 
 vi.mock('../WeatherCard/WeatherCard', () => ({
   __esModule: true,
-  default: ({ campsiteId, weatherData }: any) => (
+  default: ({ weatherData }: any) => (
     <div className="weather-card">
       {weatherData && weatherData.length > 0 ? (
         weatherData.map((period: any, index: number) => (
@@ -45,7 +45,7 @@ vi.mock('../WeatherCard/WeatherCard', () => ({
   ),
 }))
 
-import * as CampsitesApi from '../../api/Campsites'
+import type { Store } from '@reduxjs/toolkit'
 import CampsiteMarker from './CampsiteMarker'
 import { Campsite } from '../../types/Campsite'
 
@@ -91,8 +91,6 @@ const sampleSite: Campsite = {
 }
 
 import * as CampsiteSlice from '../../store/campsiteSlice'
-
-import type { Store } from '@reduxjs/toolkit'
 
 describe('<CampsiteMarker />', () => {
   let store: Store

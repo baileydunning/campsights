@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, vi, expect } from 'vitest'
 import request from 'supertest'
+
 import { server } from './server'
 
 vi.mock('express-rate-limit', () => ({

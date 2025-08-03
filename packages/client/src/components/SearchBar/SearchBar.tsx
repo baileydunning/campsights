@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, useEffect } from 'react'
+
 import type { Campsite } from '../../types/Campsite'
 
 interface SearchBarProps {

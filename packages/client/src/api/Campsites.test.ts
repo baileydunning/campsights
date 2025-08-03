@@ -27,18 +27,6 @@ const mockCampsites: Campsite[] = [
   },
 ]
 
-const mockCampsite: Campsite = {
-  id: '3',
-  name: 'Mountain Base',
-  url: 'https://example.com/3',
-  lat: 39,
-  lng: -104,
-  state: 'CO',
-  mapLink: 'https://maps.example.com/3',
-  source: 'BLM',
-  description: 'High up',
-}
-
 describe('Campsites API', () => {
   const globalAny: any = global
 

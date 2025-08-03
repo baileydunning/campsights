@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+
 import SearchBar from './SearchBar'
 import type { Campsite } from '../../types/Campsite'
 

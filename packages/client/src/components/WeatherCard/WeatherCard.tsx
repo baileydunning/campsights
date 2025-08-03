@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+
 import { WeatherPeriod } from '../../types/Weather'
-import { getCampsiteById } from '../../api/Campsites'
 import './WeatherCard.css'
 
 interface WeatherCardProps {

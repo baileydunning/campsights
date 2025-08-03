@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
+import { useDispatch } from 'react-redux'
 import { Campsite } from '../../types/Campsite'
 import { fetchCampsiteById } from '../../store/campsiteSlice'
-import { useDispatch } from 'react-redux'
 import WeatherCard from '../WeatherCard/WeatherCard'
+
 import './CampsiteMarker.css'
 
 export interface CampsiteMarkerProps {

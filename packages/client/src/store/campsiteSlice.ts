@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+
 import { CampsitesState } from '../types/Campsite'
 import { getCampsites, getCampsiteById } from '../api/Campsites'
 

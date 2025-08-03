@@ -1,11 +1,12 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react'
-import './App.css'
+import { useDispatch, useSelector } from 'react-redux'
 import Loading from './components/Loading/Loading'
 import SearchBar from './components/SearchBar/SearchBar'
-import { useDispatch, useSelector } from 'react-redux'
 import { fetchCampsites, selectCampsites } from './store/campsiteSlice'
 import type { AppDispatch } from './store/store'
 import type { Campsite } from './types/Campsite'
+
+import './App.css'
 
 const MapView = lazy(() => import('./components/MapView/MapView'))
 

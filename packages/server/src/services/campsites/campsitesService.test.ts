@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
 import { Campsite } from '../../models/campsiteModel'
 import { WeatherPeriod } from '../../models/weatherModel'
 
@@ -87,7 +88,6 @@ describe('campsitesService', () => {
         elevation: 1234,
         weather: mockWeather,
       })
-
       ;(global.fetch as any).mockClear()
       await campsitesService.getCampsiteById('abc123')
       expect(global.fetch).not.toHaveBeenCalled()

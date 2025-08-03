@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+
 import reducer, {
   fetchCampsites,
   fetchCampsiteById,
@@ -57,7 +58,6 @@ describe('campsiteSlice', () => {
 
       const cached = JSON.parse(localStorage.getItem('campsights_campsites')!)
       expect(cached.data).toEqual(mockCampsites)
-
       ;(getCampsites as any).mockClear()
       const result2 = await fetchCampsites()(dispatch, getState, undefined)
       expect(result2.payload).toEqual(mockCampsites)

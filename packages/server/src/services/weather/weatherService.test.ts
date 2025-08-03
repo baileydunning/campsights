@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
 import { getWeatherForecast } from './weatherService'
 import type { Campsite } from '../../models/campsiteModel'
 import type { WeatherPeriod } from '../../models/weatherModel'

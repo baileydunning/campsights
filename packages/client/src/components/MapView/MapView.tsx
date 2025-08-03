@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react'
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet'
 import L from 'leaflet'
+
 import './MapView.css'
 import type { Campsite } from '../../types/Campsite'
 const CampsiteMarker = React.lazy(() => import('../CampsiteMarker/CampsiteMarker'))
