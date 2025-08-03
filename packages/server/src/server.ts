@@ -85,7 +85,7 @@ export function server() {
     res.sendFile(indexHtmlPath)
   })
 
-  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  app.use((err: any, req: express.Request, res: express.Response) => {
     console.error('Unhandled error:', err)
     const status = err.status || err.statusCode || 500
     res.status(status).json({ error: err.message || 'Internal Server Error' })

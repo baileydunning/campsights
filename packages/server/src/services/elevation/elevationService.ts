@@ -40,6 +40,7 @@ export async function getElevation(lat: number, lng: number): Promise<number | n
     elevationCache.set(cacheKey, { elevation, timestamp: now })
     return elevation
   } catch (err) {
+    console.error(`Failed to fetch elevation for ${lat},${lng}:`, err)
     circuitBreaker.recordElevationFailure()
     performanceMetrics.recordElevationTimeout()
     preWarmCache.add(cacheKey)
@@ -56,7 +57,6 @@ export const getElevations = async (
   const uncached: { latitude: number; longitude: number }[] = []
   const uncachedIndexes: number[] = []
 
-  // Check in-memory cache
   for (const [index, key] of keys.entries()) {
     if (elevationCache.has(key)) {
       results[index] = elevationCache.get(key)!.elevation
@@ -67,7 +67,6 @@ export const getElevations = async (
     }
   }
 
-  // Fetch uncached elevations from API
   if (uncached.length > 0) {
     let payload: { results: Elevation[] } | null = null
     try {
@@ -89,6 +88,7 @@ export const getElevations = async (
         results[uncachedIndexes[i]] = elevation
       })
     } catch (err: any) {
+      console.error(`Failed to fetch elevations for ${uncached.map(loc => `${loc.latitude},${loc.longitude}`).join('; ')}:`, err)
       uncachedIndexes.forEach((index) => {
         results[index] = null
       })

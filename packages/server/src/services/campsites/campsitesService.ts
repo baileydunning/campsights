@@ -113,6 +113,7 @@ async function getCampsiteByIdInternal(
     try {
       response = await fetchWithRetry(`${BLM_API_URL}/${id}`)
     } catch (err) {
+      console.error(`Failed to fetch campsite ${id}:`, err)
       return null
     }
     if (!response.ok) return null

@@ -14,7 +14,6 @@ export interface CampsiteMarkerProps {
 }
 
 const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
-  if (!site) return null
   const popupRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
   const [enrichedSite, setEnrichedSite] = useState<Campsite | null>(null)
@@ -22,6 +21,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
   const [error, setError] = useState<string | null>(null)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const dispatch = useDispatch()
+
+  if (!site) return null
 
   const fetchEnrichedSite = async () => {
     if (isLoading || enrichedSite) return
@@ -37,8 +38,8 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
         setError('Campsite details not found')
       }
     } catch (err) {
-      setError('Failed to load campsite details')
-      console.error('Error fetching enriched campsite:', err)
+      setError('Failed to load campsite details: ' + (err instanceof Error ? err.message : 'Unknown error'))
+      console.error('Error fetching enriched campsite:', error)
     } finally {
       setIsLoading(false)
     }
@@ -87,7 +88,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
         click: () => {
           fetchEnrichedSite()
         },
-        popupopen: (e) => {
+        popupopen: (_e) => {
           if (map && markerRef.current) {
             const markerLatLng = markerRef.current.getLatLng()
             map.panTo(markerLatLng, { animate: true })

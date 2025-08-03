@@ -4,11 +4,10 @@ import { WeatherPeriod } from '../../types/Weather'
 import './WeatherCard.css'
 
 interface WeatherCardProps {
-  campsiteId: string
   weatherData?: WeatherPeriod[]
 }
 
-const WeatherCard: React.FC<WeatherCardProps> = ({ campsiteId, weatherData }) => {
+const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
   if (weatherData === undefined) {
     return (
       <div className="weather-period-card weather-loading" role="status" aria-live="polite">

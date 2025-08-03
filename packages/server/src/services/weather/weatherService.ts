@@ -39,6 +39,7 @@ export async function getWeather(lat: number, lng: number, id?: string): Promise
     weatherCache.set(cacheKey, { weather, timestamp: now })
     return weather
   } catch (err) {
+    console.error(`Failed to fetch weather for ${lat},${lng}:`, err)
     circuitBreaker.recordWeatherFailure()
     performanceMetrics.recordWeatherTimeout()
     preWarmCache.add(cacheKey)

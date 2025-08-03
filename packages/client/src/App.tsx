@@ -5,7 +5,6 @@ import SearchBar from './components/SearchBar/SearchBar'
 import { fetchCampsites, selectCampsites } from './store/campsiteSlice'
 import type { AppDispatch } from './store/store'
 import type { Campsite } from './types/Campsite'
-
 import './App.css'
 
 const MapView = lazy(() => import('./components/MapView/MapView'))

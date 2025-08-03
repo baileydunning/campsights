@@ -35,17 +35,17 @@ const mockWeatherData: WeatherPeriod[] = [
 
 describe('WeatherCard', () => {
   it('renders loading spinner when weatherData is undefined', () => {
-    render(<WeatherCard campsiteId="1" />)
+    render(<WeatherCard />)
     expect(screen.getByTestId('weather-spinner')).toBeInTheDocument()
   })
 
   it("renders 'No weather data available' when weatherData is empty", () => {
-    render(<WeatherCard campsiteId="1" weatherData={[]} />)
+    render(<WeatherCard weatherData={[]} />)
     expect(screen.getByText(/No weather data available/i)).toBeInTheDocument()
   })
 
   it('renders weather periods when weatherData is provided', () => {
-    render(<WeatherCard campsiteId="1" weatherData={mockWeatherData} />)
+    render(<WeatherCard weatherData={mockWeatherData} />)
     expect(screen.getByText(/Monday \(Day\)/)).toBeInTheDocument()
     expect(screen.getByText(/Monday Night \(Night\)/)).toBeInTheDocument()
     expect(screen.getAllByText(/Temp:/)).toHaveLength(2)
