@@ -24,20 +24,31 @@ export function server() {
     'http://localhost:4000',
   ]
 
-  app.use(
-    cors({
-      origin: function (origin, callback) {
-        if (!origin) return callback(null, true)
-        if (allowedOrigins.includes(origin)) {
-          return callback(null, true)
+  const corsOptions: cors.CorsOptions = {
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(
+          new Error(JSON.stringify({ error: 'API access denied: invalid origin' }))
+        );
+      }
+    }
+  };
+
+  app.use((req, res, next) => {
+    cors(corsOptions)(req, res, (err) => {
+      if (err) {
+        try {
+          const parsed = JSON.parse(err.message);
+          return res.status(403).json(parsed);
+        } catch {
+          return res.status(500).json({ error: 'CORS error' });
         }
-        const err = new Error('API access denied: invalid origin')
-        ;(err as any).status = 403
-        return callback(err)
-      },
-      credentials: true,
-    })
-  )
+      }
+      next();
+    });
+  });
 
   app.use(express.json())
 
