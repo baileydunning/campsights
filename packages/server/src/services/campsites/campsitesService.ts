@@ -28,7 +28,7 @@ function rateLimit(): Promise<void> {
 }
 
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
-const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
+const BLM_API_URL = 'https://blm-spider.bailey.stage.harperfabric.com:9926/Campsites';
 
 export const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
 
