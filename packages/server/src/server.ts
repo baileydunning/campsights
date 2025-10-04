@@ -18,7 +18,7 @@ export function server() {
   app.use(compression({ level: 9, threshold: 0 }));
 
   const allowedOrigins = [
-    'https://campsights.onrender.com',
+    'https://blm-spider.bailey.stage.harperfabric.com',
     'http://localhost:5173',
     'http://localhost:4000'
   ];
