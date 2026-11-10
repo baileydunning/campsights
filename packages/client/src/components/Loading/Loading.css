@@ -3,26 +3,45 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 400px; 
-  min-width: 320px;
-  min-height: 300px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  margin: 0 auto;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #E9E6DF;
   position: relative;
   z-index: 2;
-  transition: background 0.2s;
 }
 
-.breathing-tent {
-  animation: breathe 2s ease-in-out infinite;
-  transform-origin: center bottom;
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(34, 110, 82, 0) 0deg, #226E52 300deg, rgba(34, 110, 82, 0) 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  /* Don't flash on fast loads */
+  opacity: 0;
+  animation: loading-spin 0.9s linear infinite, loading-fade-in 0.3s ease-out 0.15s forwards;
 }
 
-@keyframes breathe {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(1.08); }
-  45%  { transform: scale(1.12); }
-  60%  { transform: scale(1.08); }
-  100% { transform: scale(1); }
+.loading-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loading-fade-in {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: loading-spin 2s linear infinite, loading-fade-in 0.3s ease-out 0.15s forwards;
+  }
 }

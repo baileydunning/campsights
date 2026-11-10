@@ -3,10 +3,10 @@ import Loading from './Loading';
 import { describe, it, expect } from 'vitest';
 
 describe('<Loading />', () => {
-  it('renders the loading screen with tent SVG', () => {
+  it('renders an accessible loading spinner', () => {
     render(<Loading />);
-    expect(screen.getByRole('img', { name: /campsite tent marker/i })).toBeInTheDocument();
-    expect(document.querySelector('.breathing-tent')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/loading/i);
+    expect(document.querySelector('.loading-spinner')).toBeInTheDocument();
     expect(document.querySelector('.loading-screen')).toBeInTheDocument();
   });
 });
