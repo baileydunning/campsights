@@ -14,7 +14,7 @@
 .search-bar__input {
   width: 100%;
   height: 44px;
-  padding: 0 40px 0 40px;
+  padding: 0 12px 0 40px;
   font-family: var(--font, 'Montserrat', sans-serif);
   font-size: 16px; /* 16px stops iOS from zooming the page on focus */
   color: var(--ink, #1F2D27);
@@ -26,8 +26,13 @@
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
+.search-bar__input.has-value {
+  padding-right: 40px; /* room for the clear button */
+}
+
 .search-bar__input::placeholder {
   color: #8A938E;
+  font-size: 14px;
 }
 
 .search-bar__input::-webkit-search-cancel-button {

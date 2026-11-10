@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import "./App.css";
 import Loading from "./components/Loading/Loading";
@@ -51,9 +51,22 @@ const MapPage: React.FC<MapPageProps> = ({ query, setQuery, filtered, setFiltere
   const allCampsites = useSelector(selectCampsites);
   const loading = useSelector(selectLoading);
   const error = useSelector(selectError);
+  const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     document.title = "Campsights";
+  }, []);
+
+  // Publish the search panel's height so map controls and popups can stay below it.
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || typeof ResizeObserver === "undefined") return;
+    const update = () =>
+      document.documentElement.style.setProperty("--panel-bottom", `${Math.ceil(panel.getBoundingClientRect().bottom)}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(panel);
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -64,7 +77,7 @@ const MapPage: React.FC<MapPageProps> = ({ query, setQuery, filtered, setFiltere
         </Suspense>
       </main>
 
-      <header className="search-panel">
+      <header className="search-panel" ref={panelRef}>
         <div className="search-panel__top">
           <h1 className="brand">Campsights</h1>
           <a
@@ -80,6 +93,13 @@ const MapPage: React.FC<MapPageProps> = ({ query, setQuery, filtered, setFiltere
             </svg>
           </a>
         </div>
+        <p className="search-panel__about">
+          Dispersed campsites on public land, using data from the{" "}
+          <a href="https://www.blm.gov/visit" target="_blank" rel="noopener noreferrer">
+            Bureau of Land Management
+          </a>{" "}
+          website.
+        </p>
         <SearchBar
           campsites={allCampsites}
           initialQuery={query}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { CampsiteImage } from "../../types/Campsite";
 
 interface PhotoGalleryProps {
@@ -13,6 +13,15 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ images, name }) => {
   const current = visible[Math.min(index, visible.length - 1)];
 
   useEffect(() => setIndex(0), [images]);
+
+  const touchStartX = useRef<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => (touchStartX.current = e.touches[0].clientX);
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || visible.length < 2) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+    touchStartX.current = null;
+  };
 
   const step = (delta: number) => setIndex((i) => (i + delta + visible.length) % visible.length);
 
@@ -31,7 +40,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ images, name }) => {
 
   return (
     <div className="gallery">
-      <div className="gallery__frame">
+      <div className="gallery__frame" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <img
           key={current.src}
           className="gallery__image"

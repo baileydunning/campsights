@@ -31,6 +31,9 @@ const RememberView: React.FC = () => {
       const c = e.target.getCenter();
       lastView = { center: [c.lat, c.lng], zoom: e.target.getZoom() };
     },
+    // Lets CSS tuck the side controls away on small phones while a popup is open.
+    popupopen: (e) => e.target.getContainer().classList.add("has-popup"),
+    popupclose: (e) => e.target.getContainer().classList.remove("has-popup"),
   });
   return null;
 };

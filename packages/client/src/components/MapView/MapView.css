@@ -145,11 +145,40 @@
   border-top-left-radius: 6px;
 }
 
-/* On phones the search panel spans the top, so drop the layer switcher below it. */
+/* Keep controls clear of the iPhone home indicator and notch. */
+.MapView .leaflet-bottom { margin-bottom: env(safe-area-inset-bottom); }
+.MapView .leaflet-right { margin-right: env(safe-area-inset-right); }
+.MapView .leaflet-left { margin-left: env(safe-area-inset-left); }
+
+.MapView .leaflet-control a,
+.MapView .leaflet-control button,
+.MapView .leaflet-control label { touch-action: manipulation; }
+
+/* On phones the search panel spans the top, so drop the layer switcher below it,
+   and make every button at least 44px (Apple's minimum touch target). */
 @media (max-width: 600px) {
   .MapView .leaflet-top.leaflet-right {
-    top: calc(142px + env(safe-area-inset-top));
+    top: calc(var(--panel-bottom, 190px) + 4px);
   }
+
+  .MapView .leaflet-bar a,
+  .MapView .leaflet-touch .leaflet-bar a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+
+  .MapView .leaflet-control-layers label { padding: 8px 0; }
+
+  .MapView .leaflet-control-attribution { font-size: 9px; max-width: 70vw; }
+
+  /* Phones are too narrow for a popup and the right-hand buttons side by side. */
+  .MapView .has-popup .leaflet-right .leaflet-control:not(.leaflet-control-attribution) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .MapView .leaflet-right .leaflet-control { transition: opacity 0.15s; }
 }
 
 /* ---------- Campsite clusters ---------- */

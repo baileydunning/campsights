@@ -3,6 +3,7 @@
 
 .site-page {
   height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -88,6 +89,7 @@
 .site-hero__map,
 .gallery__frame {
   position: relative;
+  touch-action: pan-y;
   overflow: hidden;
   border-radius: 18px;
   aspect-ratio: 21 / 9;
@@ -309,6 +311,11 @@
   gap: 40px;
   align-items: start;
   margin-top: 12px;
+}
+
+.site-main,
+.site-aside {
+  min-width: 0; /* let wide children (forecast row) scroll instead of stretching the page */
 }
 
 .site-section {
@@ -593,14 +600,14 @@
 
 @media (max-width: 900px) {
   .site-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0;
   }
 
   .site-aside {
     position: static;
     order: -1;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-top: 20px;
   }
 }
@@ -626,6 +633,11 @@
   .site-page__content { padding: 0 16px 40px; }
   .site-title { padding-top: 20px; }
   .site-actions .btn { flex: 1 1 auto; justify-content: center; }
-  .site-aside { grid-template-columns: 1fr; }
+  .site-aside { grid-template-columns: minmax(0, 1fr); }
+  .site-page__content { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+  .forecast { margin: 0 -16px; padding: 2px 16px 8px; scroll-padding: 0 16px; }
+  .site-map { height: 240px; }
+  .card__footer { font-size: 0.9rem; }
+  .card__footer a { padding: 6px 4px; }
   .gallery__nav { width: 36px; height: 36px; margin-top: -18px; }
 }

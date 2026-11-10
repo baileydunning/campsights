@@ -10,19 +10,17 @@ This is the frontend for the Campsights app, built with React, Vite, and TypeScr
 - **Redux Toolkit**: State management for predictable and scalable app state.
 - **React-Leaflet**: Map rendering and interactivity using Leaflet in React.
 - **Vitest**: Fast unit and integration testing framework.
-- **CSS Modules**: Scoped and maintainable component styles.
-- **Axios/Fetch**: For API and weather data requests.
+- **React Router**: Routes for the map and campsite pages.
 
 
 ## Features
 
-- View campsites on a Leaflet map with interactive markers
-- Search for campsites by name, state, activity, etc.
-- See multi-day weather forecasts for each campsite (via National Weather Service API)
-- Get directions to any campsite via Google Maps (from your current location)
-- See BLM detail page for each campsite
-- Works offline: previously loaded data and app shell are available without a network connection
+See the [main README](../../README.md#features) for the full list. In short:
 
+- Leaflet map with clustered campsite markers, Streets, Topo and Satellite base maps, and land ownership and wildfire overlays
+- Search by name, state, activity and more, with the map zooming to the results
+- A page for every campsite at `/campsites/:id` with photos, weather alerts, a 7-day forecast, details, sun times and a map
+- Built for phones and installable as a PWA
 
 ## PWA Usage
 

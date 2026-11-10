@@ -52,6 +52,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults, onQue
     if (e.key === "Escape" && query) {
       e.preventDefault();
       update("");
+    } else if (e.key === "Enter") {
+      // On phones this closes the keyboard so the matching campsites are visible.
+      e.currentTarget.blur();
     }
   };
 
@@ -72,9 +75,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults, onQue
         value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder="Search by name, state, activities..."
+        placeholder="Search by name, state, activity"
         aria-label="Search campsites"
-        className="search-bar__input"
+        className={`search-bar__input${query ? " has-value" : ""}`}
+        enterKeyHint="search"
         autoComplete="off"
         spellCheck={false}
       />

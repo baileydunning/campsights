@@ -1,160 +1,65 @@
-import React, { useRef, useState } from "react";
+import React from "react";
 import { Marker, Popup } from "react-leaflet";
-import { tentIcon } from "../MapView/icons";
 import { Link } from "react-router";
-import { Campsite } from "../../types/Campsite";
-import { fetchCampsiteById } from "../../store/campsiteSlice";
-import { useDispatch } from "react-redux";
-import WeatherCard from "../WeatherCard/WeatherCard";
+import { tentIcon } from "../MapView/icons";
+import type { Campsite } from "../../types/Campsite";
 import "./CampsiteMarker.css";
-
 
 export interface CampsiteMarkerProps {
   site: Campsite;
-  map?: any;
 }
 
-const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site, map }) => {
+const titleCase = (s: string) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+// A compact preview card. Everything else (weather, photos, directions text)
+// lives on the campsite page, which keeps the popup small enough for phones.
+const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
   if (!site) return null;
-  const popupRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
-  const [enrichedSite, setEnrichedSite] = useState<Campsite | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  const dispatch = useDispatch();
-
-  const fetchEnrichedSite = async () => {
-    if (isLoading || enrichedSite) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const resultAction = await dispatch(fetchCampsiteById(site.id) as any);
-      if (fetchCampsiteById.fulfilled.match(resultAction)) {
-        setEnrichedSite(resultAction.payload);
-      } else {
-        setError("Campsite details not found");
-      }
-    } catch (err) {
-      setError("Failed to load campsite details");
-      console.error("Error fetching enriched campsite:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const displaySite = enrichedSite || site;
-
-  const description = displaySite.description || "";
-  const shouldTruncate = description.length > 250;
-  const displayDescription = shouldTruncate && !showFullDescription 
-    ? description.substring(0, 250) + "..."
-    : description;
-
-  const formatActivity = (activity: string) => {
-    return activity
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
+  const photo = site.images?.[0];
+  const activities = (site.activities ?? []).slice(0, 3).map(titleCase);
+  const detailsPath = `/campsites/${encodeURIComponent(site.id)}`;
+  // Leaflet sizes popups in pixels, so keep the card inside narrow phone screens.
+  const maxWidth = typeof window !== "undefined" ? Math.min(300, window.innerWidth - 48) : 300;
+  // Keep the opened popup below the floating search panel.
+  const panelBottom =
+    typeof document !== "undefined"
+      ? parseInt(getComputedStyle(document.documentElement).getPropertyValue("--panel-bottom"), 10) || 200
+      : 200;
 
   return (
-    <Marker
-      key={site.id}
-      position={[site.lat, site.lng] as [number, number]}
-      icon={tentIcon}
-      ref={markerRef}
-      eventHandlers={{
-        click: () => {
-          fetchEnrichedSite();
-        },
-        popupopen: (e) => {
-          if (map && markerRef.current) {
-            const markerLatLng = markerRef.current.getLatLng();
-            map.panTo(markerLatLng, { animate: true });
-            setTimeout(() => {
-              map.panBy([0, -100], { animate: true });
-            }, 300);
-          }
-        }
-      }}
-    >
+    <Marker position={[site.lat, site.lng]} icon={tentIcon}>
       <Popup
-        data-testid="popup"
-        ref={popupRef}
-        autoClose={true}
-        closeOnClick={true}
+        className="campsite-popup"
+        minWidth={Math.min(240, maxWidth)}
+        maxWidth={maxWidth}
+        autoPanPaddingTopLeft={[16, panelBottom + 16]}
+        autoPanPaddingBottomRight={[64, 32]}
       >
-        <div>
-          <strong>{displaySite.name || "Unnamed Site"}</strong> <i>{displaySite.state}</i>
-          <div>
-            {displayDescription}
-            {shouldTruncate && (
-              <button
-                onClick={() => setShowFullDescription(!showFullDescription)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#16563A',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  fontSize: '0.9em',
-                  marginLeft: '4px',
-                  padding: '0'
-                }}
+        <div className="campsite-card">
+          {photo && (
+            <img className="campsite-card__photo" src={photo.src} alt={photo.alt || site.name} loading="lazy" />
+          )}
+          <div className="campsite-card__body">
+            {site.state && <p className="campsite-card__state">{site.state}</p>}
+            <h3 className="campsite-card__name">{site.name || "Unnamed Site"}</h3>
+            {site.description && <p className="campsite-card__desc">{site.description}</p>}
+            {activities.length > 0 && (
+              <p className="campsite-card__activities">{activities.join(" · ")}</p>
+            )}
+            <div className="campsite-card__actions">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="popup-button"
+                role="button"
               >
-                {showFullDescription ? "See less" : "See more"}
-              </button>
-            )}
-          </div>
-          
-          <div>
-            {displaySite.activities && (
-              <>
-                <strong>Activities:</strong>{" "}
-                {displaySite.activities && displaySite.activities.length > 0
-                  ? displaySite.activities.map(formatActivity).join(', ')
-                  : "None listed"
-                }
-              </>
-            )}
-          </div>
-          
-          <div>
-            <strong>Elevation:</strong>{" "}
-            {displaySite.elevation != null && !isNaN(Number(displaySite.elevation))
-              ? `${displaySite.elevation} m (${(displaySite.elevation * 3.28084).toFixed(0)} ft)`
-              : isLoading ? "Loading..." : "Unknown"}
-          </div>
-          
-          <div className="weather-section">
-            <strong>Weather Forecast:</strong>
-            <WeatherCard 
-              campsiteId={site.id} 
-              weatherData={enrichedSite?.weather}
-            />
-          </div>
-          <div className="buttons-container" style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '8px' }}>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="popup-button"
-              role="button"
-            >
-              Get Directions
-            </a>
-            <Link
-              to={`/campsites/${encodeURIComponent(site.id)}`}
-              className="popup-button"
-              role="button"
-            >
-              Get Details
-            </Link>
+                Get Directions
+              </a>
+              <Link to={detailsPath} className="popup-button popup-button--primary" role="button">
+                Get Details
+              </Link>
+            </div>
           </div>
         </div>
       </Popup>
