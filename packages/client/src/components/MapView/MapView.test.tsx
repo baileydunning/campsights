@@ -18,6 +18,7 @@ vi.mock("react-leaflet", () => {
     ScaleControl: () => null,
     ZoomControl: () => null,
     useMap: () => ({ flyToBounds: vi.fn() }),
+    useMapEvents: () => null,
   };
 });
 
@@ -96,7 +97,7 @@ describe("MapView", () => {
       render(<MapView campsites={[]} />);
     });
     const baseNames = screen.getAllByTestId("base-layer").map((el) => el.getAttribute("data-name"));
-    expect(baseNames).toEqual(["Topo", "OpenTopoMap", "Satellite"]);
+    expect(baseNames).toEqual(["Streets", "Topo", "Satellite"]);
     const overlayNames = screen.getAllByTestId("overlay").map((el) => el.getAttribute("data-name"));
     expect(overlayNames).toEqual(["Campsites", "Land ownership", "Wildfire perimeters"]);
     expect(screen.getByTestId("fire-perimeters")).toBeInTheDocument();

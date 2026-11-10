@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
+import { Navigate, Route, Routes } from "react-router";
 import "./App.css";
 import Loading from "./components/Loading/Loading";
 import SearchBar from "./components/SearchBar/SearchBar";
@@ -8,18 +9,52 @@ import type { AppDispatch } from "./store/store";
 import type { Campsite } from "./types/Campsite";
 
 const MapView = lazy(() => import("./components/MapView/MapView"));
+const CampsitePage = lazy(() => import("./components/CampsitePage/CampsitePage"));
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const allCampsites = useSelector(selectCampsites);
-  const loading = useSelector(selectLoading);
-  const error = useSelector(selectError);
-  const [filtered, setFiltered] = useState<Campsite[]>([]);
+  // Kept here (not in the map page) so a search survives a trip to a campsite page and back.
   const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState<Campsite[]>([]);
 
   useEffect(() => {
     dispatch(fetchCampsites());
   }, [dispatch]);
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<MapPage query={query} setQuery={setQuery} filtered={filtered} setFiltered={setFiltered} />}
+      />
+      <Route
+        path="/campsites/:id"
+        element={
+          <Suspense fallback={<Loading />}>
+            <CampsitePage />
+          </Suspense>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+interface MapPageProps {
+  query: string;
+  setQuery: (q: string) => void;
+  filtered: Campsite[];
+  setFiltered: (c: Campsite[]) => void;
+}
+
+const MapPage: React.FC<MapPageProps> = ({ query, setQuery, filtered, setFiltered }) => {
+  const allCampsites = useSelector(selectCampsites);
+  const loading = useSelector(selectLoading);
+  const error = useSelector(selectError);
+
+  useEffect(() => {
+    document.title = "Campsights";
+  }, []);
 
   return (
     <div className="app">
@@ -45,7 +80,12 @@ const App: React.FC = () => {
             </svg>
           </a>
         </div>
-        <SearchBar campsites={allCampsites} onSearchResults={setFiltered} onQueryChange={setQuery} />
+        <SearchBar
+          campsites={allCampsites}
+          initialQuery={query}
+          onSearchResults={setFiltered}
+          onQueryChange={setQuery}
+        />
         <p className="search-panel__status" aria-live="polite">
           {error && allCampsites.length === 0
             ? "Couldn't load campsites. Try refreshing."

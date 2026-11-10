@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, Suspense } from "react";
+import React, { useEffect, useRef, useState, useMemo, Suspense } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -8,6 +8,7 @@ import {
   ScaleControl,
   ZoomControl,
   useMap,
+  useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
 import "./MapView.css";
@@ -20,6 +21,19 @@ import { BASE_LAYERS, LAND_OWNERSHIP_LAYER, MAX_ZOOM } from "./mapLayers";
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
 
 const defaultPosition: [number, number] = [39.2508, -106.2925];
+
+// Remember where the map was so coming back from a campsite page lands in the same place.
+let lastView: { center: [number, number]; zoom: number } = { center: defaultPosition, zoom: 8 };
+
+const RememberView: React.FC = () => {
+  useMapEvents({
+    moveend: (e) => {
+      const c = e.target.getCenter();
+      lastView = { center: [c.lat, c.lng], zoom: e.target.getZoom() };
+    },
+  });
+  return null;
+};
 
 const personIcon = new L.DivIcon({
   html: `<span class="you-are-here-dot"></span>`,
@@ -36,7 +50,13 @@ interface MapViewProps {
 // After the user stops typing, zoom the map to fit whatever the search matched.
 const FitToResults: React.FC<{ campsites: Campsite[]; query: string }> = ({ campsites, query }) => {
   const map = useMap();
+  const mounted = useRef(false);
   useEffect(() => {
+    // Skip the first render so returning to the map keeps the remembered view.
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (!query || campsites.length === 0) return;
     const timer = setTimeout(() => {
       const bounds = L.latLngBounds(campsites.map((s) => [s.lat, s.lng] as [number, number]));
@@ -58,8 +78,8 @@ const MapView: React.FC<MapViewProps> = ({ campsites, searchQuery = "" }) => {
   return (
     <div className="MapView">
       <MapContainer
-        center={defaultPosition}
-        zoom={8}
+        center={lastView.center}
+        zoom={lastView.zoom}
         maxZoom={MAX_ZOOM}
         zoomControl={false}
         style={{ height: "100%", width: "100%" }}
@@ -102,6 +122,7 @@ const MapView: React.FC<MapViewProps> = ({ campsites, searchQuery = "" }) => {
         <MapControls onLocate={setCurrentPosition} />
         <ScaleControl position="bottomleft" imperial metric={false} />
         <FitToResults campsites={campsites} query={searchQuery} />
+        <RememberView />
 
         {currentPosition && (
           <Marker position={currentPosition} icon={personIcon} zIndexOffset={1000}>

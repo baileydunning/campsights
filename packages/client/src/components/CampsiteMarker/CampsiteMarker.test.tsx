@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { MemoryRouter } from 'react-router';
 
 vi.mock('react-leaflet', () => {
   return {
@@ -119,9 +120,9 @@ describe('<CampsiteMarker />', () => {
 
   it('renders marker and popup with site info', () => {
     render(
-      <Provider store={store}>
+      <MemoryRouter><Provider store={store}>
         <CampsiteMarker site={sampleSite} />
-      </Provider>
+      </Provider></MemoryRouter>
     );
     expect(screen.getByTestId('marker')).toBeInTheDocument();
     expect(screen.getByText('Test Site')).toBeInTheDocument();
@@ -135,9 +136,9 @@ describe('<CampsiteMarker />', () => {
   it('displays "Unnamed Site" when name is empty', () => {
     const unnamed = { ...sampleSite, name: '' };
     render(
-      <Provider store={store}>
+      <MemoryRouter><Provider store={store}>
         <CampsiteMarker site={unnamed} />
-      </Provider>
+      </Provider></MemoryRouter>
     );
     expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
   });
@@ -145,18 +146,18 @@ describe('<CampsiteMarker />', () => {
   it('shows "Unknown" for elevation when invalid', () => {
     const noElev = { ...sampleSite, elevation: NaN };
     render(
-      <Provider store={store}>
+      <MemoryRouter><Provider store={store}>
         <CampsiteMarker site={noElev} />
-      </Provider>
+      </Provider></MemoryRouter>
     );
     expect(screen.getByText('Unknown')).toBeInTheDocument();
   });
 
   it('shows loading state initially and then enriched data', async () => {
     render(
-      <Provider store={store}>
+      <MemoryRouter><Provider store={store}>
         <CampsiteMarker site={{ ...sampleSite, weather: undefined }} />
-      </Provider>
+      </Provider></MemoryRouter>
     );
 
     expect(screen.getByText('Loading weather...')).toBeInTheDocument();

@@ -83,16 +83,45 @@ async function getCampsiteById(id: string, request: Request, env: Env): Promise<
   }
   const site = (await res.json()) as { lat: number; lng: number; elevation?: number | null };
 
-  const [weather, elevation] = await Promise.all([
-    getWeather(site.lat, site.lng),
+  const [forecast, elevation, alerts] = await Promise.all([
+    getForecast(site.lat, site.lng),
     site.elevation != null ? Promise.resolve(site.elevation) : getElevation(site.lat, site.lng),
+    getAlerts(site.lat, site.lng),
   ]);
 
-  return json({ ...site, elevation, weather }, 200, { 'Cache-Control': 'public, max-age=600' });
+  return json(
+    {
+      ...site,
+      elevation,
+      weather: forecast.periods,
+      alerts,
+      nearestTown: forecast.nearestTown,
+      timeZone: forecast.timeZone,
+      forecastUrl: `https://forecast.weather.gov/MapClick.php?lat=${site.lat}&lon=${site.lng}`,
+    },
+    200,
+    { 'Cache-Control': 'public, max-age=600' }
+  );
 }
 
+interface NearestTown {
+  city: string;
+  state: string;
+  distanceMiles: number;
+  direction: string; // direction of the campsite from the town, e.g. "NE"
+}
+
+interface Forecast {
+  periods: unknown[];
+  nearestTown: NearestTown | null;
+  timeZone: string | null;
+}
+
+const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
 // Cloudflare's cache (cf.cacheTtl) stands in for the in-memory caches the Express server used.
-async function getWeather(lat: number, lng: number): Promise<unknown[]> {
+async function getForecast(lat: number, lng: number): Promise<Forecast> {
+  const result: Forecast = { periods: [], nearestTown: null, timeZone: null };
   try {
     const points = await fetch(`https://api.weather.gov/points/${round(lat, 4)},${round(lng, 4)}`, {
       headers: UPSTREAM_HEADERS,
@@ -100,18 +129,54 @@ async function getWeather(lat: number, lng: number): Promise<unknown[]> {
       cf: { cacheTtl: 86400, cacheEverything: true },
     } as RequestInit);
     if (!points.ok) throw new Error(`Points API ${points.status}`);
-    const forecastUrl = ((await points.json()) as any)?.properties?.forecast;
-    if (!forecastUrl) throw new Error('No forecast URL');
+    const props = ((await points.json()) as any)?.properties ?? {};
+    result.timeZone = typeof props.timeZone === 'string' ? props.timeZone : null;
 
-    const forecast = await fetch(forecastUrl, {
+    const rel = props.relativeLocation?.properties;
+    if (rel?.city && typeof rel.distance?.value === 'number') {
+      const bearing = typeof rel.bearing?.value === 'number' ? rel.bearing.value : 0;
+      result.nearestTown = {
+        city: rel.city,
+        state: rel.state ?? '',
+        distanceMiles: Math.round((rel.distance.value / 1609.344) * 10) / 10,
+        direction: COMPASS[Math.round(bearing / 45) % 8],
+      };
+    }
+
+    if (!props.forecast) throw new Error('No forecast URL');
+    const forecast = await fetch(props.forecast, {
       headers: UPSTREAM_HEADERS,
       signal: AbortSignal.timeout(8000),
       cf: { cacheTtl: 600, cacheEverything: true },
     } as RequestInit);
     if (!forecast.ok) throw new Error(`Forecast API ${forecast.status}`);
-    return ((await forecast.json()) as any)?.properties?.periods ?? [];
+    result.periods = ((await forecast.json()) as any)?.properties?.periods ?? [];
   } catch (err) {
     console.error('Weather fetch error', lat, lng, err);
+  }
+  return result;
+}
+
+// Active NWS alerts (red flag warnings, winter storms, floods...) for the point.
+async function getAlerts(lat: number, lng: number): Promise<unknown[]> {
+  try {
+    const res = await fetch(`https://api.weather.gov/alerts/active?point=${round(lat, 4)},${round(lng, 4)}`, {
+      headers: UPSTREAM_HEADERS,
+      signal: AbortSignal.timeout(6000),
+      cf: { cacheTtl: 300, cacheEverything: true },
+    } as RequestInit);
+    if (!res.ok) throw new Error(`Alerts API ${res.status}`);
+    const features = ((await res.json()) as any)?.features ?? [];
+    return features.map((f: any) => ({
+      event: f.properties?.event,
+      headline: f.properties?.headline,
+      severity: f.properties?.severity,
+      description: f.properties?.description,
+      instruction: f.properties?.instruction,
+      ends: f.properties?.ends ?? f.properties?.expires,
+    }));
+  } catch (err) {
+    console.error('Alerts fetch error', lat, lng, err);
     return [];
   }
 }

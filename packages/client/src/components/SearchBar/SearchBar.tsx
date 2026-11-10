@@ -6,6 +6,7 @@ interface SearchBarProps {
   campsites: Campsite[];
   onSearchResults: (results: Campsite[]) => void;
   onQueryChange?: (query: string) => void;
+  initialQuery?: string;
 }
 
 const flattenObject = (obj: Record<string, any>): string => {
@@ -20,8 +21,8 @@ const flattenObject = (obj: Record<string, any>): string => {
     .toLowerCase();
 };
 
-const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults, onQueryChange }) => {
-  const [query, setQuery] = useState("");
+const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults, onQueryChange, initialQuery = "" }) => {
+  const [query, setQuery] = useState(initialQuery);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Build the searchable text once per dataset instead of on every keystroke.
