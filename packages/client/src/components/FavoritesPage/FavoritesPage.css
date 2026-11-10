@@ -1,0 +1,125 @@
+.favorites {
+  max-width: 760px;
+}
+
+.favorites__header {
+  padding: 28px 0 20px;
+}
+
+.favorites__header h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.6vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.favorites__header p {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-muted, #5B6862);
+}
+
+.favorites__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fav-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid var(--border, #E2E0DA);
+  border-radius: 16px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.fav-card:hover {
+  border-color: #D5D2CA;
+  box-shadow: 0 4px 16px rgba(31, 45, 39, 0.08);
+}
+
+.fav-card__link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 64px 12px 12px;
+  color: inherit !important;
+  text-decoration: none;
+}
+
+.fav-card__thumb {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  background: #EEF4EA;
+  border-radius: 12px;
+}
+
+.fav-card__thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.fav-card__body { min-width: 0; }
+
+.fav-card__state {
+  margin: 0 0 2px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--forest, #226E52);
+}
+
+.fav-card__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fav-card__meta {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-size: 0.8rem;
+  color: var(--ink-muted, #5B6862);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fav-card__star {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  margin-top: -21px;
+}
+
+.favorites__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 56px 24px;
+  text-align: center;
+  background: #FFFFFF;
+  border: 1px dashed #D9D6CE;
+  border-radius: 18px;
+}
+
+.favorites__empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
+  color: #E0A21B;
+  background: #FDF3DC;
+  border-radius: 50%;
+}
+
+.favorites__empty h2 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+.favorites__empty p { margin: 0 0 14px; color: var(--ink-muted, #5B6862); }

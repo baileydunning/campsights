@@ -4,7 +4,7 @@ This is the backend for the Campsights app, built with Express and TypeScript. I
 
 ## Features
 
-+ **Read-only REST API:** Proxies structured BLM data from the BLM Spider API
++ **Read-only REST API:** Serves structured BLM data from the BLM Spider dataset
 + Elevation Integration: Fetches elevation from the Open-Elevation API
 + **Weather Forecasts:** Uses the National Weather Service API to return detailed forecasts
 + **Two-Tier Loading:** Fast list view, rich detail view
@@ -14,7 +14,7 @@ This is the backend for the Campsights app, built with Express and TypeScript. I
 
 ## Data Sources
 
-- **Campsites**: [BLM Spider API](https://blm-spider.onrender.com/api/v1/campsites) - Official Bureau of Land Management data
+- **Campsites**: [BLM Spider](https://github.com/baileydunning/blm-spider) dataset, read from the JSON file the spider commits to GitHub
 - **Elevation**: [Open-Elevation API](https://api.open-elevation.com) - SRTM-based elevation data
 - **Weather**: [National Weather Service API](https://www.weather.gov/documentation/services-web-api) - Official weather forecasts
 
@@ -24,7 +24,7 @@ The backend acts as a proxy and enhancement layer:
 
 - **Controllers**: Handle HTTP requests and responses
 - **Services**: Fetch data from external APIs and manage caching
-  - **Campsites Service**: Proxies BLM Spider API
+  - **Campsites Service**: Reads the BLM Spider dataset from GitHub
   - **Elevation Service**: Fetches elevation data with in-memory caching
   - **Weather Service**: Fetches weather forecasts with caching
 - **Models**: TypeScript interfaces for data structures

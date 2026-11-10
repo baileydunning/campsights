@@ -37,7 +37,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        expect(getByPlaceholderText("Search by name, state, activities...")).toBeInTheDocument();
+        expect(getByPlaceholderText("Search by name, state, activity")).toBeInTheDocument();
     });
 
     it("calls onSearchResults with all campsites on empty input", () => {
@@ -51,7 +51,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        const input = getByPlaceholderText("Search by name, state, activities...") as HTMLInputElement;
+        const input = getByPlaceholderText("Search by name, state, activity") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "Sunny" } });
         expect(onSearchResults).toHaveBeenLastCalledWith([mockCampsites[0]]);
     });
@@ -61,7 +61,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        const input = getByPlaceholderText("Search by name, state, activities...") as HTMLInputElement;
+        const input = getByPlaceholderText("Search by name, state, activity") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "Colorado" } });
         expect(onSearchResults).toHaveBeenLastCalledWith([mockCampsites[1]]);
     });
@@ -71,7 +71,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        const input = getByPlaceholderText("Search by name, state, activities...") as HTMLInputElement;
+        const input = getByPlaceholderText("Search by name, state, activity") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "hiking" } });
         expect(onSearchResults).toHaveBeenLastCalledWith(mockCampsites);
     });
@@ -81,7 +81,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        const input = getByPlaceholderText("Search by name, state, activities...") as HTMLInputElement;
+        const input = getByPlaceholderText("Search by name, state, activity") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "Mountain hiking" } });
         expect(onSearchResults).toHaveBeenLastCalledWith([mockCampsites[1]]);
     });
@@ -91,7 +91,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        const input = getByPlaceholderText("Search by name, state, activities...") as HTMLInputElement;
+        const input = getByPlaceholderText("Search by name, state, activity") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "desert" } });
         expect(onSearchResults).toHaveBeenLastCalledWith([]);
     });
@@ -101,7 +101,7 @@ describe("SearchBar", () => {
         const { getByPlaceholderText } = render(
             <SearchBar campsites={mockCampsites} onSearchResults={onSearchResults} />
         );
-        const input = getByPlaceholderText("Search by name, state, activities...") as HTMLInputElement;
+        const input = getByPlaceholderText("Search by name, state, activity") as HTMLInputElement;
         fireEvent.change(input, { target: { value: "test" } });
         expect(input.value).toBe("test");
     });

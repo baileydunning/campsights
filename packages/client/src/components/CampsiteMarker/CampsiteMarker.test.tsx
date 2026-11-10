@@ -1,165 +1,81 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-
-vi.mock('react-leaflet', () => {
-  return {
-    Marker: ({ children }: any) => <div data-testid="marker">{children}</div>,
-    Popup: function Popup(props: any) {
-      const children =
-        typeof props.children === 'function' ? props.children() : props.children;
-      return (
-        <div
-          onClick={() => props.eventHandlers?.popupclose?.()}
-        >
-          {children}
-        </div>
-      );
-    },
-  };
-});
-
-vi.mock('leaflet', () => {
-  class DivIconMock {
-    constructor(opts: any) {
-      Object.assign(this, opts);
-    }
-  }
-  return {
-    __esModule: true,
-    default: { DivIcon: DivIconMock },
-    DivIcon: DivIconMock,
-  };
-});
-
-vi.mock('../WeatherCard/WeatherCard', () => ({
-  __esModule: true,
-  default: ({ campsiteId, weatherData }: any) => (
-    <div className="weather-card">
-      {weatherData && weatherData.length > 0 ? (
-        weatherData.map((period: any, index: number) => (
-          <div key={index} className="weather-period-card">
-            <div className="weather-period-header">
-              {period.name} ({period.isDaytime ? "Day" : "Night"})
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="weather-period-card weather-loading">Loading weather...</div>
-      )}
-    </div>
-  ),
-}));
-
-import * as CampsitesApi from '../../api/Campsites';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import CampsiteMarker from './CampsiteMarker';
-import { Campsite } from '../../types/Campsite';
+import type { Campsite } from '../../types/Campsite';
+import * as api from '../../api/Campsites';
 
-const sampleSite: Campsite = {
+// Render the popup contents directly and fire popupopen on mount.
+vi.mock('react-leaflet', async () => {
+  const { useEffect } = await import('react');
+  return {
+    Marker: ({ children, eventHandlers }: any) => {
+      useEffect(() => eventHandlers?.popupopen?.(), []);
+      return <div data-testid="marker">{children}</div>;
+    },
+    Popup: ({ children }: any) => <div data-testid="popup">{children}</div>,
+  };
+});
+
+vi.mock('../MapView/icons', () => ({ tentIcon: {} }));
+
+const site: Campsite = {
   id: 'abc',
   name: 'Test Site',
   url: 'https://example.com/test-site',
+  lat: 40,
+  lng: -105,
+  state: 'Colorado',
+  mapLink: '',
   description: 'A lovely place',
-  lat: 10,
-  lng: 20,
-  state: 'Test State',
-  mapLink: 'https://example.com/map',
-  elevation: 100,
+  activities: ['CAMPING', 'HIKING', 'FISHING', 'BIKING', 'BOATING', 'HUNTING', 'OHV'],
+  stayLimit: '14 days.',
+  images: [{ src: 'https://example.com/a.jpg', alt: 'The view' }],
   source: 'BLM',
-  weather: [
-    {
-      number: 1,
-      name: 'Morning',
-      isDaytime: true,
-      temperature: 60,
-      temperatureUnit: 'F',
-      windSpeed: '5 mph',
-      windDirection: 'NE',
-      detailedForecast: 'Sunny',
-      startTime: '2024-01-01T06:00:00Z',
-      endTime: '2024-01-01T12:00:00Z',
-      shortForecast: 'Sunny',
-    },
-    {
-      number: 2,
-      name: 'Evening',
-      isDaytime: false,
-      temperature: 45,
-      temperatureUnit: 'F',
-      windSpeed: '3 mph',
-      windDirection: 'SW',
-      detailedForecast: 'Clear',
-      startTime: '2024-01-01T18:00:00Z',
-      endTime: '2024-01-02T00:00:00Z',
-      shortForecast: 'Clear',
-    },
-  ],
 };
 
-import * as CampsiteSlice from '../../store/campsiteSlice';
-
-
-import type { Store } from '@reduxjs/toolkit';
+const renderMarker = (s: Campsite) =>
+  render(
+    <MemoryRouter>
+      <CampsiteMarker site={s} />
+    </MemoryRouter>
+  );
 
 describe('<CampsiteMarker />', () => {
-  let store: Store;
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // Mock the thunk to always resolve with sampleSite and correct meta
-    vi.spyOn(CampsiteSlice, 'fetchCampsiteById').mockImplementation(
-      ((id: string) => async () => ({
-        type: 'campsite/fetchCampsiteById/fulfilled',
-        payload: sampleSite,
-        meta: { arg: id, requestId: 'test', requestStatus: 'fulfilled' }
-      })) as unknown as typeof CampsiteSlice.fetchCampsiteById
-    );
-    store = configureStore({ reducer: (state = {}) => state });
-  });
+  afterEach(() => vi.restoreAllMocks());
 
-  it('renders marker and popup with site info', () => {
-    render(
-      <Provider store={store}>
-        <CampsiteMarker site={sampleSite} />
-      </Provider>
-    );
-    expect(screen.getByTestId('marker')).toBeInTheDocument();
+  it('shows the campsite preview and fills in today\'s weather when opened', async () => {
+    vi.spyOn(api, 'getCampsiteById').mockResolvedValue({
+      ...site,
+      elevation: 2000,
+      nearestTown: { city: 'Salida', state: 'CO', distanceMiles: 8.4, direction: 'N' },
+      weather: [
+        { number: 1, name: 'Today', isDaytime: true, temperature: 61, temperatureUnit: 'F', windSpeed: '5 mph', windDirection: 'W', shortForecast: 'Sunny', detailedForecast: '', startTime: '', endTime: '' },
+        { number: 2, name: 'Tonight', isDaytime: false, temperature: 29, temperatureUnit: 'F', windSpeed: '5 mph', windDirection: 'W', shortForecast: 'Clear', detailedForecast: '', startTime: '', endTime: '' },
+      ],
+    });
+
+    renderMarker(site);
     expect(screen.getByText('Test Site')).toBeInTheDocument();
     expect(screen.getByText('A lovely place')).toBeInTheDocument();
-    expect(screen.getByText('100 m (328 ft)')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Directions/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Details/i })).toBeInTheDocument();
-    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
+    expect(screen.getByText('Camping')).toBeInTheDocument();
+    expect(screen.getByText('+2 more')).toBeInTheDocument();
+    expect(screen.getByText('Stay limit: 14 days')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'The view' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Details$/i })).toHaveAttribute('href', '/campsites/abc');
+
+    expect(await screen.findByText('61°')).toBeInTheDocument();
+    expect(screen.getByText('29°')).toBeInTheDocument();
+    expect(screen.getByText('Today: Sunny')).toBeInTheDocument();
+    expect(screen.getByText('6,562 ft')).toBeInTheDocument();
+    expect(screen.getByText('Colorado · 8 mi N of Salida')).toBeInTheDocument();
   });
 
-  it('displays "Unnamed Site" when name is empty', () => {
-    const unnamed = { ...sampleSite, name: '' };
-    render(
-      <Provider store={store}>
-        <CampsiteMarker site={unnamed} />
-      </Provider>
-    );
+  it('says the forecast is unavailable when the request fails', async () => {
+    vi.spyOn(api, 'getCampsiteById').mockRejectedValue(new Error('offline'));
+    renderMarker({ ...site, id: 'def', name: '', images: undefined });
     expect(screen.getByText('Unnamed Site')).toBeInTheDocument();
-  });
-
-  it('shows "Unknown" for elevation when invalid', () => {
-    const noElev = { ...sampleSite, elevation: NaN };
-    render(
-      <Provider store={store}>
-        <CampsiteMarker site={noElev} />
-      </Provider>
-    );
-    expect(screen.getByText('Unknown')).toBeInTheDocument();
-  });
-
-  it('shows loading state initially and then enriched data', async () => {
-    render(
-      <Provider store={store}>
-        <CampsiteMarker site={{ ...sampleSite, weather: undefined }} />
-      </Provider>
-    );
-
-    expect(screen.getByText('Loading weather...')).toBeInTheDocument();
-    expect(screen.getByText('Weather Forecast:')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Forecast unavailable')).toBeInTheDocument());
   });
 });

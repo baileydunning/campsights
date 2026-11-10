@@ -1,132 +1,121 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600&display=swap');
+:root {
+  --ink: #1F2D27;
+  --ink-muted: #5B6862;
+  --forest: #226E52;
+  --forest-dark: #16563A;
+  --sage: #BEDBB2;
+  --surface: #FFFFFF;
+  --border: #E2E0DA;
+  --shadow: 0 1px 2px rgba(31, 45, 39, 0.08), 0 4px 16px rgba(31, 45, 39, 0.12);
+  --radius: 12px;
+  --gap: 12px;
+  --panel-width: 360px;
+  --font: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
 
-html,
-body,
-#root,
-.app-container {
-  height: 100vh;
-  width: 100vw;
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
   margin: 0;
-  padding: 0;
-  min-width: 0;
-  min-height: 0;
-  box-sizing: border-box;
-  background: #F2EFE9;
+  overflow: hidden;
+  overscroll-behavior: none; /* no pull-to-refresh or rubber-banding over the map */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  font-family: var(--font);
+  color: var(--ink);
+  background: #E9E6DF;
 }
 
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  min-width: 0;
-  min-height: 0;
-}
-
-.app-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  background: #F1EFE9;
-  position: relative;
-  z-index: 10;
-  min-height: 50px;
-}
-
-.app-header h1 {
-  font-family: 'Bebas Neue', Arial, Helvetica, sans-serif;
-  letter-spacing: 2px;
-  font-size: 3rem;
-  color: #213547;
-  margin: 0;
-  padding-top: 15px;
-  font-weight: 400;
-  text-transform: uppercase;
-  white-space: nowrap;
-  display: block;
-  visibility: visible;
-}
-
-.app-header h3 {
-  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
-  font-size: 1rem;
-  color: #555;
-  font-weight: 400;
-  letter-spacing: 0.5px;
-  margin-top: 0.5rem;
-  text-align: center;
+/* The map fills the whole window and never scrolls the page, so the search
+   panel stays put no matter how the map is zoomed or dragged. */
+.app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
 }
 
 .main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  margin: 0;
+  position: absolute;
+  inset: 0;
 }
 
-.main-content>.MapView,
-.main-content>div {
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
+/* Floating search panel */
+.search-panel {
+  position: absolute;
+  top: calc(var(--gap) + env(safe-area-inset-top));
+  left: calc(var(--gap) + env(safe-area-inset-left));
+  z-index: 1000;
+  width: var(--panel-width);
+  max-width: calc(100vw - 2 * var(--gap));
+  padding: 12px 14px 10px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+.search-panel__top {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1002;
-  padding: 1rem;
-  box-sizing: border-box;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 
-.modal-content {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  min-width: 0;
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+.brand {
+  margin: 0;
+  font-family: 'Bebas Neue', var(--font);
+  font-weight: 400;
+  font-size: 2.5rem;
+  line-height: 1;
+  letter-spacing: 2px;
+  color: var(--forest-dark);
 }
 
-.close-modal {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: transparent;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: #888;
+.github-link {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--ink-muted);
+  transition: color 0.15s, background 0.15s;
+}
+
+.github-link:hover,
+.github-link:focus-visible {
+  color: var(--forest-dark);
+  background: #F1F0EC;
+}
+
+.search-panel__about {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+.search-panel__about a {
+  color: var(--forest);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.search-panel__status {
+  margin: 8px 2px 0;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
 }
 
 @media (max-width: 600px) {
-  .app-header {
-    padding: 1rem 0.5rem;
-  }
-  
-  .app-header h1 {
-    font-size: 3rem;
+  .search-panel {
+    right: calc(var(--gap) + env(safe-area-inset-right));
+    width: auto;
+    max-width: none;
+    transition: opacity 0.18s, transform 0.18s;
   }
 
-  .modal-content {
-    padding: 1rem;
-    max-width: 98vw;
+  /* Give an open campsite card the whole screen on phones. */
+  .popup-open .search-panel {
+    opacity: 0;
+    transform: translateY(-12px);
+    pointer-events: none;
   }
 }

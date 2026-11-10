@@ -75,7 +75,7 @@ describe('campsitesService', () => {
     it('fetches, caches, and returns campsite with weather and elevation', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue({ ...mockCampsite }),
+        json: vi.fn().mockResolvedValue([{ ...mockCampsite }]),
       } as any);
 
       const result = await campsitesService.getCampsiteById('abc123');
@@ -102,7 +102,7 @@ describe('campsitesService', () => {
     it('handles weather/elevation failures gracefully', async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue(mockCampsite),
+        json: vi.fn().mockResolvedValue([mockCampsite]),
       } as any);
 
       const weatherService = await import('../weather/weatherService');

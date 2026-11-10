@@ -1,4 +1,4 @@
-import { WeatherPeriod } from "./Weather";
+import { WeatherAlert, WeatherPeriod } from "./Weather";
 
 export interface Campsite {
   id: string;
@@ -19,6 +19,18 @@ export interface Campsite {
   stayLimit?: string;
   images?: CampsiteImage[];
   source: 'BLM';
+  // Added by the API's single-campsite endpoint
+  alerts?: WeatherAlert[];
+  nearestTown?: NearestTown | null;
+  timeZone?: string | null;
+  forecastUrl?: string;
+}
+
+export interface NearestTown {
+  city: string;
+  state: string;
+  distanceMiles: number;
+  direction: string;
 }
 
 export interface CampsiteImage {

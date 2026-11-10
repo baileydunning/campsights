@@ -10,4 +10,14 @@ export interface WeatherPeriod {
   windDirection: string;
   shortForecast: string;
   detailedForecast: string;
+  probabilityOfPrecipitation?: { value: number | null };
+}
+
+export interface WeatherAlert {
+  event: string;
+  headline?: string;
+  severity?: string;
+  description?: string;
+  instruction?: string;
+  ends?: string;
 }

@@ -1,50 +1,244 @@
-.directions-btn-container {
-  margin: 16px 0 0 0;
+/* Marker popup: a small preview card */
+
+.campsite-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.campsite-popup .leaflet-popup-content {
+  margin: 0;
+  font-family: var(--font, 'Montserrat', sans-serif);
+}
+
+.campsite-popup a.leaflet-popup-close-button {
+  top: 6px;
+  right: 6px;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  line-height: 28px;
+  color: #FFFFFF;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+}
+
+.campsite-popup a.leaflet-popup-close-button:hover { color: #FFFFFF; background: rgba(0, 0, 0, 0.55); }
+
+/* Without a photo the close button sits on white, so make it dark */
+.campsite-popup:not(:has(.campsite-card__photo)) a.leaflet-popup-close-button {
+  color: var(--ink-muted, #5B6862);
+  background: #F1F0EC;
+}
+
+.campsite-card {
+  /* Never taller than the screen; scroll inside if a listing is very long. */
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.campsite-card__photo {
+  display: block;
+  width: 100%;
+  height: 132px;
+  object-fit: cover;
+  background: #DAD6CC;
+}
+
+.campsite-card__body { padding: 14px 16px 16px; }
+
+.campsite-card__eyebrow {
+  margin: 0 28px 4px 0 !important;
+  overflow: hidden;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--forest, #226E52);
+}
+
+.campsite-card__photo + .campsite-card__body .campsite-card__eyebrow { margin-right: 0 !important; }
+
+.campsite-card__name {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink, #1F2D27);
+}
+
+/* Today's weather: fixed height so the popup doesn't jump when it loads */
+.campsite-card__weather {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: #F4F3EF;
+  border-radius: 12px;
 }
 
-.directions-button {
-  display: inline-block;
-  padding: 8px 20px;
-  background: #BEDBB2;
-  color: #2a3a4a;
-  border: none;
-  border-radius: 4px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: none;
+.campsite-card__weather svg { flex: 0 0 auto; }
+
+.campsite-card__weather-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-.directions-button:hover,
-.directions-button:focus {
-  background: #92C689;
-  color: #2a3a4a;
-  text-decoration: none;
+.campsite-card__temps {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.1;
+}
+
+.campsite-card__temps strong { font-size: 1.15rem; font-weight: 600; color: var(--ink, #1F2D27); }
+.campsite-card__temps span { font-size: 0.9rem; color: var(--ink-muted, #5B6862); }
+
+.campsite-card__forecast {
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--ink-muted, #5B6862);
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.campsite-card__weather-empty {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--ink-muted, #5B6862);
+}
+
+.campsite-card__elevation {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  align-self: center;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink, #1F2D27);
+  background: #FFFFFF;
+  border-radius: 999px;
+}
+
+.campsite-card__elevation svg { color: var(--forest, #226E52); }
+
+.campsite-card__skeleton {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #E6E4DE 0%, #F1F0EC 50%, #E6E4DE 100%);
+  background-size: 200% 100%;
+  animation: card-shimmer 1.2s linear infinite;
+}
+
+.campsite-card__skeleton--icon { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; }
+
+@keyframes card-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.campsite-card__desc {
+  margin: 0 0 12px !important;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #34433C;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.campsite-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.campsite-card__chips li {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--forest-dark, #16563A);
+  background: #E5F0E0;
+  border-radius: 999px;
+}
+
+.campsite-card__chips .campsite-card__chip-more {
+  color: var(--ink-muted, #5B6862);
+  background: #EEECE6;
+}
+
+.campsite-card__meta {
+  margin: 0 0 2px !important;
+  font-size: 0.75rem;
+  color: var(--ink-muted, #5B6862);
+}
+
+.campsite-card__actions {
+  display: grid;
+  grid-template-columns: 42px 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .popup-button {
-  display: inline-block;
-  padding: 8px 20px;
-  background: #BEDBB2;
-  color: #000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 10px;
+  font-family: var(--font, 'Montserrat', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  background: #F1F0EC;
   border: none;
-  border-radius: 4px;
-  text-decoration: none;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: none;
-}
-
-.popup-button:hover,
-.popup-button:focus {
-  background: #92C689;
-  color: #000;
-  text-decoration: none;
+  transition: background 0.15s;
+  touch-action: manipulation;
 }
 
 a.popup-button {
-  color: #000 !important;
+  color: var(--ink, #1F2D27) !important;
   text-decoration: none !important;
+}
+
+.popup-button:hover,
+.popup-button:focus-visible { background: #E6E4DE; }
+
+a.popup-button--primary {
+  color: #FFFFFF !important;
+  background: var(--forest, #226E52);
+}
+
+a.popup-button--primary:hover,
+a.popup-button--primary:focus-visible { background: var(--forest-dark, #16563A); }
+
+
+/* Short screens: smaller photo and description so the card fits. */
+@media (max-height: 700px) {
+  .campsite-card__photo { height: 96px; }
+  .campsite-card__desc { -webkit-line-clamp: 3; }
+}
+
+@media (max-width: 380px) {
+  .campsite-card__body { padding: 12px 14px 14px; }
 }

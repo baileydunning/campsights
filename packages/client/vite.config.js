@@ -11,21 +11,26 @@ export default defineConfig({
     viteCompression({ algorithm: 'gzip' }),
     visualizer({
       filename: 'dist/bundle-stats.html',
-      open: true,
+      open: false,
       gzipSize: true,
       brotliSize: true,
     }),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered by hand in src/pwa.ts so it can be skipped on localhost.
+      injectRegister: false,
       includeAssets: ['tent.png', 'tent-192.png'],
       manifest: {
+        id: '/',
         name: 'Campsights',
         short_name: 'Campsights',
-        start_url: '.',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
-        background_color: '#F1EFE9',
-        theme_color: '#F1EFE9',
-        description: 'Discover and share campsites!',
+        background_color: '#F7F5F0',
+        theme_color: '#F7F5F0',
+        categories: ['travel', 'navigation', 'sports'],
+        description: 'Find dispersed campsites on BLM public land, with weather, elevation, land ownership and wildfire layers.',
         icons: [
           {
             src: 'tent-192.png',
@@ -35,7 +40,8 @@ export default defineConfig({
           {
             src: 'tent.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       },
