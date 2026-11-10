@@ -1,11 +1,63 @@
 .search-bar {
-  padding: 1rem 2rem;
-  font-size: 1.35rem;
-  border: 2px solid #bbb;
-  border-radius: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar__icon {
+  position: absolute;
+  left: 12px;
+  color: var(--ink-muted, #5B6862);
+  pointer-events: none;
+}
+
+.search-bar__input {
   width: 100%;
-  max-width: 700px;
+  height: 44px;
+  padding: 0 40px 0 40px;
+  font-family: var(--font, 'Montserrat', sans-serif);
+  font-size: 16px; /* 16px stops iOS from zooming the page on focus */
+  color: var(--ink, #1F2D27);
+  background: #F4F3EF;
+  border: 1px solid transparent;
+  border-radius: 10px;
   outline: none;
-  box-sizing: border-box;
-  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  appearance: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.search-bar__input::placeholder {
+  color: #8A938E;
+}
+
+.search-bar__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-bar__input:focus {
+  background: #FFFFFF;
+  border-color: var(--forest, #226E52);
+  box-shadow: 0 0 0 3px rgba(34, 110, 82, 0.15);
+}
+
+.search-bar__clear {
+  position: absolute;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--ink-muted, #5B6862);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.search-bar__clear:hover,
+.search-bar__clear:focus-visible {
+  color: var(--ink, #1F2D27);
+  background: #E9E7E1;
 }

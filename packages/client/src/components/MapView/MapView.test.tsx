@@ -1,84 +1,66 @@
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import MapView from "./MapView";
 
-vi.mock("react-leaflet", () => ({
-  MapContainer: ({ children }: any) => <div role="region">{children}</div>,
-  TileLayer: () => <div data-testid="tile-layer" />, // no-op
-  Marker: ({ children }: any) => <div data-testid="person-marker">{children}</div>,
-  Popup: ({ children }: any) => <div data-testid="person-popup">{children}</div>,
-  Tooltip: ({ children }: any) => <div data-testid="person-tooltip">{children}</div>,
-}));
-
-vi.mock("../CampsiteMarker/CampsiteMarker", async () => {
+vi.mock("react-leaflet", () => {
+  const Passthrough = ({ children }: any) => <>{children}</>;
+  const LayersControl: any = ({ children }: any) => <div data-testid="layers-control">{children}</div>;
+  LayersControl.BaseLayer = ({ name, children }: any) => <div data-testid="base-layer" data-name={name}>{children}</div>;
+  LayersControl.Overlay = ({ name, children }: any) => <div data-testid="overlay" data-name={name}>{children}</div>;
   return {
-    __esModule: true,
-    default: ({ site }: any) => (
-      <div data-testid="marker">
-        <div data-testid="popup">
-          <div>
-            <strong>{site.name ? site.name : "Unnamed Site"}</strong> <i>{site.state}</i>
-          </div>
-          <div>{site.description}</div>
-          <div>
-            <strong>Activities:</strong>{" "}
-            {site.activities && site.activities.length > 0
-              ? site.activities.join(', ')
-              : "No activities listed"}
-          </div>
-          <div>
-            <strong>Elevation:</strong>{" "}
-            {site.elevation != null && !isNaN(Number(site.elevation))
-              ? `${site.elevation} m (${(site.elevation * 3.28084).toFixed(0)} ft)`
-              : "Unknown"}
-          </div>
-          <div>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="popup-button"
-              role="button"
-            >
-              Get Directions
-            </a>
-            <a
-              href={site.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="popup-button"
-              role="button"
-            >
-              Get Details
-            </a>
-          </div>
-        </div>
-      </div>
-    ),
+    MapContainer: ({ children }: any) => <div role="region">{children}</div>,
+    TileLayer: () => <div data-testid="tile-layer" />,
+    Marker: ({ children }: any) => <div data-testid="person-marker">{children}</div>,
+    Popup: Passthrough,
+    Tooltip: ({ children }: any) => <div data-testid="person-tooltip">{children}</div>,
+    LayersControl,
+    ScaleControl: () => null,
+    ZoomControl: () => null,
+    useMap: () => ({ flyToBounds: vi.fn() }),
   };
 });
 
+vi.mock("./MarkerClusterGroup", () => ({
+  __esModule: true,
+  default: ({ children }: any) => <div data-testid="cluster-group">{children}</div>,
+}));
+
+vi.mock("./FirePerimeters", () => ({
+  __esModule: true,
+  default: () => <div data-testid="fire-perimeters" />,
+}));
+
+vi.mock("./MapControls", () => ({
+  __esModule: true,
+  default: ({ onLocate }: any) => (
+    <button onClick={() => onLocate([39.5, -106.5])}>Show my location</button>
+  ),
+}));
+
+vi.mock("../CampsiteMarker/CampsiteMarker", () => ({
+  __esModule: true,
+  default: ({ site }: any) => <div data-testid="marker">{site.name || "Unnamed Site"}</div>,
+}));
+
 const mockCampsites = [
   {
-    id: "1", 
+    id: "1",
     name: "Test Site",
     description: "A nice place",
     lat: 40,
     lng: -105,
-    requires_4wd: true,
     url: "https://example.com/1",
     state: "CO",
     mapLink: "https://maps.example.com/1",
     source: "BLM" as const,
   },
   {
-    id: "2", 
+    id: "2",
     name: "",
     description: "",
     lat: 41,
     lng: -106,
-    requires_4wd: false,
     url: "https://example.com/2",
     state: "WY",
     mapLink: "https://maps.example.com/2",
@@ -91,45 +73,43 @@ describe("MapView", () => {
     vi.clearAllMocks();
   });
 
-  it("displays campsite markers from prop", async () => {
+  it("renders campsite markers inside the cluster group", async () => {
     await act(async () => {
       render(<MapView campsites={mockCampsites} />);
     });
     await waitFor(() => {
-      expect(screen.getByRole("region")).toBeInTheDocument();
-    });
-    await waitFor(() => {
       expect(screen.getAllByTestId("marker")).toHaveLength(2);
     });
+    expect(screen.getByTestId("cluster-group")).toContainElement(screen.getAllByTestId("marker")[0]);
   });
 
   it("handles empty campsites array", async () => {
     await act(async () => {
       render(<MapView campsites={[]} />);
     });
-    await waitFor(() => {
-      expect(screen.getByRole("region")).toBeInTheDocument();
-    });
+    expect(screen.getByRole("region")).toBeInTheDocument();
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
 
-  it("renders the current location marker and shows tooltip on hover", async () => {
-    const mockGeolocation = {
-      getCurrentPosition: (success: any) => success({ coords: { latitude: 39.5, longitude: -106.5 } })
-    };
-    // @ts-ignore
-    global.navigator.geolocation = mockGeolocation;
+  it("offers the base maps and overlays in the layer switcher", async () => {
+    await act(async () => {
+      render(<MapView campsites={[]} />);
+    });
+    const baseNames = screen.getAllByTestId("base-layer").map((el) => el.getAttribute("data-name"));
+    expect(baseNames).toEqual(["Topo", "OpenTopoMap", "Satellite"]);
+    const overlayNames = screen.getAllByTestId("overlay").map((el) => el.getAttribute("data-name"));
+    expect(overlayNames).toEqual(["Campsites", "Land ownership", "Wildfire perimeters"]);
+    expect(screen.getByTestId("fire-perimeters")).toBeInTheDocument();
+  });
 
+  it("shows a you-are-here marker after locating the user", async () => {
     await act(async () => {
       render(<MapView campsites={mockCampsites} />);
     });
-
-    const showLocationBtn = await screen.findByRole('button', { name: /show my location/i });
-    showLocationBtn.click();
-
+    expect(screen.queryByTestId("person-marker")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /show my location/i }));
     await waitFor(() => {
-      expect(screen.getByTestId("person-marker")).toBeInTheDocument();
+      expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
     });
-    expect(screen.getByTestId("person-tooltip")).toHaveTextContent(/You are here/i);
   });
 });

@@ -42,3 +42,5 @@ Thumbs.db
 # LMDB
 /packages/server/data.lmdb-lock
 /packages/server/data.lmdb
+# Wrangler local dev files
+.wrangler/

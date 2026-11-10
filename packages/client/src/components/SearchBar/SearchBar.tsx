@@ -1,9 +1,11 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, KeyboardEvent, useEffect, useMemo, useRef } from "react";
 import type { Campsite } from "../../types/Campsite";
+import "./SearchBar.css";
 
 interface SearchBarProps {
   campsites: Campsite[];
   onSearchResults: (results: Campsite[]) => void;
+  onQueryChange?: (query: string) => void;
 }
 
 const flattenObject = (obj: Record<string, any>): string => {
@@ -18,36 +20,72 @@ const flattenObject = (obj: Record<string, any>): string => {
     .toLowerCase();
 };
 
-const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ campsites, onSearchResults, onQueryChange }) => {
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // Build the searchable text once per dataset instead of on every keystroke.
+  const searchIndex = useMemo(() => campsites.map((camp) => flattenObject(camp)), [campsites]);
+
+  const filter = (input: string) => {
+    const searchWords = input.toLowerCase().split(/\s+/).filter(Boolean);
+    if (searchWords.length === 0) return campsites;
+    return campsites.filter((_, i) => searchWords.every((word) => searchIndex[i].includes(word)));
+  };
+
+  // Re-run the current search when the data arrives or changes.
   useEffect(() => {
-    onSearchResults(campsites);
+    onSearchResults(filter(query));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campsites, onSearchResults]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
+  const update = (input: string) => {
     setQuery(input);
+    onQueryChange?.(input.trim());
+    onSearchResults(filter(input));
+  };
 
-    const searchWords = input.toLowerCase().split(/\s+/).filter(Boolean);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => update(e.target.value);
 
-    const results = campsites.filter((camp) => {
-      const flattened = flattenObject(camp);
-      return searchWords.every((word) => flattened.includes(word));
-    });
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape" && query) {
+      e.preventDefault();
+      update("");
+    }
+  };
 
-    onSearchResults(results);
+  const clear = () => {
+    update("");
+    inputRef.current?.focus();
   };
 
   return (
-    <input
-      type="text"
-      value={query}
-      onChange={handleChange}
-      placeholder="Search by name, state, activities..."
-      className="search-bar"
-      style={{ width: "50vw", height: "25px", outline: 'none' }}
-    />
+    <div className="search-bar">
+      <svg className="search-bar__icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        ref={inputRef}
+        type="search"
+        value={query}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder="Search by name, state, activities..."
+        aria-label="Search campsites"
+        className="search-bar__input"
+        autoComplete="off"
+        spellCheck={false}
+      />
+      {query && (
+        <button type="button" className="search-bar__clear" onClick={clear} aria-label="Clear search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
+    </div>
   );
 };
 

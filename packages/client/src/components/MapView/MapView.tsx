@@ -1,98 +1,116 @@
-import React, { useEffect, useState, useMemo, useCallback, Suspense } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Tooltip,
+  LayersControl,
+  ScaleControl,
+  ZoomControl,
+  useMap,
+} from "react-leaflet";
 import L from "leaflet";
 import "./MapView.css";
-import type { Campsite } from '../../types/Campsite';
+import type { Campsite } from "../../types/Campsite";
+import MarkerClusterGroup from "./MarkerClusterGroup";
+import MapControls from "./MapControls";
+import FirePerimeters from "./FirePerimeters";
+import { BASE_LAYERS, LAND_OWNERSHIP_LAYER, MAX_ZOOM } from "./mapLayers";
+
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
 
 const defaultPosition: [number, number] = [39.2508, -106.2925];
 
 const personIcon = new L.DivIcon({
-  html: `<div style="display: flex; align-items: flex-end; justify-content: center; height: 48px; width: 32px;">
-    <svg xmlns='http://www.w3.org/2000/svg' width='28' height='42' viewBox='0 0 32 48' aria-label='You Are Here Person Marker'>
-      <circle cx='16' cy='8' r='6' fill='#000000'/>
-      <path d='M12 14 L12 26 L20 26 L20 14 Z' fill='#000000'/>
-      <path d='M12 16 L4 28 L8 30 L16 18 Z' fill='#000000'/>
-      <path d='M20 16 L28 28 L24 30 L16 18 Z' fill='#000000'/>
-      <path d='M12 26 L12 46 L16 46 L16 26 Z' fill='#000000'/>
-      <path d='M16 26 L16 46 L20 46 L20 26 Z' fill='#000000'/>
-    </svg>
-  </div>` ,
-  className: 'you-are-here-marker',
-  iconSize: [32, 48],
-  iconAnchor: [16, 48],
+  html: `<span class="you-are-here-dot"></span>`,
+  className: "you-are-here-marker",
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 });
 
 interface MapViewProps {
   campsites: Campsite[];
+  searchQuery?: string;
 }
 
-const MapView: React.FC<MapViewProps> = ({ campsites }) => {
+// After the user stops typing, zoom the map to fit whatever the search matched.
+const FitToResults: React.FC<{ campsites: Campsite[]; query: string }> = ({ campsites, query }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (!query || campsites.length === 0) return;
+    const timer = setTimeout(() => {
+      const bounds = L.latLngBounds(campsites.map((s) => [s.lat, s.lng] as [number, number]));
+      map.flyToBounds(bounds, { padding: [60, 60], maxZoom: 11, duration: 0.8 });
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [campsites, query, map]);
+  return null;
+};
+
+const MapView: React.FC<MapViewProps> = ({ campsites, searchQuery = "" }) => {
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
-  const [showMap, setShowMap] = useState(false);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setShowMap(true), 0); 
-    return () => clearTimeout(timeout);
-  }, []);
-
-  const [geoRequested, setGeoRequested] = useState(false);
-  useEffect(() => {
-    if (!geoRequested) return;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCurrentPosition([pos.coords.latitude, pos.coords.longitude]),
-        () => setCurrentPosition(null)
-      );
-    }
-  }, [geoRequested]);
-
-  const renderCampsiteMarker = useCallback(
-    (site: Campsite) => <CampsiteMarker key={site.id} site={site} />, 
-    []
-  );
 
   const campsiteMarkers = useMemo(
-    () => campsites.map(renderCampsiteMarker),
-    [campsites, renderCampsiteMarker]
+    () => campsites.map((site) => <CampsiteMarker key={site.id} site={site} />),
+    [campsites]
   );
 
   return (
     <div className="MapView">
-      {showMap ? (
-        <Suspense fallback={null}>
-          <MapContainer
-            center={currentPosition || defaultPosition}
-            zoom={8}
-            style={{ height: "100%", width: "100%" }}
-          >
+      <MapContainer
+        center={defaultPosition}
+        zoom={8}
+        maxZoom={MAX_ZOOM}
+        zoomControl={false}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <LayersControl position="topright">
+          {BASE_LAYERS.map((layer, i) => (
+            <LayersControl.BaseLayer key={layer.name} name={layer.name} checked={i === 0}>
+              <TileLayer
+                url={layer.url}
+                attribution={layer.attribution}
+                maxNativeZoom={layer.maxNativeZoom}
+                maxZoom={MAX_ZOOM}
+                {...(layer.subdomains ? { subdomains: layer.subdomains } : {})}
+              />
+            </LayersControl.BaseLayer>
+          ))}
+
+          <LayersControl.Overlay name="Campsites" checked>
+            <MarkerClusterGroup>
+              <Suspense fallback={null}>{campsiteMarkers}</Suspense>
+            </MarkerClusterGroup>
+          </LayersControl.Overlay>
+
+          <LayersControl.Overlay name={LAND_OWNERSHIP_LAYER.name}>
             <TileLayer
-              attribution="&copy; OpenStreetMap contributors"
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              url={LAND_OWNERSHIP_LAYER.url}
+              attribution={LAND_OWNERSHIP_LAYER.attribution}
+              maxNativeZoom={LAND_OWNERSHIP_LAYER.maxNativeZoom}
+              maxZoom={MAX_ZOOM}
+              opacity={LAND_OWNERSHIP_LAYER.opacity}
             />
-            {campsiteMarkers}
-            {currentPosition && (
-              <Marker position={currentPosition} icon={personIcon}>
-                <Tooltip direction="top" offset={[0, -40]} opacity={1} permanent={false} sticky>
-                  You are here
-                </Tooltip>
-              </Marker>
-            )}
-          </MapContainer>
-          {!geoRequested && (
-            <button
-              className="popup-button"
-              style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}
-              onClick={() => setGeoRequested(true)}
-              aria-label="Show My Location"
-            >
-              Show My Location
-            </button>
-          )}
-        </Suspense>
-      ) : (
-        null
-      )}
+          </LayersControl.Overlay>
+
+          <LayersControl.Overlay name="Wildfire perimeters">
+            <FirePerimeters />
+          </LayersControl.Overlay>
+        </LayersControl>
+
+        <ZoomControl position="bottomright" />
+        <MapControls onLocate={setCurrentPosition} />
+        <ScaleControl position="bottomleft" imperial metric={false} />
+        <FitToResults campsites={campsites} query={searchQuery} />
+
+        {currentPosition && (
+          <Marker position={currentPosition} icon={personIcon} zIndexOffset={1000}>
+            <Tooltip direction="top" offset={[0, -12]} opacity={1}>
+              You are here
+            </Tooltip>
+          </Marker>
+        )}
+      </MapContainer>
     </div>
   );
 };
