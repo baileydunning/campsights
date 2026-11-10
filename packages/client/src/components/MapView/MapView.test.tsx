@@ -27,6 +27,8 @@ vi.mock("./MarkerClusterGroup", () => ({
   default: ({ children }: any) => <div data-testid="cluster-group">{children}</div>,
 }));
 
+vi.mock("./FavoritesControl", () => ({ __esModule: true, default: () => null }));
+
 vi.mock("./FirePerimeters", () => ({
   __esModule: true,
   default: () => <div data-testid="fire-perimeters" />,

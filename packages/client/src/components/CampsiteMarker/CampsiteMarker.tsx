@@ -6,6 +6,7 @@ import type { Campsite } from "../../types/Campsite";
 import { getCampsiteById } from "../../api/Campsites";
 import WeatherIcon from "../CampsitePage/WeatherIcon";
 import { groupForecast } from "../CampsitePage/weather";
+import FavoriteButton from "../FavoriteButton/FavoriteButton";
 import "./CampsiteMarker.css";
 
 export interface CampsiteMarkerProps {
@@ -151,6 +152,7 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
             )}
 
             <div className="campsite-card__actions">
+              <FavoriteButton id={site.id} name={site.name} />
               <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`}
                 target="_blank"
@@ -158,10 +160,10 @@ const CampsiteMarker: React.FC<CampsiteMarkerProps> = ({ site }) => {
                 className="popup-button"
                 role="button"
               >
-                Get Directions
+                Directions
               </a>
               <Link to={detailsPath} className="popup-button popup-button--primary" role="button" onClick={() => setPopupOpen(false)}>
-                Get Details
+                Details
               </Link>
             </div>
           </div>

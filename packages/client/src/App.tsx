@@ -11,6 +11,7 @@ import type { Campsite } from "./types/Campsite";
 
 const MapView = lazy(() => import("./components/MapView/MapView"));
 const CampsitePage = lazy(() => import("./components/CampsitePage/CampsitePage"));
+const FavoritesPage = lazy(() => import("./components/FavoritesPage/FavoritesPage"));
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -33,6 +34,14 @@ const App: React.FC = () => {
         element={
           <Suspense fallback={<Loading />}>
             <CampsitePage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/favorites"
+        element={
+          <Suspense fallback={<Loading />}>
+            <FavoritesPage />
           </Suspense>
         }
       />

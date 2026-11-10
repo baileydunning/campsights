@@ -62,7 +62,7 @@ describe('<CampsiteMarker />', () => {
     expect(screen.getByText('+2 more')).toBeInTheDocument();
     expect(screen.getByText('Stay limit: 14 days')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'The view' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Get Details/i })).toHaveAttribute('href', '/campsites/abc');
+    expect(screen.getByRole('button', { name: /^Details$/i })).toHaveAttribute('href', '/campsites/abc');
 
     expect(await screen.findByText('61°')).toBeInTheDocument();
     expect(screen.getByText('29°')).toBeInTheDocument();

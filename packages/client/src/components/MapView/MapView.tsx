@@ -16,6 +16,7 @@ import type { Campsite } from "../../types/Campsite";
 import MarkerClusterGroup from "./MarkerClusterGroup";
 import MapControls from "./MapControls";
 import FirePerimeters from "./FirePerimeters";
+import FavoritesControl from "./FavoritesControl";
 import { BASE_LAYERS, LAND_OWNERSHIP_LAYER, MAX_ZOOM } from "./mapLayers";
 
 const CampsiteMarker = React.lazy(() => import("../CampsiteMarker/CampsiteMarker"));
@@ -120,6 +121,7 @@ const MapView: React.FC<MapViewProps> = ({ campsites, searchQuery = "" }) => {
             <FirePerimeters />
           </LayersControl.Overlay>
         </LayersControl>
+        <FavoritesControl />
 
         <ZoomControl position="bottomright" />
         <MapControls onLocate={setCurrentPosition} />

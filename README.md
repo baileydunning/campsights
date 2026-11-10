@@ -1,12 +1,12 @@
 # Campsights
 
-Campsights is a map of dispersed campsites on Bureau of Land Management (BLM) public land. You can search the map, check the weather, see who manages the surrounding land, look for nearby wildfires, and open a detailed page for each campsite with photos, a forecast, directions and sun times.
+Campsights is a map of dispersed campsites on Bureau of Land Management (BLM) public land. You can search the map, check the weather, see who manages the surrounding land, look for nearby wildfires, save favorites, and open a detailed page for each campsite with photos, a forecast, directions and sun times.
 
 **Live site:** https://campsights.guide
 
 **API docs:** https://campsights.guide/docs
 
-Campsite data comes from my [BLM Spider](https://github.com/baileydunning/blm-spider), which scrapes the BLM website every week and filters out day-use areas and other places that aren't campsites.
+Campsite data comes from my [BLM Spider](https://github.com/baileydunning/blm-spider), which scrapes the BLM website every week and filters out day-use areas and other places that aren't campsites. See [How the BLM Spider works](#how-the-blm-spider-works).
 
 > **Disclaimer:** Not every location on the map is a confirmed campsite. Some are trailheads, staging areas or other points of interest. Weather, elevation and land ownership data are approximate. Always check current rules, closures and fire restrictions with the local BLM office before you go.
 
@@ -21,7 +21,8 @@ Campsite data comes from my [BLM Spider](https://github.com/baileydunning/blm-sp
   - **Land ownership** from the BLM Surface Management Agency layer (BLM, Forest Service, state, private and so on)
   - **Wildfire perimeters** for current fires from the National Interagency Fire Center. Click a fire for its name, size and containment. The data only downloads when the layer is turned on.
 - Show my location, full screen, zoom and a scale bar in miles
-- Tapping a campsite opens a small preview card with a photo, short description, top activities, and buttons for directions and details
+- A star button under the layer switcher opens your favorites, with a count of saved campsites
+- Tapping a campsite opens a preview card with a photo, state and nearest town, today's weather and elevation, a short description, activity tags, the stay limit, and buttons to save it, get directions or open its page
 - The map remembers where you were when you come back from a campsite page
 
 ### Search
@@ -30,6 +31,7 @@ Campsite data comes from my [BLM Spider](https://github.com/baileydunning/blm-sp
 - Multi-word searches match campsites that contain all of the words
 - The map zooms to fit the results after you stop typing
 - Shows how many campsites match
+- An info button next to the description explains where the data comes from and its limits
 
 ### Campsite pages
 
@@ -42,7 +44,14 @@ Every campsite has its own page at `/campsites/:id` that can be bookmarked or sh
 - Description, activities, directions, fees and permits, wildlife and nearby campgrounds when the BLM lists them
 - Elevation, coordinates (tap to copy), stay limit, and today's sunrise, sunset and hours of daylight in local time
 - A small map with the base map switcher and land ownership overlay, plus links to Google Maps, Apple Maps and CalTopo
-- Directions through Google Maps, a link to the official BLM page, and a share button
+- Directions through Google Maps, a save to favorites button, a link to the official BLM page, and a share button
+
+### Favorites
+
+- Star a campsite from its map card or its page
+- The favorites page at `/favorites` lists saved campsites, newest first, with a photo, state and activities. Tap one to open it, or tap the star to remove it.
+- Favorites are saved in the browser's `localStorage` (key `campsights:favorites`), so they stay on that device and browser. No account is needed. Changes show up in other open tabs right away.
+- Campsites that drop out of the BLM data are hidden from the list
 
 ### Phones and offline use
 
@@ -51,6 +60,22 @@ Every campsite has its own page at `/campsites/:id` that can be bookmarked or sh
 - The app shell is cached by a service worker for faster repeat visits. Campsite data is cached in the browser for 24 hours.
 - After a new deploy, open tabs reload themselves once instead of breaking
 - The service worker is turned off on `localhost` so local runs always show the latest build
+
+## How the BLM Spider works
+
+The [BLM Spider](https://github.com/baileydunning/blm-spider) is a separate Node.js and TypeScript project that turns the BLM's public recreation pages into one JSON file.
+
+1. **Search.** It starts at the BLM's site search for "dispersed" (`https://www.blm.gov/visit/search?query=dispersed`) and walks through the result pages one at a time until a page comes back empty, collecting the link to every result.
+2. **Fetch detail pages.** It downloads each result's page, 12 at a time, using keep-alive connections, a 10 second timeout and up to two retries with a short backoff. Duplicate links are skipped.
+3. **Parse.** Each page is parsed with Cheerio to pull out the name, overview text, directions, activities, wildlife, nearby campgrounds, fees, stay limit, photos (with alt text and credit) and coordinates. Text is cleaned of extra whitespace and leftover markup.
+4. **Fill in the state.** When a page doesn't list its state, the spider works it out from the coordinates with Turf.js and a local US states GeoJSON file, so no outside service is needed.
+5. **Filter.** Places are dropped if they have no coordinates, if their stay limit says day use, or if they mention things like day use, shooting ranges, interpretive sites or science centers without also mentioning camping, tents, RVs or a campground.
+6. **Give each campsite an ID.** The ID is a UUID generated from the campsite's BLM page URL (UUID v5), so the same campsite keeps the same ID every week. Campsights relies on this for campsite page links and saved favorites.
+7. **Save.** The results are written to `data/blm-campsites.json`.
+
+A GitHub Actions workflow in the spider repo runs this every Sunday at 2:00 UTC. It checks that the new file isn't empty before committing it, so a failed crawl never replaces good data. Campsights reads that committed file directly from GitHub, and its own deploy workflow runs every Monday to pick it up.
+
+Scraping is best effort. If the BLM changes its page layout, some fields may come back empty until the parser is updated, and the filter can let through a few places that aren't campsites or miss some that are.
 
 ## How it works
 
@@ -75,6 +100,7 @@ Hosting is free on Cloudflare's free plan. The only cost is the domain.
 ## Tech stack
 
 - **Frontend:** React 19, TypeScript, Vite, Redux Toolkit, React Router, React-Leaflet, Leaflet.markercluster
+- **Data source:** [BLM Spider](https://github.com/baileydunning/blm-spider) (Node.js, TypeScript, Axios, Cheerio, Turf.js)
 - **Hosting and API:** Cloudflare Workers with static assets
 - **Alternate server:** Express and TypeScript (used for Docker)
 - **Data:** BLM Spider, National Weather Service API, Open-Elevation API, BLM Surface Management Agency map tiles, NIFC WFIGS fire perimeters, USGS, Esri and OpenStreetMap tiles
@@ -228,9 +254,13 @@ packages/
       components/
         MapView/       Map, layers, clusters, controls, fire perimeters
         CampsiteMarker/ Map marker and preview card
-        CampsitePage/  Campsite detail page, gallery, forecast, sun times
+        CampsitePage/  Campsite detail page, gallery, forecast, sun times, top bar
+        FavoritesPage/ Saved campsites list
+        FavoriteButton/ Star button used in cards, pages and lists
+        InfoTip/       Info button and tooltip
         SearchBar/
       store/           Redux slice for campsite data
+      favorites.ts     Favorites saved in localStorage
       pwa.ts           Service worker registration and stale build recovery
   server/            Express server (Docker and local API) and openapi.yaml
 worker/

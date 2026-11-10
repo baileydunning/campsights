@@ -193,7 +193,7 @@
 
 .campsite-card__actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 42px 1fr 1fr;
   gap: 8px;
   margin-top: 12px;
 }

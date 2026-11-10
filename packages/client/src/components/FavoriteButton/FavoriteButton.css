@@ -1,0 +1,55 @@
+.fav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.fav-button:active { transform: scale(0.94); }
+
+.fav-button svg { transition: transform 0.2s; }
+.fav-button.is-saved svg { color: #E0A21B; animation: fav-pop 0.3s ease-out; }
+
+@keyframes fav-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fav-button.is-saved svg { animation: none; }
+}
+
+/* Round icon button */
+.fav-button--icon {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: var(--ink-muted, #5B6862);
+  background: #F1F0EC;
+  border: none;
+  border-radius: 10px;
+}
+
+.fav-button--icon:hover,
+.fav-button--icon:focus-visible { background: #E6E4DE; color: var(--ink, #1F2D27); }
+.fav-button--icon.is-saved { background: #FDF3DC; }
+
+/* Labeled button, matches .btn on the campsite page */
+.fav-button--button {
+  height: 44px;
+  padding: 0 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink, #1F2D27);
+  background: #FFFFFF;
+  border: 1px solid var(--border, #E2E0DA);
+  border-radius: 12px;
+}
+
+.fav-button--button:hover { background: #F1F0EC; }
+.fav-button--button.is-saved { background: #FDF3DC; border-color: #F2D894; }

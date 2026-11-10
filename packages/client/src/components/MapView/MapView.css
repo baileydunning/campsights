@@ -73,6 +73,34 @@
   50% { opacity: 0.35; }
 }
 
+/* Favorites star (under the layer switcher) */
+.MapView .favorites-control__link {
+  position: relative;
+  width: 44px !important;
+  height: 44px !important;
+  color: #B9BDB9 !important;
+}
+
+.MapView .favorites-control__link.has-favorites { color: #E0A21B !important; }
+
+.MapView .favorites-control__badge {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: #FFFFFF;
+  background: var(--forest, #226E52);
+  border-radius: 999px;
+}
+
+.MapView .favorites-control__badge[hidden] { display: none; }
+
 /* Layer switcher */
 .MapView .leaflet-control-layers-toggle,
 .MapView .leaflet-touch .leaflet-control-layers-toggle {
