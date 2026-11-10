@@ -1,0 +1,51 @@
+/* Positioned against the search panel so the bubble spans its full width. */
+.info-tip {
+  display: inline;
+}
+
+.info-tip__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: -4px 0 -4px 2px;
+  padding: 0;
+  vertical-align: middle;
+  color: var(--ink-muted, #5B6862);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: color 0.15s, background 0.15s;
+}
+
+.info-tip__button:hover,
+.info-tip__button:focus-visible,
+.info-tip__button[aria-expanded="true"] {
+  color: var(--forest-dark, #16563A);
+  background: #EEF4EA;
+}
+
+.info-tip__bubble {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  display: block;
+  margin-top: 8px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #FFFFFF;
+  background: var(--ink, #1F2D27);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(31, 45, 39, 0.25);
+  animation: info-tip-in 0.12s ease-out;
+}
+
+@keyframes info-tip-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}

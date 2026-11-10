@@ -109,5 +109,13 @@ html, body, #root {
     right: calc(var(--gap) + env(safe-area-inset-right));
     width: auto;
     max-width: none;
+    transition: opacity 0.18s, transform 0.18s;
+  }
+
+  /* Give an open campsite card the whole screen on phones. */
+  .popup-open .search-panel {
+    opacity: 0;
+    transform: translateY(-12px);
+    pointer-events: none;
   }
 }

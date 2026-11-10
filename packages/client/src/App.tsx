@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router";
 import "./App.css";
 import Loading from "./components/Loading/Loading";
 import SearchBar from "./components/SearchBar/SearchBar";
+import InfoTip from "./components/InfoTip/InfoTip";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCampsites, selectCampsites, selectError, selectLoading } from "./store/campsiteSlice";
 import type { AppDispatch } from "./store/store";
@@ -99,6 +100,11 @@ const MapPage: React.FC<MapPageProps> = ({ query, setQuery, filtered, setFiltere
             Bureau of Land Management
           </a>{" "}
           website.
+          <InfoTip label="About this data">
+            Not every location on the map is a confirmed campsite. Some are trailheads, staging areas or other
+            points of interest. Weather, elevation and land ownership data are approximate. Always check current
+            rules, closures and fire restrictions with the local BLM office before you go.
+          </InfoTip>
         </p>
         <SearchBar
           campsites={allCampsites}
