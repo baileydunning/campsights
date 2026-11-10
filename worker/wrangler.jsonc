@@ -1,0 +1,20 @@
+// Cloudflare Worker config for campsights.guide.
+// Deployed by .github/workflows/deploy-cloudflare.yml.
+{
+  "name": "campsights",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-01",
+  "observability": { "enabled": true },
+  "assets": {
+    // Built React app plus the campsite data files the workflow generates.
+    "directory": "../packages/client/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // These paths go to the Worker; everything else is served as a static file.
+    "run_worker_first": ["/api/*", "/docs", "/docs/*", "/health"]
+  },
+  "routes": [
+    { "pattern": "campsights.guide", "custom_domain": true },
+    { "pattern": "www.campsights.guide", "custom_domain": true }
+  ]
+}

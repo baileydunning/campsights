@@ -18,9 +18,13 @@ export function server() {
   app.use(compression({ level: 9, threshold: 0 }));
 
   const allowedOrigins = [
+    'https://campsights.guide',
+    'https://www.campsights.guide',
     'https://campsights.onrender.com',
     'http://localhost:5173',
-    'http://localhost:4000'
+    'http://localhost:4000',
+    // Add your own domain(s) here, comma-separated, e.g. ALLOWED_ORIGINS=https://campsights.com
+    ...(process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
   ];
 
   app.use(cors({

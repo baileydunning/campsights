@@ -6,11 +6,10 @@ Campsite data is powered by my custom [BLM Spider API](https://github.com/bailey
 
 *Disclaimer:* Not all locations shown on the map are confirmed campsites. Some may be trailheads, parking areas, or general points of interest. Elevation and weather data are approximate and may not reflect current or exact conditions. Always verify site details and local regulations before heading out.
 
-**Live project link:** https://campsights.onrender.com/
+**Live project link:** https://campsights.guide/
 
-**Interactive API docs and schema:** https://campsights.onrender.com/docs
+**Interactive API docs and schema:** https://campsights.guide/docs
 
-**Spider docs:** https://blm-spider.onrender.com/docs
 
 ## Tech Stack
 

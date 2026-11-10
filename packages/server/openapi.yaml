@@ -5,10 +5,10 @@ info:
   description: |
     API for Campsights app - provides campsite data from the Bureau of Land Management (BLM) Spider API with enhanced elevation and weather information.
 
-    **CORS access is restricted:** Only requests from the official production and development frontend origins are allowed (https://campsights.onrender.com, http://localhost:5173 and http://localhost:4000).
+    **CORS access is restricted:** Only requests from the official production and development frontend origins are allowed (https://campsights.guide, http://localhost:5173 and http://localhost:4000).
 
     ## Data Sources
-    - **Campsites**: Bureau of Land Management Spider API (https://blm-spider.onrender.com/api/v1/campsites)
+    - **Campsites**: BLM Spider dataset (https://github.com/baileydunning/blm-spider)
     - **Elevation**: Open Elevation API (https://api.open-elevation.com)
     - **Weather**: National Weather Service API
 
@@ -17,8 +17,8 @@ info:
     - GET /campsites/{id}: Returns enhanced data with elevation and weather
 
 servers:
-- url: https://campsights.onrender.com/api/v1
-  description: Production server (Render) - Proxies BLM Spider API with elevation/weather enhancements
+- url: https://campsights.guide/api/v1
+  description: Production server (Cloudflare Workers)
 - url: http://localhost:3000/api/v1
   description: Development server (Local) - Proxies BLM Spider API with elevation/weather enhancements
 tags:

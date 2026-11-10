@@ -1,0 +1,39 @@
+name: Deploy to Cloudflare
+
+on:
+  # Run it by hand from the Actions tab.
+  workflow_dispatch:
+  # Redeploy every Monday so the site picks up Sunday's blm-spider scrape.
+  schedule:
+    - cron: '0 8 * * 1'
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build client and campsite data
+        run: npm run build:cf
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          wranglerVersion: '4.42.0'

@@ -28,7 +28,11 @@ function rateLimit(): Promise<void> {
 }
 
 const CAMPSITE_CACHE_TTL = 5 * 60 * 1000;
-const BLM_API_URL = 'https://blm-spider.onrender.com/api/v1/campsites';
+// Campsite data comes straight from the JSON file the blm-spider GitHub Action
+// commits each week, so no spider server needs to be running.
+const BLM_DATA_URL =
+  process.env.BLM_DATA_URL ||
+  'https://raw.githubusercontent.com/baileydunning/blm-spider/main/data/blm-campsites.json';
 
 export const campsiteCache = new Map<string, { campsite: Campsite; timestamp: number }>();
 
@@ -56,7 +60,7 @@ export const getCampsites = async (): Promise<Campsite[]> => {
   }
   await rateLimit();
   const response = await fetchWithRetry(
-    `${BLM_API_URL}?limit=all`,
+    BLM_DATA_URL,
     {},
     2,
     500,
@@ -107,28 +111,19 @@ async function getCampsiteByIdInternal(
   if (cached && now - cached.timestamp < CAMPSITE_CACHE_TTL) {
     raw = cached.campsite;
   } else {
-    await rateLimit();
-    let response;
+    let found: Campsite | undefined;
     try {
-      response = await fetchWithRetry(`${BLM_API_URL}/${id}`);
+      const all = await getCampsites();
+      found = all.find((site) => site.id === id);
     } catch (err) {
-      console.error('Error fetching campsite:', err);
+      console.error('Error fetching campsites:', err);
       return null;
     }
-    if (!response.ok) {
-      let errorText = '';
-      try {
-        errorText = await response.text();
-      } catch {}
-      console.error(`Failed to fetch campsite ${id}: status ${response.status}, body:`, errorText);
+    if (!found) {
+      console.error(`Campsite ${id} not found`);
       return null;
     }
-    try {
-      raw = await response.json();
-    } catch (err) {
-      console.error('Failed to parse JSON for campsite', id, err);
-      return null;
-    }
+    raw = found;
     campsiteCache.set(id, { campsite: raw, timestamp: now });
   }
 
