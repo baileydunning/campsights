@@ -6,6 +6,12 @@ import { createElementObject, createLayerComponent, extendContext } from "@react
 
 type MarkerClusterGroupProps = L.MarkerClusterGroupOptions & { children?: ReactNode };
 
+export const DISABLE_CLUSTERING_AT_ZOOM = 12;
+
+// Bubble diameter grows with the log of the count, so a 140-site cluster is
+// bigger than a 2-site one without dwarfing the single tents around it.
+export const clusterSize = (count: number) => Math.round(18 + 9 * Math.log10(count + 1));
+
 // Groups child <Marker>s into numbered clusters when zoomed out.
 const MarkerClusterGroup = createLayerComponent<L.MarkerClusterGroup, MarkerClusterGroupProps>(
   ({ children: _children, ...options }, ctx) => {
@@ -13,14 +19,17 @@ const MarkerClusterGroup = createLayerComponent<L.MarkerClusterGroup, MarkerClus
       chunkedLoading: true,
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: true,
-      maxClusterRadius: 50,
+      // Zoomed in to a valley or road, every site fits on screen, so stop grouping.
+      disableClusteringAtZoom: DISABLE_CLUSTERING_AT_ZOOM,
+      // Group loosely when zoomed out (fewer, calmer bubbles) and tightly as you zoom in.
+      maxClusterRadius: (zoom: number) => (zoom <= 6 ? 80 : zoom <= 8 ? 60 : zoom <= 10 ? 45 : 30),
       iconCreateFunction: (cluster) => {
         const count = cluster.getChildCount();
-        const size = count < 10 ? "sm" : count < 100 ? "md" : "lg";
+        const size = clusterSize(count);
         return L.divIcon({
           html: `<span>${count}</span>`,
-          className: `campsite-cluster campsite-cluster--${size}`,
-          iconSize: size === "sm" ? [32, 32] : size === "md" ? [38, 38] : [44, 44],
+          className: `campsite-cluster${size >= 32 ? " campsite-cluster--lg" : ""}`,
+          iconSize: [size, size],
         });
       },
       ...options,

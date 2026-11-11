@@ -10,6 +10,7 @@
     "lint": "lerna run lint",
     "clean": "lerna clean",
     "build:cf": "npm run build --workspace client && node worker/scripts/build-data.mjs packages/client/dist/data && cp packages/server/openapi.yaml packages/client/dist/openapi.yaml",
+    "elevations": "LOOKUP_ELEVATION=1 node worker/scripts/build-data.mjs packages/client/dist/data",
     "start": "npm run build:cf && npx --yes wrangler@4.42.0 dev --config worker/wrangler.jsonc"
   },
   "dependencies": {},

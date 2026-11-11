@@ -217,16 +217,17 @@
   justify-content: center;
   border-radius: 50%;
   font-family: var(--font, 'Montserrat', sans-serif);
+  font-size: 11px;
   font-weight: 600;
+  line-height: 1;
   color: #FFFFFF;
   background: var(--forest, #226E52);
-  border: 3px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid #FFFFFF;
+  /* A soft halo instead of a heavy white ring keeps clusters from looking like buttons. */
+  box-shadow: 0 0 0 4px rgba(34, 110, 82, 0.22), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.campsite-cluster--sm { font-size: 12px; }
-.campsite-cluster--md { font-size: 13px; background: #1C6248; }
-.campsite-cluster--lg { font-size: 14px; background: var(--forest-dark, #16563A); }
+.campsite-cluster--lg { font-size: 12px; background: var(--forest-dark, #16563A); }
 
 /* ---------- You are here ---------- */
 

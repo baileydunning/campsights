@@ -2,33 +2,159 @@
 // into the client build as static files the Worker can serve without parsing
 // the whole 4 MB file on every request (the free plan has a 10 ms CPU limit).
 //
+// It also cleans up state names and adds each campsite's elevation (in meters)
+// so the map can filter by elevation. Elevations are saved in
+// worker/data/elevations.json, so only new campsites need a lookup.
+//
+// New elevations are only looked up in CI (the deploy workflow) or when
+// LOOKUP_ELEVATION=1 is set (npm run elevations), so local runs start right away.
+//
 // Usage: node worker/scripts/build-data.mjs <outDir>
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const SOURCE =
   process.env.BLM_DATA_URL ||
   'https://raw.githubusercontent.com/baileydunning/blm-spider/main/data/blm-campsites.json';
-const outDir = process.argv[2];
-if (!outDir) throw new Error('Usage: node build-data.mjs <outDir>');
+const ELEVATION_URL = process.env.ELEVATION_URL || 'https://api.open-meteo.com/v1/elevation';
+const ELEVATION_BATCH = 100; // Open-Meteo accepts up to 100 points per request
+// Open-Meteo's free tier counts every point toward a limit of 600 a minute, so
+// leave a gap between batches to stay under it.
+const ELEVATION_GAP_MS = Number(process.env.ELEVATION_GAP_MS ?? 15000);
+const RATE_LIMIT_WAIT_MS = Number(process.env.RATE_LIMIT_WAIT_MS ?? 65000);
 
-const res = await fetch(SOURCE);
-if (!res.ok) throw new Error(`Failed to download campsite data: ${res.status}`);
-const raw = await res.json();
+// Elevations never change, so each campsite is looked up once and saved here
+// (keyed by campsite ID, in meters). Commit this file after it changes.
+const CACHE_FILE = fileURLToPath(new URL('../data/elevations.json', import.meta.url));
 
-const campsites = raw.filter(
-  (s) =>
-    s && typeof s.id === 'string' && /^[a-zA-Z0-9_-]+$/.test(s.id) &&
-    typeof s.lat === 'number' && typeof s.lng === 'number' &&
-    !Number.isNaN(s.lat) && !Number.isNaN(s.lng)
-);
-if (campsites.length === 0) throw new Error('No valid campsites in source data');
+// Rough box around the US, Alaska and Hawaii. Drops campsites the spider saved
+// without real coordinates (it uses 0,0 when a page has none).
+export const isInUS = (lat, lng) =>
+  typeof lat === 'number' && typeof lng === 'number' &&
+  Number.isFinite(lat) && Number.isFinite(lng) &&
+  lat >= 18 && lat <= 72 && lng >= -180 && lng <= -64;
 
-await mkdir(path.join(outDir, 'campsites'), { recursive: true });
-await writeFile(path.join(outDir, 'campsites.json'), JSON.stringify(campsites));
-await Promise.all(
-  campsites.map((s) =>
-    writeFile(path.join(outDir, 'campsites', `${s.id}.json`), JSON.stringify(s))
-  )
-);
-console.log(`Wrote ${campsites.length} campsites to ${outDir}`);
+// The scraped state is sometimes doubled ("OregonOregon") or in capitals ("OREGON").
+export const cleanState = (value) => {
+  let s = typeof value === 'string' ? value.trim() : '';
+  const half = s.length / 2;
+  if (s.length % 2 === 0 && half > 0 && s.slice(0, half) === s.slice(half)) s = s.slice(0, half);
+  if (s && s === s.toUpperCase()) {
+    s = s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return s;
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const readCache = async () => {
+  try {
+    return JSON.parse(await readFile(CACHE_FILE, 'utf8'));
+  } catch {
+    return {};
+  }
+};
+
+// Looks up elevations in meters and returns a map of campsite ID to elevation.
+// Waits and retries when rate limited, and stops early if the daily limit is
+// used up. A failed lookup never fails the build.
+const fetchElevations = async (sites, onBatch) => {
+  const found = {};
+  for (let start = 0; start < sites.length; start += ELEVATION_BATCH) {
+    if (start > 0) await sleep(ELEVATION_GAP_MS);
+    const batch = sites.slice(start, start + ELEVATION_BATCH);
+    const url =
+      `${ELEVATION_URL}?latitude=${batch.map((s) => s.lat.toFixed(5)).join(',')}` +
+      `&longitude=${batch.map((s) => s.lng.toFixed(5)).join(',')}`;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+        if (res.status === 429) {
+          const reason = (await res.json().catch(() => ({})))?.reason ?? '';
+          if (/daily|hourly/i.test(reason)) {
+            console.warn(`Elevation lookups stopped: ${reason}`);
+            return found;
+          }
+          throw Object.assign(new Error(reason || 'HTTP 429'), { rateLimited: true });
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { elevation } = await res.json();
+        if (!Array.isArray(elevation) || elevation.length !== batch.length) throw new Error('bad response');
+        elevation.forEach((m, i) => {
+          if (typeof m === 'number' && Number.isFinite(m)) found[batch[i].id] = Math.round(m);
+        });
+        await onBatch(found);
+        console.log(`Elevation: ${Math.min(start + batch.length, sites.length)} of ${sites.length}`);
+        break;
+      } catch (err) {
+        if (attempt === 3) {
+          console.warn(`Elevation lookup failed for points ${start}-${start + batch.length - 1}: ${err.message}`);
+        } else {
+          await sleep(err.rateLimited ? RATE_LIMIT_WAIT_MS : 2000 * attempt);
+        }
+      }
+    }
+  }
+  return found;
+};
+
+const main = async () => {
+  const outDir = process.argv[2];
+  if (!outDir) throw new Error('Usage: node build-data.mjs <outDir>');
+
+  const res = await fetch(SOURCE);
+  if (!res.ok) throw new Error(`Failed to download campsite data: ${res.status}`);
+  const raw = await res.json();
+
+  const campsites = raw
+    .filter(
+      (s) =>
+        s && typeof s.id === 'string' && /^[a-zA-Z0-9_-]+$/.test(s.id) &&
+        isInUS(s.lat, s.lng)
+    )
+    .map((s) => ({ ...s, state: cleanState(s.state) }));
+  if (campsites.length === 0) throw new Error('No valid campsites in source data');
+  const dropped = raw.length - campsites.length;
+  if (dropped) console.warn(`Dropped ${dropped} campsites without valid coordinates`);
+
+  const cache = await readCache();
+  const missing = [];
+  for (const s of campsites) {
+    if (typeof s.elevation === 'number') continue;
+    if (typeof cache[s.id] === 'number') s.elevation = cache[s.id];
+    else missing.push(s);
+  }
+  console.log(`Elevation: ${campsites.length - missing.length} of ${campsites.length} campsites already known`);
+
+  const lookup = process.env.LOOKUP_ELEVATION === '1' || (process.env.CI === 'true' && process.env.SKIP_ELEVATION !== '1');
+  if (missing.length && !lookup) {
+    console.log(`Skipping elevation lookups for ${missing.length} campsites. Run "npm run elevations" to fill them in.`);
+  } else if (missing.length) {
+    // Save after every batch so stopping partway through doesn't lose progress.
+    const save = async (found) => {
+      const updated = { ...cache, ...found };
+      const lines = Object.keys(updated).sort().map((id) => `  ${JSON.stringify(id)}: ${updated[id]}`);
+      await mkdir(path.dirname(CACHE_FILE), { recursive: true });
+      await writeFile(CACHE_FILE, `{\n${lines.join(',\n')}\n}\n`);
+    };
+    const found = await fetchElevations(missing, save);
+    for (const s of missing) if (found[s.id] != null) s.elevation = found[s.id];
+    console.log(`Looked up elevation for ${Object.keys(found).length} of ${missing.length} campsites`);
+  }
+
+  await mkdir(path.join(outDir, 'campsites'), { recursive: true });
+  await writeFile(path.join(outDir, 'campsites.json'), JSON.stringify(campsites));
+  await Promise.all(
+    campsites.map((s) =>
+      writeFile(path.join(outDir, 'campsites', `${s.id}.json`), JSON.stringify(s))
+    )
+  );
+  console.log(`Wrote ${campsites.length} campsites to ${outDir}`);
+};
+
+// Only run when called as a script, so cleanState can be imported in tests.
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('build-data.mjs')) {
+  await main();
+}
