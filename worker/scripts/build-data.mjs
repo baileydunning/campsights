@@ -28,6 +28,13 @@ const RATE_LIMIT_WAIT_MS = Number(process.env.RATE_LIMIT_WAIT_MS ?? 65000);
 // (keyed by campsite ID, in meters). Commit this file after it changes.
 const CACHE_FILE = fileURLToPath(new URL('../data/elevations.json', import.meta.url));
 
+// Rough box around the US, Alaska and Hawaii. Drops campsites the spider saved
+// without real coordinates (it uses 0,0 when a page has none).
+export const isInUS = (lat, lng) =>
+  typeof lat === 'number' && typeof lng === 'number' &&
+  Number.isFinite(lat) && Number.isFinite(lng) &&
+  lat >= 18 && lat <= 72 && lng >= -180 && lng <= -64;
+
 // The scraped state is sometimes doubled ("OregonOregon") or in capitals ("OREGON").
 export const cleanState = (value) => {
   let s = typeof value === 'string' ? value.trim() : '';
@@ -105,11 +112,12 @@ const main = async () => {
     .filter(
       (s) =>
         s && typeof s.id === 'string' && /^[a-zA-Z0-9_-]+$/.test(s.id) &&
-        typeof s.lat === 'number' && typeof s.lng === 'number' &&
-        !Number.isNaN(s.lat) && !Number.isNaN(s.lng)
+        isInUS(s.lat, s.lng)
     )
     .map((s) => ({ ...s, state: cleanState(s.state) }));
   if (campsites.length === 0) throw new Error('No valid campsites in source data');
+  const dropped = raw.length - campsites.length;
+  if (dropped) console.warn(`Dropped ${dropped} campsites without valid coordinates`);
 
   const cache = await readCache();
   const missing = [];
