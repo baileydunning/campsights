@@ -6,6 +6,9 @@
 // so the map can filter by elevation. Elevations are saved in
 // worker/data/elevations.json, so only new campsites need a lookup.
 //
+// New elevations are only looked up in CI (the deploy workflow) or when
+// LOOKUP_ELEVATION=1 is set (npm run elevations), so local runs start right away.
+//
 // Usage: node worker/scripts/build-data.mjs <outDir>
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -49,7 +52,7 @@ const readCache = async () => {
 // Looks up elevations in meters and returns a map of campsite ID to elevation.
 // Waits and retries when rate limited, and stops early if the daily limit is
 // used up. A failed lookup never fails the build.
-const fetchElevations = async (sites) => {
+const fetchElevations = async (sites, onBatch) => {
   const found = {};
   for (let start = 0; start < sites.length; start += ELEVATION_BATCH) {
     if (start > 0) await sleep(ELEVATION_GAP_MS);
@@ -75,6 +78,7 @@ const fetchElevations = async (sites) => {
         elevation.forEach((m, i) => {
           if (typeof m === 'number' && Number.isFinite(m)) found[batch[i].id] = Math.round(m);
         });
+        await onBatch(found);
         console.log(`Elevation: ${Math.min(start + batch.length, sites.length)} of ${sites.length}`);
         break;
       } catch (err) {
@@ -116,18 +120,20 @@ const main = async () => {
   }
   console.log(`Elevation: ${campsites.length - missing.length} of ${campsites.length} campsites already known`);
 
-  if (missing.length && process.env.SKIP_ELEVATION !== '1') {
-    const found = await fetchElevations(missing);
-    for (const s of missing) if (found[s.id] != null) s.elevation = found[s.id];
-    const count = Object.keys(found).length;
-    if (count) {
-      await mkdir(path.dirname(CACHE_FILE), { recursive: true });
+  const lookup = process.env.LOOKUP_ELEVATION === '1' || (process.env.CI === 'true' && process.env.SKIP_ELEVATION !== '1');
+  if (missing.length && !lookup) {
+    console.log(`Skipping elevation lookups for ${missing.length} campsites. Run "npm run elevations" to fill them in.`);
+  } else if (missing.length) {
+    // Save after every batch so stopping partway through doesn't lose progress.
+    const save = async (found) => {
       const updated = { ...cache, ...found };
-      // One campsite per line keeps the diffs small when new ones are added.
       const lines = Object.keys(updated).sort().map((id) => `  ${JSON.stringify(id)}: ${updated[id]}`);
+      await mkdir(path.dirname(CACHE_FILE), { recursive: true });
       await writeFile(CACHE_FILE, `{\n${lines.join(',\n')}\n}\n`);
-    }
-    console.log(`Looked up elevation for ${count} of ${missing.length} campsites`);
+    };
+    const found = await fetchElevations(missing, save);
+    for (const s of missing) if (found[s.id] != null) s.elevation = found[s.id];
+    console.log(`Looked up elevation for ${Object.keys(found).length} of ${missing.length} campsites`);
   }
 
   await mkdir(path.join(outDir, 'campsites'), { recursive: true });
