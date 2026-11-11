@@ -3,6 +3,8 @@ import {
   MapContainer,
   TileLayer,
   Marker,
+  Circle,
+  CircleMarker,
   Tooltip,
   LayersControl,
   ScaleControl,
@@ -13,6 +15,7 @@ import {
 import L from "leaflet";
 import "./MapView.css";
 import type { Campsite } from "../../types/Campsite";
+import type { Origin } from "../../filters";
 import MarkerClusterGroup from "./MarkerClusterGroup";
 import MapControls from "./MapControls";
 import FirePerimeters from "./FirePerimeters";
@@ -48,11 +51,20 @@ const personIcon = new L.DivIcon({
 
 interface MapViewProps {
   campsites: Campsite[];
-  searchQuery?: string;
+  // Changes when the search or filters change; empty when neither is active.
+  fitKey?: string;
+  origin?: Origin | null;
+  radiusMiles?: number | null;
 }
 
-// After the user stops typing, zoom the map to fit whatever the search matched.
-const FitToResults: React.FC<{ campsites: Campsite[]; query: string }> = ({ campsites, query }) => {
+const METERS_PER_MILE = 1609.344;
+
+// After the user stops typing or changes a filter, zoom the map to fit the results.
+const FitToResults: React.FC<{ campsites: Campsite[]; fitKey: string; origin?: Origin | null }> = ({
+  campsites,
+  fitKey,
+  origin,
+}) => {
   const map = useMap();
   const mounted = useRef(false);
   useEffect(() => {
@@ -61,17 +73,22 @@ const FitToResults: React.FC<{ campsites: Campsite[]; query: string }> = ({ camp
       mounted.current = true;
       return;
     }
-    if (!query || campsites.length === 0) return;
+    if (!fitKey) return;
+    const points = campsites.map((s) => [s.lat, s.lng] as [number, number]);
+    if (origin) points.push([origin.lat, origin.lng]);
+    if (points.length === 0) return;
     const timer = setTimeout(() => {
-      const bounds = L.latLngBounds(campsites.map((s) => [s.lat, s.lng] as [number, number]));
-      map.flyToBounds(bounds, { padding: [60, 60], maxZoom: 11, duration: 0.8 });
+      if (points.length === 1) map.flyTo(points[0], Math.max(map.getZoom(), 10), { duration: 0.8 });
+      else map.flyToBounds(L.latLngBounds(points), { padding: [60, 60], maxZoom: 11, duration: 0.8 });
     }, 700);
     return () => clearTimeout(timer);
-  }, [campsites, query, map]);
+    // Only refit when the search or filters change, not when the same results re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitKey, map]);
   return null;
 };
 
-const MapView: React.FC<MapViewProps> = ({ campsites, searchQuery = "" }) => {
+const MapView: React.FC<MapViewProps> = ({ campsites, fitKey = "", origin = null, radiusMiles = null }) => {
   const [currentPosition, setCurrentPosition] = useState<[number, number] | null>(null);
 
   const campsiteMarkers = useMemo(
@@ -126,7 +143,34 @@ const MapView: React.FC<MapViewProps> = ({ campsites, searchQuery = "" }) => {
         <ZoomControl position="bottomright" />
         <MapControls onLocate={setCurrentPosition} />
         <ScaleControl position="bottomleft" imperial metric={false} />
-        <FitToResults campsites={campsites} query={searchQuery} />
+        <FitToResults campsites={campsites} fitKey={fitKey} origin={origin} />
+
+        {origin && radiusMiles != null && (
+          <Circle
+            center={[origin.lat, origin.lng]}
+            radius={radiusMiles * METERS_PER_MILE}
+            interactive={false}
+            pathOptions={{ className: "search-radius", color: "#226E52", weight: 1.5, dashArray: "6 6", fillOpacity: 0.04 }}
+          />
+        )}
+        {origin && origin.label !== "your location" && (
+          <CircleMarker
+            center={[origin.lat, origin.lng]}
+            radius={6}
+            pathOptions={{ className: "search-origin", color: "#FFFFFF", weight: 2, fillColor: "#16563A", fillOpacity: 1 }}
+          >
+            <Tooltip direction="top" offset={[0, -6]} opacity={1}>
+              {origin.label}
+            </Tooltip>
+          </CircleMarker>
+        )}
+        {origin && origin.label === "your location" && !currentPosition && (
+          <Marker position={[origin.lat, origin.lng]} icon={personIcon} zIndexOffset={1000}>
+            <Tooltip direction="top" offset={[0, -12]} opacity={1}>
+              You are here
+            </Tooltip>
+          </Marker>
+        )}
         <RememberView />
 
         {currentPosition && (

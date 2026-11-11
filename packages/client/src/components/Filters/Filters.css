@@ -1,0 +1,290 @@
+.filters {
+  margin-top: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border, #E2E0DA);
+}
+
+.filters__section {
+  padding: 10px 0;
+  border-bottom: 1px solid #EFEDE8;
+}
+
+.filters__label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted, #5B6862);
+}
+
+.filters__select,
+.filters__place input,
+.filters__elevation-field input,
+.filters__inline-select select {
+  height: 40px;
+  font-family: var(--font);
+  font-size: 16px; /* stops iOS from zooming on focus */
+  color: var(--ink, #1F2D27);
+  background: #F4F3EF;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  outline: none;
+}
+
+.filters__select:focus,
+.filters__place input:focus,
+.filters__elevation-field input:focus,
+.filters__inline-select select:focus {
+  background: #FFFFFF;
+  border-color: var(--forest, #226E52);
+  box-shadow: 0 0 0 3px rgba(34, 110, 82, 0.15);
+}
+
+.filters__select {
+  width: 100%;
+  padding: 0 8px;
+}
+
+.filters__place {
+  display: flex;
+  gap: 8px;
+}
+
+.filters__place input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 10px;
+  appearance: none;
+}
+
+.filters__place input::placeholder,
+.filters__elevation-field input::placeholder {
+  color: #8A938E;
+  font-size: 14px;
+}
+
+.filters__button {
+  min-width: 64px;
+  height: 40px;
+  padding: 0 16px;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: var(--forest, #226E52);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.filters__button:hover:not(:disabled),
+.filters__button:focus-visible {
+  background: var(--forest-dark, #16563A);
+}
+
+.filters__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.filters__link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 0 4px;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--forest, #226E52);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.filters__link-button:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 2px; }
+.filters__link-button:disabled { opacity: 0.6; cursor: default; }
+
+.filters__origin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters__inline-select select {
+  padding: 0 8px;
+}
+
+.filters__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filters__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  max-width: 100%;
+  padding: 0 12px;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink, #1F2D27);
+  background: #F4F3EF;
+  border: 1px solid #E2E0DA;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+button.filters__chip:hover { border-color: #C9C6BE; }
+
+.filters__chip.is-on {
+  color: #FFFFFF;
+  background: var(--forest, #226E52);
+  border-color: var(--forest, #226E52);
+}
+
+.filters__origin .filters__chip {
+  padding-right: 2px;
+  cursor: default;
+}
+
+.filters__chip-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.filters__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 2px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.filters__chip-remove:hover,
+.filters__chip-remove:focus-visible { background: rgba(255, 255, 255, 0.2); }
+
+.filters__elevation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters__elevation-field {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.filters__elevation-field > span:first-child {
+  position: absolute;
+  left: 10px;
+  font-size: 0.75rem;
+  color: var(--ink-muted, #5B6862);
+  pointer-events: none;
+}
+
+.filters__elevation-field input {
+  width: 100%;
+  padding: 0 28px 0 42px;
+}
+
+.filters__elevation-field input:disabled { opacity: 0.55; }
+
+.filters__unit {
+  position: absolute;
+  right: 10px;
+  font-size: 0.75rem;
+  color: var(--ink-muted, #5B6862);
+  pointer-events: none;
+}
+
+.filters__dash {
+  font-size: 0.8rem;
+  color: var(--ink-muted, #5B6862);
+}
+
+.filters__hint,
+.filters__error {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ink-muted, #5B6862);
+}
+
+.filters__error { color: #A3361F; }
+
+.filters__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+}
+
+.filters__footer .filters__link-button { margin-top: 0; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Closest campsites list */
+.results-list ol {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.results-list li + li { border-top: 1px solid #EFEDE8; }
+
+.results-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 4px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.results-list__item:hover,
+.results-list__item:focus-visible { background: #F4F3EF; }
+
+.results-list__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink, #1F2D27);
+}
+
+.results-list__meta {
+  font-size: 0.75rem;
+  color: var(--ink-muted, #5B6862);
+}
+
+.results-list__more {
+  margin: 6px 4px 0;
+  font-size: 0.75rem;
+  color: var(--ink-muted, #5B6862);
+}

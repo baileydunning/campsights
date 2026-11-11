@@ -55,7 +55,7 @@ describe('campsiteSlice', () => {
       const result = await fetchCampsites()(dispatch, getState, undefined);
       expect(result.payload).toEqual(mockCampsites);
 
-      const cached = JSON.parse(localStorage.getItem('campsights_campsites')!);
+      const cached = JSON.parse(localStorage.getItem('campsights_campsites_v2')!);
       expect(cached.data).toEqual(mockCampsites);
 
       (getCampsites as any).mockClear();

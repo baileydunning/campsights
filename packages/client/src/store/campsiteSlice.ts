@@ -10,7 +10,14 @@ export const fetchCampsites = createAsyncThunk(
       return state.campsites.campsites;
     }
 
-    const CACHE_KEY = 'campsights_campsites';
+    // Bump the version when the shape of the data changes (v2 added elevation and cleaned state names).
+    const CACHE_KEY = 'campsights_campsites_v2';
+    try {
+      // The old cache is about 3.5 MB, so drop it to leave room for the new one.
+      localStorage.removeItem('campsights_campsites');
+    } catch {
+      /* storage blocked */
+    }
     const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
     
     try {

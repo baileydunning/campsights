@@ -98,11 +98,84 @@ html, body, #root {
   text-underline-offset: 2px;
 }
 
+.search-panel {
+  /* Long filter and result lists scroll inside the panel instead of off screen. */
+  max-height: calc(100dvh - 2 * var(--gap) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search-panel__row {
+  display: flex;
+  gap: 8px;
+}
+
+.search-panel__row .search-bar { flex: 1; min-width: 0; }
+
+.filters-toggle {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 12px;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: #F4F3EF;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.filters-toggle:hover { background: #ECEAE4; }
+.filters-toggle:focus-visible { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px rgba(34, 110, 82, 0.15); }
+.filters-toggle.is-open,
+.filters-toggle.is-active { color: var(--forest-dark); border-color: var(--forest); background: #FFFFFF; }
+
+.filters-toggle__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: var(--forest);
+  border-radius: 999px;
+}
+
+.search-panel__status-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .search-panel__status {
   margin: 8px 2px 0;
   font-size: 0.75rem;
   color: var(--ink-muted);
 }
+
+.search-panel__list-toggle {
+  flex-shrink: 0;
+  padding: 6px 2px 0;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--forest);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.search-panel__list-toggle:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 @media (max-width: 600px) {
   .search-panel {
@@ -111,6 +184,9 @@ html, body, #root {
     max-width: none;
     transition: opacity 0.18s, transform 0.18s;
   }
+
+  /* Make room for filters and results on small screens. */
+  .search-panel.is-expanded .search-panel__about { display: none; }
 
   /* Give an open campsite card the whole screen on phones. */
   .popup-open .search-panel {

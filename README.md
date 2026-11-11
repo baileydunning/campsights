@@ -33,6 +33,18 @@ Campsite data comes from my [BLM Spider](https://github.com/baileydunning/blm-sp
 - Shows how many campsites match
 - An info button next to the description explains where the data comes from and its limits
 
+### Filters
+
+The Filters button next to the search box narrows the map further. Filters work together with the search text.
+
+- **Near:** type a town or place (looked up with OpenStreetMap's Nominatim) or use your location, then pick a distance of 25, 50, 100 or 200 miles. The map shows the search radius, and "Show list" lists the closest matching campsites with distance and direction.
+- **State**
+- **Activities:** a short list of groups such as hiking, fishing or climbing, each covering the BLM's similar activity names. Picking more than one shows campsites that list all of them.
+- **Elevation:** a minimum and maximum in feet
+- **Stay limit:** 7 or 14 days or more. Most BLM pages don't list a stay limit, so this filter only matches campsites that do.
+
+Filters stay in place when you open a campsite page and come back.
+
 ### Campsite pages
 
 Every campsite has its own page at `/campsites/:id` that can be bookmarked or shared.
@@ -91,7 +103,7 @@ BLM website ──(weekly scrape)──> blm-spider repo: data/blm-campsites.jso
 ```
 
 1. The [BLM Spider](https://github.com/baileydunning/blm-spider) runs every Sunday in GitHub Actions and commits a fresh `data/blm-campsites.json`.
-2. The **Deploy to Cloudflare** workflow in this repo builds the React app, downloads that JSON, and splits it into one file with every campsite plus one small file per campsite.
+2. The **Deploy to Cloudflare** workflow in this repo builds the React app, downloads that JSON, cleans up state names, adds each campsite's elevation, and splits it into one file with every campsite plus one small file per campsite. Elevations are saved by campsite ID in `worker/data/elevations.json`, so a deploy only looks up campsites that are new that week, using the [Open-Meteo elevation API](https://open-meteo.com/en/docs/elevation-api). Lookups go 100 points at a time with a pause between requests to stay under Open-Meteo's free rate limit. If a lookup fails, the build still finishes and those campsites have no elevation until a later run. To fill or refresh the file, run `npm run build:cf` locally (about 6 minutes for every campsite) and commit `worker/data/elevations.json`.
 3. Everything is deployed to a **Cloudflare Worker**. The app and data files are served as static assets. The Worker handles the API, adding weather, alerts, nearest town and elevation to single-campsite requests.
 4. Wildfire perimeters and map tiles are loaded straight from their public sources in the browser.
 
@@ -159,7 +171,7 @@ Worker settings live in `worker/wrangler.jsonc`.
 
 ### `GET /api/v1/campsites`
 
-Returns every campsite as a JSON array. This is the raw BLM data with no weather or elevation, so it loads quickly.
+Returns every campsite as a JSON array. This is the BLM data plus elevation in meters (added at build time), with no weather, so it loads quickly.
 
 ```json
 [
